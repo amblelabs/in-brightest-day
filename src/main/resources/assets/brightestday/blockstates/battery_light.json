@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "brightestday:block/battery_light"
+    }
+  }
+}

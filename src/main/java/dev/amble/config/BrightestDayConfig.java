@@ -15,7 +15,7 @@ public class BrightestDayConfig {
                     .build())
             .build();
 
-    private static final int CONFIG_VERSION = 1;
+    private static final int CONFIG_VERSION = 2;
 
     @SerialEntry
     public int configVersion = 0;
@@ -322,6 +322,11 @@ public class BrightestDayConfig {
     public int teamMaxSize = 6;
 
     @SerialEntry
+    public double spaceEntryHeight = 1000.0;
+    @SerialEntry
+    public double spaceArrivalHeight = 330.0;
+
+    @SerialEntry
     public int gliderCost = 150;
     @SerialEntry
     public int gliderChargeTicks = 15;
@@ -353,6 +358,7 @@ public class BrightestDayConfig {
             config.flightDrainPerSecond = Math.min(config.flightDrainPerSecond, defaults.flightDrainPerSecond);
             config.flightBoostDrainPerSecond = Math.min(config.flightBoostDrainPerSecond, defaults.flightBoostDrainPerSecond);
         }
+        if (config.configVersion < 2 && config.spaceEntryHeight == 384.0) config.spaceEntryHeight = defaults.spaceEntryHeight;
         config.configVersion = CONFIG_VERSION;
         HANDLER.save();
     }

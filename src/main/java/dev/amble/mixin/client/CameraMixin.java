@@ -3,6 +3,7 @@ package dev.amble.mixin.client;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import dev.amble.client.effects.BlastEffects;
 import dev.amble.client.flight.FlightAnimator;
+import dev.amble.client.space.SpaceRenderer;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
@@ -15,6 +16,7 @@ import org.jspecify.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Constant;
 import org.spongepowered.asm.mixin.injection.ModifyConstant;
@@ -34,6 +36,12 @@ public abstract class CameraMixin {
     @Shadow @Final private Vector3f up;
     @Shadow @Final private Vector3f left;
     @Shadow private int matrixPropertiesDirty;
+    @Shadow private float depthFar;
+
+    @Inject(method = "update", at = @At(value = "FIELD", target = "Lnet/minecraft/client/Camera;depthFar:F", opcode = Opcodes.PUTFIELD, shift = At.Shift.AFTER))
+    private void brightestday$extendSpaceView(CallbackInfo ci) {
+        if (SpaceRenderer.extendsView()) this.depthFar = SpaceRenderer.DEPTH_FAR;
+    }
 
     @ModifyConstant(method = "tickFov", constant = @Constant(floatValue = 1.5F))
     private float brightestday$raiseFovCapWhileFlying(float max) {

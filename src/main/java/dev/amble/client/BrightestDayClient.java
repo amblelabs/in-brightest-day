@@ -43,6 +43,8 @@ import dev.amble.client.flight.FlightAnimations;
 import dev.amble.client.flight.FlightAnimator;
 import dev.amble.client.flight.AileronRolls;
 import dev.amble.client.team.ClientTeams;
+import dev.amble.client.space.SpaceHud;
+import dev.amble.client.space.SpaceRenderer;
 import dev.amble.client.flight.FlightTrail;
 import dev.amble.client.hud.FlightSpeedHud;
 import dev.amble.client.hud.RingChargeHud;
@@ -70,6 +72,8 @@ public class BrightestDayClient implements ClientModInitializer {
         FlightTrail.init();
         AileronRolls.init();
         ClientTeams.init();
+        SpaceRenderer.init();
+        SpaceHud.init();
         BlastEffects.init();
         ShieldEffects.init();
         WallEffects.init();

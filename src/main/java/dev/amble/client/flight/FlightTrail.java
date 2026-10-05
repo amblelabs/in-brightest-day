@@ -108,13 +108,11 @@ public final class FlightTrail {
                 }
                 points.clear();
                 points.addAll(aged);
-                if (emit) {
-                    Vec3 position = foot(player, 1.0F, footSide(foot));
-                    Point newest = points.peekFirst();
-                    double gap = newest == null ? 0.0 : newest.pos().distanceTo(position);
-                    if (gap > MAX_POINT_JUMP) points.clear();
-                    if (points.isEmpty() || gap > MIN_POINT_SPACING) points.addFirst(new Point(position, 0));
-                }
+                Vec3 position = foot(player, 1.0F, footSide(foot));
+                Point newest = points.peekFirst();
+                double gap = newest == null ? 0.0 : newest.pos().distanceTo(position);
+                if (gap > MAX_POINT_JUMP) points.clear();
+                if (emit && (points.isEmpty() || gap > MIN_POINT_SPACING)) points.addFirst(new Point(position, 0));
             }
 
             trail.emitting = emit;
@@ -199,6 +197,12 @@ public final class FlightTrail {
             Vec3 a = smooth.get(i);
             Vec3 b = smooth.get(i + 1);
             float segment = (float) a.distanceTo(b);
+            if (segment > MAX_POINT_JUMP) {
+                travelled += segment;
+                nextVoxel = travelled + TRAIL_START_GAP;
+                lastCell = null;
+                continue;
+            }
             while (segment > 0.0F && nextVoxel <= travelled + segment) {
                 float t = (nextVoxel - travelled) / segment;
                 float life = Mth.lerp(t, smoothLives.get(i), smoothLives.get(i + 1));

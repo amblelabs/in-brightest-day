@@ -16,6 +16,7 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.TransparentBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.level.material.PushReaction;
@@ -47,6 +48,12 @@ public class BrightestDayBlocks {
             properties -> new ConstructLightBlock(properties.strength(-1.0F, 3600000.0F).noLootTable().noOcclusion().noCollision().replaceable()
                     .lightLevel(_ -> 15).pushReaction(PushReaction.POPPED).isValidSpawn((state, level, pos, type) -> false)
                     .isSuffocating((state, level, pos) -> false).isViewBlocking((state, level, pos, box) -> false)));
+
+    public static final Block BATTERY_LIGHT = registerBlock("battery_light",
+            properties -> new TransparentBlock(properties.strength(-1.0F, 3600000.0F).noLootTable().noOcclusion()
+                    .lightLevel(_ -> 15).sound(SoundType.AMETHYST).pushReaction(PushReaction.IMMOVEABLE)
+                    .isValidSpawn((state, level, pos, type) -> false).isSuffocating((state, level, pos) -> false)
+                    .isViewBlocking((state, level, pos, box) -> false)));
 
     public static Optional<Block> lantern(LanternCorps corps) {
         return Optional.ofNullable(LANTERNS.get(corps));

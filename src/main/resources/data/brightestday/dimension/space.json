@@ -1,0 +1,18 @@
+{
+  "type": "brightestday:space",
+  "generator": {
+    "type": "minecraft:flat",
+    "settings": {
+      "biome": "brightestday:space",
+      "features": false,
+      "lakes": false,
+      "layers": [
+        {
+          "block": "minecraft:air",
+          "height": 1
+        }
+      ],
+      "structure_overrides": []
+    }
+  }
+}
