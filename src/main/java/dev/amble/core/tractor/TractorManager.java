@@ -112,7 +112,7 @@ public final class TractorManager {
 
         AABB searchArea = player.getBoundingBox().expandTowards(reach.subtract(eye)).inflate(1.0);
         EntityHitResult entityHit = ProjectileUtil.getEntityHitResult(level, player, eye, reach, searchArea,
-                entity -> !Mannequins.isHologram(entity) && !entity.isSpectator() && entity.isAlive() && !isHeld(entity), 0.3F);
+                entity -> !Mannequins.isHologram(entity) && !entity.isSpectator() && entity.isAlive() && !isHeld(entity) && !entity.isPassengerOfSameVehicle(player), 0.3F);
         if (entityHit != null) return entityHit.getEntity();
 
         if (blockHit.getType() != HitResult.Type.BLOCK) return null;

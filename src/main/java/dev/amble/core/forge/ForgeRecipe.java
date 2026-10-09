@@ -11,6 +11,14 @@ import java.util.function.Function;
 
 public record ForgeRecipe(String key, List<ItemStack> inputs, int lava, Function<Player, List<ItemStack>> outputs) {
 
+    public int strikes() {
+        return switch (this.key) {
+            case "lantern" -> 3;
+            case ForgeRecipes.FUSE -> 7;
+            default -> 5;
+        };
+    }
+
     public boolean affordable(Player player) {
         if (player.hasInfiniteMaterials()) return true;
         for (ItemStack input : this.inputs) {

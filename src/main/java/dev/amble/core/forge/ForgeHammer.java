@@ -24,10 +24,10 @@ import java.util.Map;
 import java.util.UUID;
 
 public final class ForgeHammer {
-    public static final int STRIKES = 5;
     public static final int BEAT_TICKS = 24;
-    public static final int MAX_MISSES = 2;
-    private static final int WINDOW = 3;
+    public static final int GOOD_WINDOW = 6;
+    public static final int PERFECT_WINDOW = 2;
+    public static final int MAX_STREAK = 3;
     private static final int GAP = 8;
     private static final double REACH = 8.0;
 
@@ -37,10 +37,12 @@ public final class ForgeHammer {
         final ForgeRecipe recipe;
         final int color;
         final boolean lava;
+        final int total;
         long beatAt;
         int strike;
-        int hits;
-        int misses;
+        int perfects;
+        int streak;
+        int combo;
 
         Session(ServerLevel level, BlockPos pos, ForgeRecipe recipe, int color, boolean lava, long beatAt) {
             this.level = level;
@@ -48,6 +50,7 @@ public final class ForgeHammer {
             this.recipe = recipe;
             this.color = color;
             this.lava = lava;
+            this.total = recipe.strikes();
             this.beatAt = beatAt;
         }
     }
@@ -79,40 +82,62 @@ public final class ForgeHammer {
     }
 
     private static void strike(ServerPlayer player, Session session) {
-        long offset = session.level.getGameTime() - session.beatAt;
-        boolean hit = Math.abs(offset) <= WINDOW;
-        if (hit) {
-            session.hits++;
-            session.level.playSound(null, session.pos, SoundEvents.ANVIL_USE, SoundSource.BLOCKS, 0.9F, 0.9F + session.hits * 0.08F);
-            Vec3 top = Vec3.atCenterOf(session.pos).add(0.0, 0.6, 0.0);
-            session.level.sendParticles(ParticleTypes.CRIT, top.x, top.y, top.z, 10, 0.2, 0.1, 0.2, 0.3);
-            session.level.sendParticles(new DustParticleOptions(session.color, 1.4F), top.x, top.y, top.z, 8, 0.3, 0.1, 0.3, 0.0);
-        } else {
-            session.misses++;
-            session.level.playSound(null, session.pos, SoundEvents.ANVIL_LAND, SoundSource.BLOCKS, 0.5F, 0.6F);
-        }
-        advance(player, session, hit ? ForgeBeatS2CPayload.HIT : ForgeBeatS2CPayload.MISS);
-    }
-
-    private static void advance(ServerPlayer player, Session session, int feedback) {
-        session.strike++;
-        if (session.misses > MAX_MISSES) {
-            fail(player, session);
+        long offset = Math.abs(session.level.getGameTime() - session.beatAt);
+        if (offset > GOOD_WINDOW) {
+            miss(player, session);
             return;
         }
-        if (session.strike >= STRIKES) {
-            SESSIONS.remove(player.getUUID());
-            ServerPlayNetworking.send(player, new ForgeBeatS2CPayload(false, 0L, session.strike, session.hits, session.misses, session.color, feedback));
-            SpectrumForgeBlock.craft(session.level, session.pos, session.recipe, player, session.color, session.lava);
+        boolean perfect = offset <= PERFECT_WINDOW;
+        if (perfect) session.perfects |= 1 << session.strike;
+        session.combo++;
+        session.streak = 0;
+        session.strike++;
+
+        Vec3 top = Vec3.atCenterOf(session.pos).add(0.0, 0.6, 0.0);
+        float pitch = 0.8F + Math.min(session.combo, 8) * 0.07F;
+        session.level.playSound(null, session.pos, SoundEvents.ANVIL_USE, SoundSource.BLOCKS, 1.0F, pitch);
+        session.level.sendParticles(ParticleTypes.CRIT, top.x, top.y, top.z, perfect ? 24 : 12, 0.25, 0.1, 0.25, 0.4);
+        session.level.sendParticles(new DustParticleOptions(session.color, perfect ? 2.0F : 1.4F), top.x, top.y, top.z, perfect ? 18 : 8, 0.35, 0.15, 0.35, 0.0);
+        session.level.sendParticles(ParticleTypes.LAVA, top.x, top.y, top.z, perfect ? 4 : 1, 0.2, 0.05, 0.2, 0.0);
+        if (perfect) {
+            session.level.sendParticles(ParticleTypes.END_ROD, top.x, top.y, top.z, 10, 0.2, 0.2, 0.2, 0.08);
+            session.level.playSound(null, session.pos, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.BLOCKS, 1.4F, pitch + 0.3F);
+        }
+
+        if (session.strike >= session.total) {
+            complete(player, session, perfect ? ForgeBeatS2CPayload.PERFECT : ForgeBeatS2CPayload.HIT);
             return;
         }
         session.beatAt = session.level.getGameTime() + GAP + BEAT_TICKS;
-        sync(player, session, feedback);
+        sync(player, session, perfect ? ForgeBeatS2CPayload.PERFECT : ForgeBeatS2CPayload.HIT);
+    }
+
+    private static void miss(ServerPlayer player, Session session) {
+        session.streak++;
+        session.combo = 0;
+        session.level.playSound(null, session.pos, SoundEvents.ANVIL_LAND, SoundSource.BLOCKS, 0.5F, 0.6F);
+        if (session.streak >= MAX_STREAK) {
+            fail(player, session);
+            return;
+        }
+        session.beatAt = session.level.getGameTime() + GAP + BEAT_TICKS;
+        sync(player, session, ForgeBeatS2CPayload.MISS);
+    }
+
+    private static void complete(ServerPlayer player, Session session, int feedback) {
+        SESSIONS.remove(player.getUUID());
+        ServerPlayNetworking.send(player, payload(session, false, feedback));
+        Vec3 top = Vec3.atCenterOf(session.pos).add(0.0, 0.8, 0.0);
+        session.level.sendParticles(new DustParticleOptions(session.color, 2.2F), top.x, top.y, top.z, 40, 0.5, 0.4, 0.5, 0.0);
+        session.level.sendParticles(ParticleTypes.FIREWORK, top.x, top.y, top.z, 30, 0.2, 0.2, 0.2, 0.15);
+        session.level.playSound(null, session.pos, SoundEvents.BELL_RESONATE, SoundSource.BLOCKS, 1.0F, 1.2F);
+        session.level.playSound(null, session.pos, SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.BLOCKS, 1.4F, 1.0F);
+        SpectrumForgeBlock.craft(session.level, session.pos, session.recipe, player, session.color, session.lava);
     }
 
     private static void fail(ServerPlayer player, Session session) {
         SESSIONS.remove(player.getUUID());
-        ServerPlayNetworking.send(player, new ForgeBeatS2CPayload(false, 0L, session.strike, session.hits, session.misses, session.color, ForgeBeatS2CPayload.MISS));
+        ServerPlayNetworking.send(player, payload(session, false, ForgeBeatS2CPayload.MISS));
         Vec3 top = Vec3.atCenterOf(session.pos).add(0.0, 0.7, 0.0);
         for (ItemStack input : session.recipe.inputs()) {
             if (!Catalysts.is(input)) continue;
@@ -125,8 +150,12 @@ public final class ForgeHammer {
         player.sendOverlayMessage(Component.translatable("forge.brightestday.hammer.failed").withColor(session.color));
     }
 
+    private static ForgeBeatS2CPayload payload(Session session, boolean active, int feedback) {
+        return new ForgeBeatS2CPayload(active, session.beatAt, session.strike, session.total, session.perfects, session.streak, session.color, feedback);
+    }
+
     private static void sync(ServerPlayer player, Session session, int feedback) {
-        ServerPlayNetworking.send(player, new ForgeBeatS2CPayload(true, session.beatAt, session.strike, session.hits, session.misses, session.color, feedback));
+        ServerPlayNetworking.send(player, payload(session, true, feedback));
     }
 
     private static void tick(MinecraftServer server) {
@@ -143,11 +172,7 @@ public final class ForgeHammer {
                 fail(player, session);
                 continue;
             }
-            if (session.level.getGameTime() > session.beatAt + WINDOW) {
-                session.misses++;
-                session.level.playSound(null, session.pos, SoundEvents.ANVIL_LAND, SoundSource.BLOCKS, 0.4F, 0.5F);
-                advance(player, session, ForgeBeatS2CPayload.MISS);
-            }
+            if (session.level.getGameTime() > session.beatAt + GOOD_WINDOW) miss(player, session);
         }
     }
 

@@ -493,6 +493,8 @@ public class BrightestDayConfig extends Config {
     public int hopeShrine = 8;
     @ConfigGroup.Pop
     public int meteorNight = 3;
+    @ValidatedInt.Restrict(min = 1, max = 365)
+    public int meteorIntervalDays = 12;
     public static BrightestDayConfig get() {
         return instance;
     }

@@ -1,5 +1,10 @@
 package dev.amble.core.progression;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import dev.amble.BrightestDay;
+import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
+import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.BrightestDayBlocks;
 import dev.amble.core.BrightestDayItems;
@@ -30,6 +35,9 @@ public final class ZamaronMeteor {
     private static final int CRATER_CRYSTALS = 6;
     private static final int MIN_DISTANCE = 300;
     private static final int MAX_DISTANCE = 800;
+    private static final int FAR_MIN_DISTANCE = 800;
+    private static final int FAR_MAX_DISTANCE = 2500;
+    private static final float INTERVAL_JITTER = 0.25F;
     private static final double APPROACH = 220.0;
     private static final double ALTITUDE = 200.0;
     private static final int CRATER_RADIUS = 5;
@@ -37,6 +45,17 @@ public final class ZamaronMeteor {
     private static final long NIGHT_END = 22000;
 
     private record Fall(Vec3 start, BlockPos target, int age) {}
+
+    private record Schedule(long nextDay, int count) {
+        static final Codec<Schedule> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                Codec.LONG.fieldOf("next_day").forGetter(Schedule::nextDay),
+                Codec.INT.fieldOf("count").forGetter(Schedule::count)
+        ).apply(instance, Schedule::new));
+    }
+
+    private static final AttachmentType<Schedule> SCHEDULE = AttachmentRegistry.<Schedule>builder()
+            .persistent(Schedule.CODEC)
+            .buildAndRegister(BrightestDay.id("meteor_schedule"));
 
     private static @Nullable Fall falling;
 
@@ -50,19 +69,34 @@ public final class ZamaronMeteor {
             fly(level);
             return;
         }
-        if (server.getTickCount() % 100 != 0 || WorldProgress.get(server).meteorFallen()) return;
+        if (server.getTickCount() % 100 != 0) return;
 
         long day = level.getOverworldClockTime() / 24000L;
         long time = level.getOverworldClockTime() % 24000L;
-        if (day < BrightestDayConfig.get().meteorNight - 1 || time < NIGHT_START || time > NIGHT_END) return;
-        launch(level);
+        if (time < NIGHT_START || time > NIGHT_END) return;
+        if (!WorldProgress.get(server).meteorFallen()) {
+            if (day >= BrightestDayConfig.get().meteorNight - 1) launch(level, false);
+            return;
+        }
+        Schedule schedule = level.getAttached(SCHEDULE);
+        if (schedule == null) {
+            level.setAttached(SCHEDULE, new Schedule(day + interval(level.getRandom()), 1));
+            return;
+        }
+        if (day >= schedule.nextDay()) launch(level, true);
     }
 
-    private static void launch(ServerLevel level) {
+    private static long interval(RandomSource random) {
+        int days = BrightestDayConfig.get().meteorIntervalDays;
+        float jitter = (random.nextFloat() * 2.0F - 1.0F) * INTERVAL_JITTER;
+        return Math.max(1L, Math.round(days * (1.0F + jitter)));
+    }
+
+    private static void launch(ServerLevel level, boolean far) {
         RandomSource random = level.getRandom();
         BlockPos spawn = level.getRespawnData().globalPos().pos();
         float angle = random.nextFloat() * Mth.TWO_PI;
-        int distance = Mth.nextInt(random, MIN_DISTANCE, MAX_DISTANCE);
+        int distance = far ? Mth.nextInt(random, FAR_MIN_DISTANCE, FAR_MAX_DISTANCE) : Mth.nextInt(random, MIN_DISTANCE, MAX_DISTANCE);
         drop(level, spawn.offset(Mth.floor(Mth.cos(angle) * distance), 0, Mth.floor(Mth.sin(angle) * distance)));
     }
 
@@ -75,6 +109,9 @@ public final class ZamaronMeteor {
         Vec3 start = new Vec3(target.getX() - Mth.cos(angle) * APPROACH, level.getMaxY() + ALTITUDE * 0.25, target.getZ() - Mth.sin(angle) * APPROACH);
         falling = new Fall(start, target, 0);
         WorldProgress.update(level.getServer(), state -> state.withMeteorFallen());
+        Schedule previous = level.getAttached(SCHEDULE);
+        long today = level.getOverworldClockTime() / 24000L;
+        level.setAttached(SCHEDULE, new Schedule(today + interval(level.getRandom()), previous == null ? 1 : previous.count() + 1));
 
         Component message = Component.translatable("message.brightestday.meteor.streak").withStyle(ChatFormatting.ITALIC).withColor(PINK);
         for (ServerPlayer player : level.players()) {
@@ -128,7 +165,7 @@ public final class ZamaronMeteor {
         level.sendParticles(ParticleTypes.EXPLOSION_EMITTER, impact.getX(), impact.getY(), impact.getZ(), 3, 2.0, 1.0, 2.0, 0.0);
         level.sendParticles(new DustParticleOptions(PINK, 4.0F), impact.getX(), impact.getY() + 1, impact.getZ(), 200, 4.0, 3.0, 4.0, 0.0);
         level.playSound(null, impact, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.AMBIENT, 6.0F, 0.5F);
-        Component message = Component.translatable("message.brightestday.meteor.landed").withStyle(ChatFormatting.ITALIC).withColor(PINK);
+        Component message = Component.translatable("message.brightestday.meteor.landed", heart.getX(), heart.getY(), heart.getZ()).withStyle(ChatFormatting.ITALIC).withColor(PINK);
         for (ServerPlayer player : level.players()) player.sendSystemMessage(message);
     }
 

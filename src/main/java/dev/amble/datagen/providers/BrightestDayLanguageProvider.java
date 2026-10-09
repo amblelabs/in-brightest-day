@@ -399,16 +399,16 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("jei.brightestday.forge.singleplayer", "Singleplayer only");
         builder.add("jei.brightestday.forge.lava", "Costs %s lava");
         builder.add("jei.brightestday.forge.darkness", "Only at night, away from light");
-        builder.add("jei.brightestday.forge.hammer", "Strike %s beats; %s misses shatter it");
+        builder.add("jei.brightestday.forge.hammer", "Strike %s beats; %s misses in a row shatter it");
         builder.add("jei.brightestday.info.ring", "Power rings can't be crafted; they choose their bearers. Recharge at your corps lantern or a Central Power Battery, speaking the oath to swear the ring to you.");
         builder.add("jei.brightestday.info.ring.unobtainable", "This ring can't be earned in survival.");
         builder.add("jei.brightestday.info.lantern", "A corps' personal Power Battery. When a ring chooses you, its lantern is placed in the world and its location revealed. Yellow, Star Sapphire and Indigo lanterns can also be forged. Charge your ring at it to recharge and swear your oath.");
         builder.add("jei.brightestday.info.spectrum_forge", "Fill it with lava buckets. Sneak-use to cycle recipes, use with an empty hand to begin forging, then strike the forge each time the ring closes. Answers only to those with 250 Fear, at night and away from light.");
-        builder.add("jei.brightestday.info.zamaronian_crystal", "Falls to the Overworld in a pink meteor. Sneak-use to cycle recipes, use with an empty hand to begin forging, then strike it each time the ring closes. Answers only to those with 250 Love, and slowly sheds Zamaron Crystals.");
+        builder.add("jei.brightestday.info.zamaronian_crystal", "Falls to the Overworld in pink meteors that return every so often, far across the world. Sneak-use to cycle recipes, use with an empty hand to begin forging, then strike it each time the ring closes. Answers only to those with 250 Love, and slowly sheds Zamaron Crystals.");
         builder.add("jei.brightestday.info.yellow_battery_core", "Place it at the center of a 3×3×3 shell of gold blocks in the Overworld to build a yellow Central Power Battery. It must float on a 2-block stalk standing on a 3×3 pad of the same blocks, with a 1-block stalk and another 3×3 pad on top. Two opposite sides also need a 1-block stalk ending in an upright 3×3 pad; the battery's glowing emitters face out along those arms.");
         builder.add("jei.brightestday.info.sapphire_battery_core", "Place it at the center of a 3×3×3 shell of amethyst blocks in the Overworld to build a Star Sapphire Central Power Battery. It must float on a 2-block stalk standing on a 3×3 pad of the same blocks, with a 1-block stalk and another 3×3 pad on top. Two opposite sides also need a 1-block stalk ending in an upright 3×3 pad; the battery's glowing emitters face out along those arms.");
         builder.add("jei.brightestday.info.parallax_shard", "Dropped by Wardens and found in Ancient City chests. The catalyst for yellow rings and battery cores; it survives a failed forging.");
-        builder.add("jei.brightestday.info.zamaron_crystal", "Scattered around the fallen Zamaronian meteor and slowly shed by the Zamaronian Crystal. The catalyst for Star Sapphire rings and battery cores; it survives a failed forging.");
+        builder.add("jei.brightestday.info.zamaron_crystal", "Scattered around each fallen Zamaronian meteor and slowly shed by the Zamaronian Crystal. The catalyst for Star Sapphire rings and battery cores; it survives a failed forging.");
         builder.add("forge.brightestday.lava", "%s lava");
         builder.add("forge.brightestday.lava_level", "Lava: %s / %s");
         builder.add("forge.brightestday.needs_lava", "The forge needs %s lava.");
@@ -416,6 +416,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("forge.brightestday.hammer.begin", "Strike the forge when the ring closes!");
         builder.add("forge.brightestday.hammer.failed", "The forging shatters. Only the catalyst survives.");
         builder.add("hud.brightestday.forge.hit", "HIT");
+        builder.add("hud.brightestday.forge.perfect", "PERFECT");
         builder.add("hud.brightestday.forge.miss", "MISS");
         builder.add("forge.brightestday.unworthy.fear", "The forge does not answer to the unafraid... or the unfeared.");
         builder.add("forge.brightestday.unworthy.love", "The crystal stays cold to you.");
@@ -440,7 +441,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.sanctuary.barred", "Only those with hope may pass.");
         builder.add("message.brightestday.sanctuary.blessed", "You have walked the path of hope. The light is yours.");
         builder.add("message.brightestday.meteor.streak", "A pink light streaks across the night sky...");
-        builder.add("message.brightestday.meteor.landed", "Something lovely fell from the sky.");
+        builder.add("message.brightestday.meteor.landed", "Something lovely fell from the sky at %s, %s, %s.");
         builder.add("block.brightestday.spectrum_forge", "Spectrum Forge");
         builder.add("block.brightestday.zamaronian_crystal", "Zamaronian Crystal");
         builder.add("item.brightestday.parallax_shard", "Parallax Shard");
@@ -786,7 +787,9 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("brightestday.server.hopeShrine", "Hope per Shrine");
         builder.add("brightestday.server.hopeShrine.desc", "Hope gained at each pilgrimage shrine (five times this at the final one).");
         builder.add("brightestday.server.meteorNight", "Zamaron Meteor Night");
-        builder.add("brightestday.server.meteorNight.desc", "The night on which the Zamaron meteor falls.");
+        builder.add("brightestday.server.meteorNight.desc", "The night on which the first Zamaron meteor falls.");
+        builder.add("brightestday.server.meteorIntervalDays", "Days Between Meteors");
+        builder.add("brightestday.server.meteorIntervalDays.desc", "In-game days between Zamaron meteor crashes after the first (varies by up to a quarter either way). Later meteors land 800 to 2500 blocks from spawn.");
         builder.add("brightestday.client.showOathText", "Show Oath Text");
         builder.add("brightestday.client.showOathText.desc", "While speaking your oath to charge a ring, show the oath beneath the crosshair with spoken words lit up. Turn off to show a progress bar above the hotbar instead.");
         builder.add("brightestday.client.showRageVignette", "Show Rage Vignette");
