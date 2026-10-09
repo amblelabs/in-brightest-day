@@ -484,6 +484,8 @@ public class BrightestDayConfig extends Config {
     public int indigoSlowSeconds = 3;
     @ValidatedInt.Restrict(min = 1, max = 5)
     public int indigoSlowLevel = 1;
+    @ValidatedInt.Restrict(min = 1, max = 16)
+    public int batteriesPerCorps = 1;
     public boolean batteryCeremony = true;
     public int batteryCeremonyMembers = 2;
     public int bluePathDistance = 2000;

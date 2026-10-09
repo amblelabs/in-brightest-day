@@ -466,6 +466,13 @@ public final class CentralPowerBattery {
         };
     }
 
+    public static boolean atLimit(MinecraftServer server, BlockPos pos, LanternCorps corps) {
+        long existing = WorldProgress.get(server).batteries().stream()
+                .filter(battery -> battery.corps() == corps && !battery.pos().equals(pos))
+                .count();
+        return existing >= BrightestDayConfig.get().batteriesPerCorps;
+    }
+
     static void track(ServerLevel level, BlockPos pos, LanternCorps corps) {
         if (level.dimension() != Level.OVERWORLD) {
             announce(level, pos, Component.translatable("message.brightestday.battery.overworld"), corps);

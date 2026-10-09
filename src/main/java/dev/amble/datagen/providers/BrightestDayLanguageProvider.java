@@ -434,6 +434,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("bossbar.brightestday.battery", "%s Central Power Battery");
         builder.add("message.brightestday.battery.unworthy", "The ring finds no worthy heart named %s.");
         builder.add("message.brightestday.battery.refused", "%s refused the ring. It returns to the battery.");
+        builder.add("message.brightestday.battery.limit", "The %s cannot raise more than %s Central Power Battery cores.");
         builder.add("message.brightestday.battery.sent", "The ring streaks away in search of %s.");
         builder.add("message.brightestday.battery.dormant", "Your ring is dormant. It needs a Central Power Battery.");
         builder.add("message.brightestday.sanctuary.barred", "Only those with hope may pass.");
@@ -776,6 +777,8 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("brightestday.server.batteryCeremony.desc", "Whether a Central Power Battery must be lit by a ceremony of corps members.");
         builder.add("brightestday.server.batteryCeremonyMembers", "Ceremony Members");
         builder.add("brightestday.server.batteryCeremonyMembers.desc", "How many corps members must take part in the lighting ceremony.");
+        builder.add("brightestday.server.batteriesPerCorps", "Batteries Per Corps");
+        builder.add("brightestday.server.batteriesPerCorps.desc", "How many Central Power Batteries each corps can have on the server. Placing another core past this is refused; batteries that already exist are kept.");
         builder.add("brightestday.server.bluePathDistance", "Blue Pilgrimage Distance");
         builder.add("brightestday.server.bluePathDistance.desc", "How far the blue lantern pilgrimage leads, in blocks.");
         builder.add("brightestday.server.bluePathSpacing", "Blue Shrine Spacing");
