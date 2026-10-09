@@ -14,6 +14,10 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import dev.amble.BrightestDay;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.tags.TagKey;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
@@ -39,6 +43,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public final class TractorManager {
+    private static final TagKey<Block> IMMUNE = TagKey.create(Registries.BLOCK, BrightestDay.id("tractor_immune"));
     public static final double RANGE = 24.0;
     private static final double MIN_DISTANCE = 2.0;
     private static final double DISTANCE_STEP = 1.0;
@@ -113,7 +118,7 @@ public final class TractorManager {
         if (blockHit.getType() != HitResult.Type.BLOCK) return null;
         BlockPos pos = blockHit.getBlockPos();
         BlockState state = level.getBlockState(pos);
-        if (state.isAir() || state.hasBlockEntity() || state.getDestroySpeed(level, pos) < 0.0F || !level.mayInteract(player, pos)) return null;
+        if (state.isAir() || state.hasBlockEntity() || state.is(IMMUNE) || state.getDestroySpeed(level, pos) < 0.0F || !level.mayInteract(player, pos)) return null;
 
         FallingBlockEntity block = FallingBlockEntity.fall(level, pos, state);
         block.setNoGravity(true);

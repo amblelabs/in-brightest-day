@@ -77,6 +77,7 @@ public final class CentralPowerBattery {
     public static final int STALK = 2;
     public static final int TOP_STALK = 1;
     public static final int ARM = 1;
+    private static final int SOLO_RANK = 2;
 
     private static final Map<BlockPos, ServerBossEvent> BARS = new HashMap<>();
     private static final Map<BlockPos, Map<UUID, Long>> CEREMONIES = new HashMap<>();
@@ -196,17 +197,21 @@ public final class CentralPowerBattery {
         return InteractionResult.CONSUME;
     }
 
+    private static boolean kindled(MinecraftServer server, LanternCorps corps) {
+        WorldProgress state = WorldProgress.get(server);
+        return state.kindled().contains(corps) || state.batteries().stream().anyMatch(battery -> battery.corps() == corps && battery.lit());
+    }
+
     static void sworn(ServerLevel level, BlockPos pos, ServerPlayer player) {
         WorldProgress.Battery battery = at(level, pos, false);
         BrightestDayConfig config = BrightestDayConfig.get();
         if (battery == null || !config.batteryCeremony || battery.lit() || battery.health() <= 0 || !complete(level, battery.pos())) return;
-        Emotion emotion = Emotion.of(battery.corps()).orElse(null);
         long now = level.getGameTime();
         Map<UUID, Long> sworn = CEREMONIES.computeIfAbsent(battery.pos(), key -> new HashMap<>());
         sworn.values().removeIf(time -> now - time > CEREMONY_WINDOW);
         sworn.put(player.getUUID(), now);
-        int needed = IndigoOne.multiplayer(level.getServer()) ? Math.max(1, config.batteryCeremonyMembers) : 1;
-        boolean worthy = emotion != null && SpectrumMeters.get(player, emotion) >= Emotion.MAX;
+        int needed = !kindled(level.getServer(), battery.corps()) || !IndigoOne.multiplayer(level.getServer()) ? 1 : Math.max(1, config.batteryCeremonyMembers);
+        boolean worthy = RingRanks.rank(player, battery.corps()) >= SOLO_RANK;
         if (!worthy && sworn.size() < needed) {
             announce(level, battery.pos(), Component.translatable("message.brightestday.battery.ceremony", player.getDisplayName(), sworn.size(), needed), battery.corps());
             level.playSound(null, battery.pos(), SoundEvents.BEACON_AMBIENT, SoundSource.BLOCKS, 1.5F, 0.8F);
@@ -214,7 +219,7 @@ public final class CentralPowerBattery {
         }
         CEREMONIES.remove(battery.pos());
         AWAITING.remove(battery.pos());
-        WorldProgress.update(level.getServer(), state -> state.withBattery(battery.withLit(true)));
+        WorldProgress.update(level.getServer(), state -> state.withBattery(battery.withLit(true)).withKindled(battery.corps()));
         announce(level, battery.pos(), Component.translatable("message.brightestday.battery.lit").withStyle(ChatFormatting.BOLD), battery.corps());
         level.playSound(null, battery.pos(), SoundEvents.BEACON_POWER_SELECT, SoundSource.BLOCKS, 2.0F, 0.7F);
     }

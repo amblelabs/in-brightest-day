@@ -776,7 +776,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("brightestday.server.batteryCeremony", "Battery Lighting Ceremony");
         builder.add("brightestday.server.batteryCeremony.desc", "Whether a Central Power Battery must be lit by a ceremony of corps members.");
         builder.add("brightestday.server.batteryCeremonyMembers", "Ceremony Members");
-        builder.add("brightestday.server.batteryCeremonyMembers.desc", "How many corps members must take part in the lighting ceremony.");
+        builder.add("brightestday.server.batteryCeremonyMembers.desc", "How many corps members must take part in the lighting ceremony. A corps's very first battery, or any member at rank 2 or higher, can light one alone.");
         builder.add("brightestday.server.batteriesPerCorps", "Batteries Per Corps");
         builder.add("brightestday.server.batteriesPerCorps.desc", "How many Central Power Batteries each corps can have on the server. Placing another core past this is refused; batteries that already exist are kept.");
         builder.add("brightestday.server.bluePathDistance", "Blue Pilgrimage Distance");

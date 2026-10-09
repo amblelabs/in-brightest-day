@@ -1,0 +1,12 @@
+{
+  "values": [
+    "#minecraft:wither_immune",
+    "brightestday:battery_frame",
+    "brightestday:green_battery_core",
+    "brightestday:yellow_battery_core",
+    "brightestday:red_battery_core",
+    "brightestday:blue_battery_core",
+    "brightestday:indigo_battery_core",
+    "brightestday:sapphire_battery_core"
+  ]
+}
