@@ -1,6 +1,7 @@
 package dev.amble.core;
 
 import dev.amble.BrightestDay;
+import dev.amble.core.items.ConstructMimics;
 import dev.amble.core.items.LanternMannequinItem;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.ringpowers.LanternCorps;
@@ -12,7 +13,10 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.FlintAndSteelItem;
 import net.minecraft.world.item.MaceItem;
+import net.minecraft.world.item.ShearsItem;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.ToolMaterial;
 import net.minecraft.world.item.component.Weapon;
@@ -51,6 +55,15 @@ public class BrightestDayItems {
             .component(DataComponents.TOOL, MaceItem.createToolProperties())
             .attributes(MaceItem.createAttributes())
             .component(DataComponents.WEAPON, new Weapon(1)), MaceItem::new);
+    public static final Item CONSTRUCT_FLINT_AND_STEEL = registerConstructTool(ConstructTool.FLINT_AND_STEEL, properties -> properties.durability(64), FlintAndSteelItem::new);
+    public static final Item CONSTRUCT_SHEARS = registerConstructTool(ConstructTool.SHEARS, properties -> properties
+            .durability(238)
+            .component(DataComponents.TOOL, ShearsItem.createToolProperties()), ShearsItem::new);
+
+    static {
+        ConstructMimics.register(CONSTRUCT_SHEARS, Items.SHEARS);
+        ConstructMimics.register(CONSTRUCT_FLINT_AND_STEEL, Items.FLINT_AND_STEEL);
+    }
 
     public static final Item PARALLAX_SHARD = register("parallax_shard", id -> new Item(new Item.Properties()
             .setId(ResourceKey.create(Registries.ITEM, id)).rarity(Rarity.RARE).fireResistant()));

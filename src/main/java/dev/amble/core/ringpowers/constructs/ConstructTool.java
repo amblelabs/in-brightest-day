@@ -12,7 +12,9 @@ public enum ConstructTool {
     SHOVEL("shovel", "U", "iron_shovel"),
     HOE("hoe", "L", "iron_hoe"),
     SPEAR("spear", "—", "iron_spear"),
-    MACE("mace", "O", "mace");
+    MACE("mace", "O", "mace"),
+    FLINT_AND_STEEL("flint_and_steel", "C", "flint_and_steel"),
+    SHEARS("shears", "V", "shears");
 
     private final String name;
     private final String glyph;

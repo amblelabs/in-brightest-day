@@ -1106,6 +1106,8 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("item.brightestday.construct_hoe", "Construct Hoe");
         builder.add("item.brightestday.construct_spear", "Construct Spear");
         builder.add("item.brightestday.construct_mace", "Construct Mace");
+        builder.add("item.brightestday.construct_flint_and_steel", "Construct Flint and Steel");
+        builder.add("item.brightestday.construct_shears", "Construct Shears");
         builder.add("message.brightestday.forged", "Forged %s");
         builder.add("message.brightestday.forge_no_room", "No room for the construct.");
         builder.add("message.brightestday.unknown_pattern", "The ring doesn't recognize that pattern.");

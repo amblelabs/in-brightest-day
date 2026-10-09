@@ -23,7 +23,9 @@ public final class GestureRecognizer {
             template(ConstructTool.BATTLEAXE, false, 0, 1, 1, 1, 0, 0, 1, 0),
             template(ConstructTool.SHOVEL, false, 0, 1, 0, 0.35F, 0.15F, 0.08F, 0.5F, 0, 0.85F, 0.08F, 1, 0.35F, 1, 1),
             template(ConstructTool.HOE, false, 0, 1, 0, 0, 0.6F, 0),
-            circle(ConstructTool.MACE)
+            circle(ConstructTool.MACE),
+            arc(ConstructTool.FLINT_AND_STEEL, 60.0F, 300.0F),
+            template(ConstructTool.SHEARS, false, 0, 1, 0.5F, 0, 1, 1)
     );
 
     public static Optional<ConstructTool> recognize(List<float[]> stroke) {
@@ -80,6 +82,15 @@ public final class GestureRecognizer {
         List<float[]> points = new ArrayList<>();
         for (int i = 0; i < coordinates.length; i += 2) points.add(new float[]{coordinates[i], coordinates[i + 1]});
         return new Template(tool, normalize(resample(points)), closed);
+    }
+
+    private static Template arc(ConstructTool tool, float fromDegrees, float toDegrees) {
+        List<float[]> points = new ArrayList<>();
+        for (int i = 0; i <= POINTS; i++) {
+            float angle = (fromDegrees + (toDegrees - fromDegrees) * i / POINTS) * Mth.DEG_TO_RAD;
+            points.add(new float[]{Mth.cos(angle), Mth.sin(angle)});
+        }
+        return new Template(tool, normalize(resample(points)), false);
     }
 
     private static Template circle(ConstructTool tool) {
