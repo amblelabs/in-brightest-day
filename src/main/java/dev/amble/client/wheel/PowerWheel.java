@@ -230,6 +230,7 @@ public final class PowerWheel {
     private void tick(Minecraft client) {
         LocalPlayer player = client.player;
         this.entries = player == null ? List.of() : this.builder.apply(player);
+        this.validate();
 
         boolean pressed = false;
         while (this.key.consumeClick()) pressed = true;
@@ -284,7 +285,20 @@ public final class PowerWheel {
         this.subHoverO = new float[0];
     }
 
+    private void validate() {
+        int count = this.entries.size();
+        if (this.submenu >= count || this.submenu >= 0 && this.entries.get(this.submenu).subs().size() != this.subHover.length) {
+            this.submenu = -1;
+            this.hoveredSub = -1;
+            this.backHovered = false;
+            this.subHover = new float[0];
+            this.subHoverO = new float[0];
+        }
+        if (this.hoveredEntry >= count) this.hoveredEntry = -1;
+    }
+
     private void updateHover() {
+        this.validate();
         int count = this.entries.size();
         if (count == 0) return;
         int previousEntry = this.hoveredEntry;
