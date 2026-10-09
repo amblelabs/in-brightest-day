@@ -1,0 +1,30 @@
+{
+  "variants": {
+    "facing=down": {
+      "model": "brightestday:block/zamaron_crystal_cluster",
+      "x": 180
+    },
+    "facing=east": {
+      "model": "brightestday:block/zamaron_crystal_cluster",
+      "x": 90,
+      "y": 90
+    },
+    "facing=north": {
+      "model": "brightestday:block/zamaron_crystal_cluster",
+      "x": 90
+    },
+    "facing=south": {
+      "model": "brightestday:block/zamaron_crystal_cluster",
+      "x": 90,
+      "y": 180
+    },
+    "facing=up": {
+      "model": "brightestday:block/zamaron_crystal_cluster"
+    },
+    "facing=west": {
+      "model": "brightestday:block/zamaron_crystal_cluster",
+      "x": 90,
+      "y": 270
+    }
+  }
+}

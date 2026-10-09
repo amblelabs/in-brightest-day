@@ -81,10 +81,17 @@ import dev.amble.core.BrightestDayMenus;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.rendering.v1.BlockEntityRendererRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.LivingEntityRenderLayerRegistrationCallback;
+import net.fabricmc.fabric.api.client.rendering.v1.BlockColorRegistry;
+import dev.amble.core.BrightestDayBlocks;
+import net.minecraft.client.color.block.BlockTintSources;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.renderer.entity.player.AvatarRenderer;
 
+import java.util.List;
+
 public class BrightestDayClient implements ClientModInitializer {
+    private static final int CRYSTAL_TINT = 0xFFFFA0E8;
+
     @Override
     public void onInitializeClient() {
         BrightestDayClientConfig.load();
@@ -97,6 +104,7 @@ public class BrightestDayClient implements ClientModInitializer {
         InsigniaEffects.init();
         BatteryTextures.init();
         Holograms.init();
+        BlockColorRegistry.register(List.of(BlockTintSources.constant(CRYSTAL_TINT)), BrightestDayBlocks.ZAMARON_CRYSTAL_CLUSTER);
         FlightTrail.init();
         AileronRolls.init();
         ClientTeams.init();

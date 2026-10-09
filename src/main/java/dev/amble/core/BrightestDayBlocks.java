@@ -20,6 +20,7 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.level.block.AmethystClusterBlock;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SoundType;
@@ -70,6 +71,10 @@ public class BrightestDayBlocks {
             properties -> new SpectrumForgeBlock(Emotion.LOVE, false, ForgeRecipes::sapphire, properties.strength(30.0F, 1200.0F).requiresCorrectToolForDrops()
                     .sound(SoundType.AMETHYST).lightLevel(_ -> 10).mapColor(MapColor.COLOR_PINK)),
             new Item.Properties().fireResistant());
+
+    public static final Block ZAMARON_CRYSTAL_CLUSTER = registerBlock("zamaron_crystal_cluster",
+            properties -> new AmethystClusterBlock(7.0F, 3.0F, properties.strength(1.5F).requiresCorrectToolForDrops().noOcclusion()
+                    .sound(SoundType.AMETHYST_CLUSTER).lightLevel(_ -> 6).pushReaction(PushReaction.POPPED).mapColor(MapColor.COLOR_PINK)));
 
     public static final Block YELLOW_BATTERY_CORE = registerBlockWithItem("yellow_battery_core",
             properties -> new BatteryCoreBlock(LanternCorps.YELLOW, () -> Blocks.GOLD_BLOCK, properties.strength(5.0F, 1200.0F).requiresCorrectToolForDrops()

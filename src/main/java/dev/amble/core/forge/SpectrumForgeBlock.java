@@ -1,6 +1,5 @@
 package dev.amble.core.forge;
 
-import dev.amble.core.BrightestDayItems;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.progression.CorpsCaps;
 import dev.amble.core.progression.Emotion;
@@ -13,7 +12,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -41,7 +39,6 @@ import java.util.function.Supplier;
 public class SpectrumForgeBlock extends Block {
     public static final int MAX_LAVA = 4;
     private static final int RITUAL_DARKNESS = 7;
-    private static final int SHED_CHANCE = 26;
     public static final IntegerProperty LAVA = IntegerProperty.create("lava", 0, MAX_LAVA);
     public static final IntegerProperty MODE = IntegerProperty.create("mode", 0, 3);
     public static final EnumProperty<Direction> FACING = BlockStateProperties.HORIZONTAL_FACING;
@@ -152,19 +149,5 @@ public class SpectrumForgeBlock extends Block {
         level.sendParticles(lava ? ParticleTypes.LAVA : ParticleTypes.END_ROD, pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5, 12, 0.3, 0.2, 0.3, 0.05);
         level.playSound(null, pos, SoundEvents.ANVIL_USE, SoundSource.BLOCKS, 1.0F, 0.7F);
         level.playSound(null, pos, SoundEvents.BEACON_POWER_SELECT, SoundSource.BLOCKS, 1.0F, 1.2F);
-    }
-
-    @Override
-    protected boolean isRandomlyTicking(BlockState state) {
-        return !this.fedByLava;
-    }
-
-    @Override
-    protected void randomTick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
-        if (this.fedByLava || random.nextInt(SHED_CHANCE) != 0) return;
-        ItemEntity crystal = new ItemEntity(level, pos.getX() + 0.5, pos.getY() + 1.1, pos.getZ() + 0.5, new ItemStack(BrightestDayItems.ZAMARON_CRYSTAL));
-        crystal.setDeltaMovement(0.0, 0.15, 0.0);
-        level.addFreshEntity(crystal);
-        level.playSound(null, pos, SoundEvents.AMETHYST_CLUSTER_BREAK, SoundSource.BLOCKS, 0.8F, 1.4F);
     }
 }

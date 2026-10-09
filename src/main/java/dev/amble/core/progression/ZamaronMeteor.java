@@ -7,11 +7,12 @@ import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.BrightestDayBlocks;
-import dev.amble.core.BrightestDayItems;
 import dev.amble.core.ringpowers.LanternCorps;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.AmethystClusterBlock;
+import net.minecraft.core.Direction;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
@@ -22,17 +23,17 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
-import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class ZamaronMeteor {
     private static final int PINK = LanternCorps.STAR_SAPPHIRE.color();
     private static final int FLIGHT_TICKS = 140;
-    private static final int CRATER_CRYSTALS = 6;
+    private static final int CRATER_CLUSTERS = 8;
     private static final int MIN_DISTANCE = 300;
     private static final int MAX_DISTANCE = 800;
     private static final int FAR_MIN_DISTANCE = 800;
@@ -155,18 +156,35 @@ public final class ZamaronMeteor {
         BlockPos heart = impact.below(CRATER_RADIUS - 2);
         level.setBlockAndUpdate(heart.below(), Blocks.CRYING_OBSIDIAN.defaultBlockState());
         level.setBlockAndUpdate(heart, BrightestDayBlocks.ZAMARONIAN_CRYSTAL.defaultBlockState());
-        for (int i = 0; i < CRATER_CRYSTALS; i++) {
-            ItemEntity crystal = new ItemEntity(level, heart.getX() + 0.5 + random.nextGaussian() * 2.0, heart.getY() + 1.5, heart.getZ() + 0.5 + random.nextGaussian() * 2.0,
-                    new ItemStack(BrightestDayItems.ZAMARON_CRYSTAL));
-            crystal.setDeltaMovement(random.nextGaussian() * 0.1, 0.3, random.nextGaussian() * 0.1);
-            level.addFreshEntity(crystal);
-        }
+        clusters(level, impact, heart, random);
 
         level.sendParticles(ParticleTypes.EXPLOSION_EMITTER, impact.getX(), impact.getY(), impact.getZ(), 3, 2.0, 1.0, 2.0, 0.0);
         level.sendParticles(new DustParticleOptions(PINK, 4.0F), impact.getX(), impact.getY() + 1, impact.getZ(), 200, 4.0, 3.0, 4.0, 0.0);
         level.playSound(null, impact, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.AMBIENT, 6.0F, 0.5F);
         Component message = Component.translatable("message.brightestday.meteor.landed", heart.getX(), heart.getY(), heart.getZ()).withStyle(ChatFormatting.ITALIC).withColor(PINK);
         for (ServerPlayer player : level.players()) player.sendSystemMessage(message);
+    }
+
+    private static void clusters(ServerLevel level, BlockPos impact, BlockPos heart, RandomSource random) {
+        BlockPos center = impact.above(2);
+        List<BlockPos> spots = new ArrayList<>();
+        List<Direction> facings = new ArrayList<>();
+        for (BlockPos pos : BlockPos.betweenClosed(center.offset(-CRATER_RADIUS, -CRATER_RADIUS, -CRATER_RADIUS), center.offset(CRATER_RADIUS, CRATER_RADIUS, CRATER_RADIUS))) {
+            if (Math.sqrt(pos.distSqr(center)) > CRATER_RADIUS || pos.equals(heart) || !level.getBlockState(pos).isAir()) continue;
+            for (Direction direction : Direction.values()) {
+                BlockPos support = pos.relative(direction);
+                if (support.equals(heart) || !level.getBlockState(support).isFaceSturdy(level, support, direction.getOpposite())) continue;
+                spots.add(pos.immutable());
+                facings.add(direction.getOpposite());
+                break;
+            }
+        }
+        for (int placed = 0; placed < CRATER_CLUSTERS && !spots.isEmpty(); placed++) {
+            int index = random.nextInt(spots.size());
+            BlockPos spot = spots.remove(index);
+            Direction facing = facings.remove(index);
+            level.setBlockAndUpdate(spot, BrightestDayBlocks.ZAMARON_CRYSTAL_CLUSTER.defaultBlockState().setValue(AmethystClusterBlock.FACING, facing));
+        }
     }
 
     private ZamaronMeteor() {}
