@@ -403,6 +403,7 @@ public final class RingLoyalty {
             if (sender != null) sender.sendOverlayMessage(Component.translatable("message.brightestday.ring_gift.offline", name).withColor(color));
             return;
         }
+        if (target == sender) return;
 
         ItemStack ring = stack.copy();
         ring.remove(DataComponents.CUSTOM_NAME);

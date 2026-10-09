@@ -127,6 +127,12 @@ public final class RingBonds {
         save(server, bonds);
     }
 
+    public static void forget(ServerPlayer player) {
+        MinecraftServer server = player.level().getServer();
+        Map<UUID, Entry> bonds = new HashMap<>(bonds(server));
+        if (bonds.entrySet().removeIf(entry -> entry.getValue().owner().equals(player.getUUID()))) save(server, bonds);
+    }
+
     public static void release(MinecraftServer server, ItemStack ring) {
         BrightestDayComponents.Bond bond = ring.remove(BrightestDayComponents.RING_BOND);
         if (bond == null || !bonds(server).containsKey(bond.id())) return;

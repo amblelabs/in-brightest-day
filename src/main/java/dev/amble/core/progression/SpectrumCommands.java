@@ -62,7 +62,8 @@ public final class SpectrumCommands {
                                 .then(Commands.literal("set").then(player().then(amount(0, BrightestDayComponents.MAX_POWER)
                                         .executes(context -> chargeSet(context, IntegerArgumentType.getInteger(context, "amount")))))))
                         .then(admin("offer")
-                                .then(admin("force").then(player().then(corps().executes(SpectrumCommands::offerForce)))))
+                                .then(Commands.literal("force").then(player().then(corps().executes(context -> offer(context, true)))))
+                                .then(player().then(corps().executes(context -> offer(context, false)))))
                         .then(admin("meteor")
                                 .then(Commands.literal("drop").executes(context -> meteorDrop(context, null))
                                         .then(Commands.argument("pos", BlockPosArgument.blockPos())
@@ -234,11 +235,24 @@ public final class SpectrumCommands {
         return reply(context, Component.literal("Set " + player.getScoreboardName() + "'s charge to " + value));
     }
 
-    private static int offerForce(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+    private static int offer(CommandContext<CommandSourceStack> context, boolean force) throws CommandSyntaxException {
         ServerPlayer player = target(context);
         LanternCorps corps = corps(context);
+        ItemStack worn = BrightestDayAttachments.getRing(player);
+        if (!force && (!worn.isEmpty() || RingBonds.bonded(player))) {
+            context.getSource().sendFailure(Component.literal(player.getScoreboardName() + " already has a bound ring (use force to replace it)"));
+            return 0;
+        }
+        if (force) {
+            if (!worn.isEmpty()) {
+                BrightestDayAttachments.setRing(player, ItemStack.EMPTY);
+                RingBonds.release(player.level().getServer(), worn);
+                if (!player.addItem(worn)) player.drop(worn, false, Prediction.SERVER_ONLY);
+            }
+            RingBonds.forget(player);
+        }
         RingOffers.forceOffer(player, corps);
-        return reply(context, Component.literal("Offered " + corps.getSerializedName() + " to " + player.getScoreboardName()));
+        return reply(context, Component.literal("Offered " + corps.getSerializedName() + " to " + player.getScoreboardName() + (force && !worn.isEmpty() ? ", replacing their ring" : "")));
     }
 
     private static int meteorDrop(CommandContext<CommandSourceStack> context, BlockPos pos) {
