@@ -59,6 +59,6 @@ public class ContainmentSphereConstruct extends ConstructRingPower {
             PowerRingItem.refund(player, this.cost(radius));
             return;
         }
-        ContainmentSphere.start(player, this.clampSize(player, radius), color);
+        if (!ContainmentSphere.start(player, this.clampSize(player, radius), color)) PowerRingItem.refund(player, this.cost(radius));
     }
 }

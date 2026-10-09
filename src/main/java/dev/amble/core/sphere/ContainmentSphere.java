@@ -86,8 +86,12 @@ public final class ContainmentSphere {
         return SPHERES.values().stream().anyMatch(sphere -> sphere.held.stream().anyMatch(held -> held.entity() == entity));
     }
 
-    public static void start(ServerPlayer player, float radius, int color) {
+    public static boolean start(ServerPlayer player, float radius, int color) {
         stop(player);
+        if (holds(player)) {
+            player.sendOverlayMessage(Component.translatable("message.brightestday.sphere.trapped"));
+            return false;
+        }
         Vec3 center = center(player, radius);
         Sphere sphere = new Sphere(player.level(), radius, color, center);
         SPHERES.put(player, sphere);
@@ -96,6 +100,7 @@ public final class ContainmentSphere {
         broadcast(player, radius, color);
         player.level().playSound(null, center.x, center.y, center.z, SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.0F, 1.5F);
         player.level().playSound(null, center.x, center.y, center.z, SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 1.2F, 0.9F);
+        return true;
     }
 
     public static void stop(ServerPlayer player) {
@@ -132,7 +137,7 @@ public final class ContainmentSphere {
             Sphere sphere = SPHERES.get(player);
             int drain = CorpsCombat.utilityCost(player, Math.max(1, Math.round(BrightestDayConfig.get().sphereDrainPerRadius * sphere.radius)));
             boolean outOfCharge = !PowerRingItem.hasCharge(player) || drainTick && !player.hasInfiniteMaterials() && !PowerRingItem.drainWorn(player, drain);
-            if (player.isRemoved() || !player.isAlive() || player.level() != sphere.level || !ArmedRingPower.isArmed(player) || outOfCharge) {
+            if (player.isRemoved() || !player.isAlive() || player.level() != sphere.level || !ArmedRingPower.isArmed(player) || outOfCharge || holds(player)) {
                 stop(player);
                 continue;
             }

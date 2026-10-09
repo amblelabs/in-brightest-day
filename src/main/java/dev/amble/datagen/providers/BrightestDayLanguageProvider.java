@@ -360,6 +360,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("brightestday.server.ringSyncDays", "Ring Sync Duration");
         builder.add("brightestday.server.ringSyncDays.desc", "In-game days a ring stays in sync away from its Central Power Battery (or the Orange lantern) before its powers lock. Only time spent online counts.");
         builder.add("message.brightestday.sphere.shattered", "You blasted your way out of the sphere!");
+        builder.add("message.brightestday.sphere.trapped", "You can't raise a sphere while one holds you.");
         builder.add("message.brightestday.sphere.shattered_holder", "%s blasted out of your containment sphere!");
         builder.add("brightestday.server.mounts", "Construct Mounts");
         builder.add("brightestday.server.horseCost", "Horse Cost");
