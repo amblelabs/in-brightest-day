@@ -32,9 +32,6 @@ public final class ForgeHammerHud {
     private static final int PENDING_COLOR = 0xFF505050;
 
     private static final int PERFECT_COLOR = 0xFFFFD65A;
-    private static final int STREAK_SIZE = 3;
-    private static final int STREAK_GAP = 3;
-    private static final int STREAK_OFFSET = 9;
     private static final float PULSE = 4.0F;
 
     private static boolean active;
@@ -42,7 +39,6 @@ public final class ForgeHammerHud {
     private static int strike;
     private static int total;
     private static int perfects;
-    private static int streak;
     private static int color;
     private static int feedback;
     private static int feedbackTicks;
@@ -54,7 +50,6 @@ public final class ForgeHammerHud {
             strike = payload.strike();
             total = payload.total();
             perfects = payload.perfects();
-            streak = payload.streak();
             color = ARGB.opaque(payload.color());
             if (payload.feedback() != ForgeBeatS2CPayload.NONE_FEEDBACK) {
                 feedback = payload.feedback();
@@ -111,12 +106,6 @@ public final class ForgeHammerHud {
             int pip = i < strike ? ((perfects >> i & 1) != 0 ? PERFECT_COLOR : HIT_COLOR) : PENDING_COLOR;
             graphics.fill(x, y, x + PIP_SIZE, y + PIP_SIZE, pip);
             x += PIP_SIZE + PIP_GAP;
-        }
-        int streakWidth = ForgeHammer.MAX_STREAK * STREAK_SIZE + (ForgeHammer.MAX_STREAK - 1) * STREAK_GAP;
-        int sx = cx - streakWidth / 2;
-        for (int i = 0; i < ForgeHammer.MAX_STREAK; i++) {
-            graphics.fill(sx, y + STREAK_OFFSET, sx + STREAK_SIZE, y + STREAK_OFFSET + STREAK_SIZE, i < streak ? MISS_COLOR : PENDING_COLOR);
-            sx += STREAK_SIZE + STREAK_GAP;
         }
 
         if (feedbackTicks > 0) {

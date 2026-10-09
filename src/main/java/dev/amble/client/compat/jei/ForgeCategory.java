@@ -60,7 +60,7 @@ public class ForgeCategory extends AbstractRecipeCategory<ForgeDisplay> {
         }
         if (display.lava() && display.recipe().lava() > 0) lines.add(Component.translatable("jei.brightestday.forge.lava", display.recipe().lava()));
         if (display.emotion() == Emotion.FEAR) lines.add(Component.translatable("jei.brightestday.forge.darkness"));
-        lines.add(Component.translatable("jei.brightestday.forge.hammer", display.recipe().strikes(), ForgeHammer.MAX_STREAK));
+        lines.add(Component.translatable("jei.brightestday.forge.hammer", display.recipe().strikes()));
 
         int y = TEXT_Y;
         for (FormattedText line : lines.subList(0, Math.min(lines.size(), LINES))) {

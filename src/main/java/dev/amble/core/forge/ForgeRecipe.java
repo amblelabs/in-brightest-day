@@ -6,6 +6,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
@@ -27,19 +28,21 @@ public record ForgeRecipe(String key, List<ItemStack> inputs, int lava, Function
         return true;
     }
 
-    public void consume(Player player) {
-        if (player.hasInfiniteMaterials()) return;
+    public List<ItemStack> consume(Player player) {
+        List<ItemStack> taken = new ArrayList<>();
+        if (player.hasInfiniteMaterials()) return taken;
         for (ItemStack input : this.inputs) {
             Item item = input.getItem();
             int remaining = input.getCount();
             for (int slot = 0; slot < player.getInventory().getContainerSize() && remaining > 0; slot++) {
                 ItemStack stack = player.getInventory().getItem(slot);
                 if (!stack.is(item)) continue;
-                int taken = Math.min(remaining, stack.getCount());
-                stack.shrink(taken);
-                remaining -= taken;
+                ItemStack part = stack.split(Math.min(remaining, stack.getCount()));
+                remaining -= part.getCount();
+                taken.add(part);
             }
         }
+        return taken;
     }
 
     public Component describe() {

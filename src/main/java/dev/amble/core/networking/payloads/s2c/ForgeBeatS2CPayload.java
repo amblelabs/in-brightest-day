@@ -6,7 +6,7 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
-public record ForgeBeatS2CPayload(boolean active, long beatAt, int strike, int total, int perfects, int streak, int color, int feedback) implements CustomPacketPayload {
+public record ForgeBeatS2CPayload(boolean active, long beatAt, int strike, int total, int perfects, int color, int feedback) implements CustomPacketPayload {
     public static final int NONE_FEEDBACK = 0;
     public static final int HIT = 1;
     public static final int MISS = 2;
@@ -22,7 +22,6 @@ public record ForgeBeatS2CPayload(boolean active, long beatAt, int strike, int t
                     ByteBufCodecs.VAR_INT, ForgeBeatS2CPayload::strike,
                     ByteBufCodecs.VAR_INT, ForgeBeatS2CPayload::total,
                     ByteBufCodecs.VAR_INT, ForgeBeatS2CPayload::perfects,
-                    ByteBufCodecs.VAR_INT, ForgeBeatS2CPayload::streak,
                     ByteBufCodecs.INT, ForgeBeatS2CPayload::color,
                     ByteBufCodecs.VAR_INT, ForgeBeatS2CPayload::feedback,
                     ForgeBeatS2CPayload::new

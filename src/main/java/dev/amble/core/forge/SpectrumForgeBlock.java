@@ -133,9 +133,9 @@ public class SpectrumForgeBlock extends Block {
 
         if (!(player instanceof ServerPlayer smith) || !(level instanceof ServerLevel server) || ForgeHammer.forging(smith)) return InteractionResult.SUCCESS_SERVER;
 
-        recipe.consume(player);
+        List<ItemStack> taken = recipe.consume(player);
         if (this.fedByLava) level.setBlockAndUpdate(pos, state.setValue(LAVA, state.getValue(LAVA) - recipe.lava()));
-        ForgeHammer.begin(smith, server, pos, recipe, color, this.fedByLava);
+        ForgeHammer.begin(smith, server, pos, recipe, color, this.fedByLava, taken);
         return InteractionResult.SUCCESS_SERVER;
     }
 

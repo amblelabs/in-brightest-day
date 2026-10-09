@@ -17,9 +17,12 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.util.Prediction;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -27,7 +30,6 @@ public final class ForgeHammer {
     public static final int BEAT_TICKS = 24;
     public static final int GOOD_WINDOW = 6;
     public static final int PERFECT_WINDOW = 2;
-    public static final int MAX_STREAK = 3;
     private static final int GAP = 8;
     private static final double REACH = 8.0;
 
@@ -38,13 +40,14 @@ public final class ForgeHammer {
         final int color;
         final boolean lava;
         final int total;
+        final List<ItemStack> taken;
         long beatAt;
         int strike;
         int perfects;
-        int streak;
         int combo;
 
-        Session(ServerLevel level, BlockPos pos, ForgeRecipe recipe, int color, boolean lava, long beatAt) {
+        Session(ServerLevel level, BlockPos pos, ForgeRecipe recipe, int color, boolean lava, List<ItemStack> taken, long beatAt) {
+            this.taken = taken;
             this.level = level;
             this.pos = pos;
             this.recipe = recipe;
@@ -59,7 +62,10 @@ public final class ForgeHammer {
 
     public static void init() {
         ServerTickEvents.END_SERVER_TICK.register(ForgeHammer::tick);
-        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> SESSIONS.remove(handler.player.getUUID()));
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+            Session session = SESSIONS.remove(handler.player.getUUID());
+            if (session != null) returnAt(session);
+        });
         AttackBlockCallback.EVENT.register((player, level, hand, pos, direction) -> {
             if (!(player instanceof ServerPlayer smith)) return InteractionResult.PASS;
             Session session = SESSIONS.get(smith.getUUID());
@@ -73,8 +79,8 @@ public final class ForgeHammer {
         return SESSIONS.containsKey(player.getUUID());
     }
 
-    public static void begin(ServerPlayer player, ServerLevel level, BlockPos pos, ForgeRecipe recipe, int color, boolean lava) {
-        Session session = new Session(level, pos.immutable(), recipe, color, lava, level.getGameTime() + GAP + BEAT_TICKS);
+    public static void begin(ServerPlayer player, ServerLevel level, BlockPos pos, ForgeRecipe recipe, int color, boolean lava, List<ItemStack> taken) {
+        Session session = new Session(level, pos.immutable(), recipe, color, lava, taken, level.getGameTime() + GAP + BEAT_TICKS);
         SESSIONS.put(player.getUUID(), session);
         player.sendOverlayMessage(Component.translatable("forge.brightestday.hammer.begin").withColor(color));
         level.playSound(null, pos, SoundEvents.SMITHING_TABLE_USE, SoundSource.BLOCKS, 1.0F, 0.8F);
@@ -90,7 +96,6 @@ public final class ForgeHammer {
         boolean perfect = offset <= PERFECT_WINDOW;
         if (perfect) session.perfects |= 1 << session.strike;
         session.combo++;
-        session.streak = 0;
         session.strike++;
 
         Vec3 top = Vec3.atCenterOf(session.pos).add(0.0, 0.6, 0.0);
@@ -113,13 +118,8 @@ public final class ForgeHammer {
     }
 
     private static void miss(ServerPlayer player, Session session) {
-        session.streak++;
         session.combo = 0;
         session.level.playSound(null, session.pos, SoundEvents.ANVIL_LAND, SoundSource.BLOCKS, 0.5F, 0.6F);
-        if (session.streak >= MAX_STREAK) {
-            fail(player, session);
-            return;
-        }
         session.beatAt = session.level.getGameTime() + GAP + BEAT_TICKS;
         sync(player, session, ForgeBeatS2CPayload.MISS);
     }
@@ -135,23 +135,39 @@ public final class ForgeHammer {
         SpectrumForgeBlock.craft(session.level, session.pos, session.recipe, player, session.color, session.lava);
     }
 
-    private static void fail(ServerPlayer player, Session session) {
+    private static void cancel(ServerPlayer player, Session session) {
         SESSIONS.remove(player.getUUID());
-        ServerPlayNetworking.send(player, payload(session, false, ForgeBeatS2CPayload.MISS));
-        Vec3 top = Vec3.atCenterOf(session.pos).add(0.0, 0.7, 0.0);
-        for (ItemStack input : session.recipe.inputs()) {
-            if (!Catalysts.is(input)) continue;
-            ItemEntity catalyst = new ItemEntity(session.level, top.x, top.y, top.z, input.copy());
-            catalyst.setDeltaMovement(0.0, 0.2, 0.0);
-            session.level.addFreshEntity(catalyst);
+        ServerPlayNetworking.send(player, payload(session, false, ForgeBeatS2CPayload.NONE_FEEDBACK));
+        for (ItemStack stack : session.taken) {
+            if (!player.addItem(stack)) player.drop(stack, false, Prediction.SERVER_ONLY);
         }
-        session.level.sendParticles(ParticleTypes.LARGE_SMOKE, top.x, top.y, top.z, 20, 0.3, 0.2, 0.3, 0.02);
-        session.level.playSound(null, session.pos, SoundEvents.ANVIL_DESTROY, SoundSource.BLOCKS, 1.0F, 0.8F);
-        player.sendOverlayMessage(Component.translatable("forge.brightestday.hammer.failed").withColor(session.color));
+        refundLava(session);
+        Vec3 top = Vec3.atCenterOf(session.pos).add(0.0, 0.7, 0.0);
+        session.level.sendParticles(ParticleTypes.SMOKE, top.x, top.y, top.z, 12, 0.3, 0.2, 0.3, 0.02);
+        session.level.playSound(null, session.pos, SoundEvents.SMITHING_TABLE_USE, SoundSource.BLOCKS, 0.8F, 0.6F);
+        player.sendOverlayMessage(Component.translatable("forge.brightestday.hammer.cancelled").withColor(session.color));
+    }
+
+    private static void returnAt(Session session) {
+        Vec3 top = Vec3.atCenterOf(session.pos).add(0.0, 0.7, 0.0);
+        for (ItemStack stack : session.taken) {
+            ItemEntity item = new ItemEntity(session.level, top.x, top.y, top.z, stack);
+            item.setDeltaMovement(0.0, 0.2, 0.0);
+            session.level.addFreshEntity(item);
+        }
+        refundLava(session);
+    }
+
+    private static void refundLava(Session session) {
+        if (!session.lava || session.recipe.lava() <= 0) return;
+        BlockState state = session.level.getBlockState(session.pos);
+        if (!(state.getBlock() instanceof SpectrumForgeBlock) || !state.hasProperty(SpectrumForgeBlock.LAVA)) return;
+        int lava = Math.min(SpectrumForgeBlock.MAX_LAVA, state.getValue(SpectrumForgeBlock.LAVA) + session.recipe.lava());
+        session.level.setBlockAndUpdate(session.pos, state.setValue(SpectrumForgeBlock.LAVA, lava));
     }
 
     private static ForgeBeatS2CPayload payload(Session session, boolean active, int feedback) {
-        return new ForgeBeatS2CPayload(active, session.beatAt, session.strike, session.total, session.perfects, session.streak, session.color, feedback);
+        return new ForgeBeatS2CPayload(active, session.beatAt, session.strike, session.total, session.perfects, session.color, feedback);
     }
 
     private static void sync(ServerPlayer player, Session session, int feedback) {
@@ -169,7 +185,7 @@ public final class ForgeHammer {
             }
             if (player.level() != session.level || player.position().distanceTo(Vec3.atCenterOf(session.pos)) > REACH
                     || !(session.level.getBlockState(session.pos).getBlock() instanceof SpectrumForgeBlock)) {
-                fail(player, session);
+                cancel(player, session);
                 continue;
             }
             if (session.level.getGameTime() > session.beatAt + GOOD_WINDOW) miss(player, session);

@@ -400,7 +400,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("jei.brightestday.forge.singleplayer", "Singleplayer only");
         builder.add("jei.brightestday.forge.lava", "Costs %s lava");
         builder.add("jei.brightestday.forge.darkness", "Only at night, away from light");
-        builder.add("jei.brightestday.forge.hammer", "Strike %s beats; %s misses in a row shatter it");
+        builder.add("jei.brightestday.forge.hammer", "Strike %s beats; misses just retry the strike");
         builder.add("jei.brightestday.info.ring", "Power rings can't be crafted; they choose their bearers. Recharge at your corps lantern or a Central Power Battery, speaking the oath to swear the ring to you.");
         builder.add("jei.brightestday.info.ring.unobtainable", "This ring can't be earned in survival.");
         builder.add("jei.brightestday.info.lantern", "A corps' personal Power Battery. When a ring chooses you, its lantern is placed in the world and its location revealed. Yellow, Star Sapphire and Indigo lanterns can also be forged. Charge your ring at it to recharge and swear your oath.");
@@ -408,14 +408,14 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("jei.brightestday.info.zamaronian_crystal", "Falls to the Overworld in pink meteors that return every so often, far across the world. Sneak-use to cycle recipes, use with an empty hand to begin forging, then strike it each time the ring closes. Answers only to those with 250 Love.");
         builder.add("jei.brightestday.info.yellow_battery_core", "Place it at the center of a 3×3×3 shell of gold blocks in the Overworld to build a yellow Central Power Battery. It must float on a 2-block stalk standing on a 3×3 pad of the same blocks, with a 1-block stalk and another 3×3 pad on top. Two opposite sides also need a 1-block stalk ending in an upright 3×3 pad; the battery's glowing emitters face out along those arms.");
         builder.add("jei.brightestday.info.sapphire_battery_core", "Place it at the center of a 3×3×3 shell of amethyst blocks in the Overworld to build a Star Sapphire Central Power Battery. It must float on a 2-block stalk standing on a 3×3 pad of the same blocks, with a 1-block stalk and another 3×3 pad on top. Two opposite sides also need a 1-block stalk ending in an upright 3×3 pad; the battery's glowing emitters face out along those arms.");
-        builder.add("jei.brightestday.info.parallax_shard", "Dropped by Wardens and found in Ancient City chests. The catalyst for yellow rings and battery cores; it survives a failed forging.");
-        builder.add("jei.brightestday.info.zamaron_crystal", "Mined from the pink crystal clusters that grow in each Zamaronian meteor crater (Fortune helps). The catalyst for Star Sapphire rings and battery cores; it survives a failed forging.");
+        builder.add("jei.brightestday.info.parallax_shard", "Dropped by Wardens and found in Ancient City chests. The catalyst for yellow rings and battery cores. Nothing is lost if a forging is interrupted.");
+        builder.add("jei.brightestday.info.zamaron_crystal", "Mined from the pink crystal clusters that grow in each Zamaronian meteor crater (Fortune helps). The catalyst for Star Sapphire rings and battery cores. Nothing is lost if a forging is interrupted.");
         builder.add("forge.brightestday.lava", "%s lava");
         builder.add("forge.brightestday.lava_level", "Lava: %s / %s");
         builder.add("forge.brightestday.needs_lava", "The forge needs %s lava.");
         builder.add("forge.brightestday.ritual.fear", "The forge of fear only answers at night, away from the light.");
         builder.add("forge.brightestday.hammer.begin", "Strike the forge when the ring closes!");
-        builder.add("forge.brightestday.hammer.failed", "The forging shatters. Only the catalyst survives.");
+        builder.add("forge.brightestday.hammer.cancelled", "The forging stops. Your materials are returned.");
         builder.add("hud.brightestday.forge.hit", "HIT");
         builder.add("hud.brightestday.forge.perfect", "PERFECT");
         builder.add("hud.brightestday.forge.miss", "MISS");
@@ -463,7 +463,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("gui.brightestday.mannequin.pad", "Base");
         builder.add("gui.brightestday.tribe.title", "Gather the Tribe");
         builder.add("gui.brightestday.tribe.whole", "The Whole Tribe");
-        builder.add("gui.brightestday.official.button", "In Brightest Day - Official Server");
+        builder.add("gui.brightestday.official.button", "In Brightest Day - Join a Corps! [Official Server]");
         builder.add("gui.brightestday.official.join", "Join Server");
         builder.add("gui.brightestday.official.refresh", "Refresh");
         builder.add("gui.brightestday.official.ip", "IP: %s");
