@@ -12,7 +12,7 @@ import net.minecraft.server.level.ServerPlayer;
 public class LightOrbConstruct extends ConstructRingPower {
 
     public LightOrbConstruct() {
-        super(BrightestDay.id("light_orb"), CorpsArsenal.shared(LanternCorps.BLUE));
+        super(BrightestDay.id("light_orb"), CorpsArsenal.shared(LanternCorps.BLUE, LanternCorps.RED));
     }
 
     @Override
