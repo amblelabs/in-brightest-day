@@ -320,6 +320,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.indigo.gather_cooldown", "The tribe can be called again in %ss.");
         builder.add("message.brightestday.indigo.gathered", "%s calls the tribe together.");
         builder.add("message.brightestday.indigo.gather_done", "%s of the tribe answered the call.");
+        builder.add("message.brightestday.indigo.gather_empty", "No one of the tribe is here to answer.");
         builder.add("message.brightestday.team.tribe_bound", "The Indigo Tribe is one. You cannot leave it while you wear the ring.");
         builder.add("message.brightestday.berserk.not_ready", "Your rage has not yet peaked.");
         builder.add("message.brightestday.berserk.start", "RAGE CONSUMES YOU");
@@ -456,6 +457,8 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("gui.brightestday.mannequin.hide_name", "Hide Name");
         builder.add("gui.brightestday.mannequin.left_handed", "Left Hand");
         builder.add("gui.brightestday.mannequin.pad", "Base");
+        builder.add("gui.brightestday.tribe.title", "Gather the Tribe");
+        builder.add("gui.brightestday.tribe.whole", "The Whole Tribe");
         builder.add("gui.brightestday.official.button", "In Brightest Day - Official Server");
         builder.add("gui.brightestday.official.join", "Join Server");
         builder.add("gui.brightestday.official.refresh", "Refresh");

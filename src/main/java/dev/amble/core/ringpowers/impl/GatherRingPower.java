@@ -12,6 +12,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Unit;
 
 import java.util.EnumSet;
+import java.util.Optional;
+import java.util.UUID;
 
 public class GatherRingPower extends RingPower<Unit> {
     public GatherRingPower() {
@@ -28,8 +30,13 @@ public class GatherRingPower extends RingPower<Unit> {
         return Unit.INSTANCE;
     }
 
-    public static void fire(ServerPlayer player) {
+    public static void request(ServerPlayer player) {
         if (player.isSpectator() || !BrightestDayAttachments.has(player, RingPowerRegistry.GATHER)) return;
-        IndigoOne.gather(player);
+        IndigoOne.roster(player);
+    }
+
+    public static void fire(ServerPlayer player, Optional<UUID> target) {
+        if (player.isSpectator() || !BrightestDayAttachments.has(player, RingPowerRegistry.GATHER)) return;
+        IndigoOne.gather(player, target);
     }
 }

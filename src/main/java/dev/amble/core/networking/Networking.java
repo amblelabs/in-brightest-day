@@ -77,6 +77,7 @@ import dev.amble.core.networking.payloads.s2c.MegaphoneS2CPayload;
 import dev.amble.core.networking.payloads.s2c.OathS2CPayload;
 import dev.amble.core.networking.payloads.s2c.TeamInvitesS2CPayload;
 import dev.amble.core.networking.payloads.s2c.TeamRosterS2CPayload;
+import dev.amble.core.networking.payloads.s2c.TribeRosterS2CPayload;
 import dev.amble.core.networking.payloads.s2c.ShieldSpawnS2CPayload;
 import dev.amble.core.networking.payloads.s2c.TractorS2CPayload;
 import dev.amble.core.networking.payloads.s2c.SphereS2CPayload;
@@ -101,6 +102,7 @@ public class Networking {
         PayloadTypeRegistry.serverboundPlay().register(TeamActionC2SPayload.TYPE, TeamActionC2SPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(TeamInvitesS2CPayload.TYPE, TeamInvitesS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(TeamRosterS2CPayload.TYPE, TeamRosterS2CPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(TribeRosterS2CPayload.TYPE, TribeRosterS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(AileronRollS2CPayload.TYPE, AileronRollS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(BloodHuntS2CPayload.TYPE, BloodHuntS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(ForgeBeatS2CPayload.TYPE, ForgeBeatS2CPayload.CODEC);

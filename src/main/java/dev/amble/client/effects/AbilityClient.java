@@ -9,6 +9,8 @@ import dev.amble.core.networking.payloads.c2s.BerserkC2SPayload;
 import dev.amble.core.networking.payloads.c2s.ConcussiveC2SPayload;
 import dev.amble.core.networking.payloads.c2s.ConversionC2SPayload;
 import dev.amble.core.networking.payloads.c2s.GatherC2SPayload;
+import dev.amble.core.networking.payloads.s2c.TribeRosterS2CPayload;
+import dev.amble.client.screens.TribeScreen;
 import dev.amble.core.ringpowers.RingPower;
 import dev.amble.core.ringpowers.RingPowerRegistry;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
@@ -24,6 +26,9 @@ public final class AbilityClient {
 
     public static void init() {
         ClientTickEvents.END_CLIENT_TICK.register(AbilityClient::tick);
+        ClientPlayNetworking.registerGlobalReceiver(TribeRosterS2CPayload.TYPE, (payload, context) -> {
+            if (context.client().gui.screen() == null) context.client().gui.setScreen(new TribeScreen(payload.members()));
+        });
     }
 
     public static boolean wantsUse(LocalPlayer player) {
@@ -50,7 +55,7 @@ public final class AbilityClient {
             if (held == RingPowerRegistry.CONCUSSIVE) ClientPlayNetworking.send(ConcussiveC2SPayload.INSTANCE);
             if (held == RingPowerRegistry.CONVERSION) ClientPlayNetworking.send(ConversionC2SPayload.INSTANCE);
             if (held == RingPowerRegistry.BERSERK) ClientPlayNetworking.send(BerserkC2SPayload.INSTANCE);
-            if (held == RingPowerRegistry.GATHER) ClientPlayNetworking.send(GatherC2SPayload.INSTANCE);
+            if (held == RingPowerRegistry.GATHER) ClientPlayNetworking.send(GatherC2SPayload.REQUEST);
         }
         pressed = held;
 

@@ -14,6 +14,8 @@ import dev.amble.core.ringpowers.impl.FlightRingPower;
 import dev.amble.core.team.LanternTeams;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
+import dev.amble.core.networking.payloads.s2c.TribeRosterS2CPayload;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -38,6 +40,7 @@ import net.minecraft.world.phys.Vec3;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -58,7 +61,9 @@ public final class IndigoOne {
 
     private static final Map<UUID, Channel> CHANNELS = new HashMap<>();
     private static final Map<UUID, Long> LAST_GIFT = new HashMap<>();
-    private static final Map<UUID, Long> GATHERING = new HashMap<>();
+    private record Gathering(long until, Optional<UUID> target) {}
+
+    private static final Map<UUID, Gathering> GATHERING = new HashMap<>();
     private static final Map<UUID, Long> GATHERED_AT = new HashMap<>();
     private static final long REGIFT_COOLDOWN = 24000L;
 
@@ -200,15 +205,42 @@ public final class IndigoOne {
         }
     }
 
-    public static void gather(ServerPlayer leader) {
-        if (!isIndigoOne(leader) || GATHERING.containsKey(leader.getUUID())) return;
-        long now = leader.level().getGameTime();
+    private static List<ServerPlayer> tribe(ServerPlayer leader) {
+        List<ServerPlayer> members = new ArrayList<>();
+        for (ServerPlayer member : leader.level().getServer().getPlayerList().getPlayers()) {
+            if (member == leader || member.isSpectator() || PowerRingItem.getWornCorps(member).orElse(null) != LanternCorps.INDIGO) continue;
+            members.add(member);
+        }
+        return members;
+    }
+
+    private static boolean ready(ServerPlayer leader) {
+        if (!isIndigoOne(leader) || GATHERING.containsKey(leader.getUUID())) return false;
         Long last = GATHERED_AT.get(leader.getUUID());
+        long now = leader.level().getGameTime();
         if (last != null && now - last < GATHER_COOLDOWN) {
             leader.sendOverlayMessage(Component.translatable("message.brightestday.indigo.gather_cooldown", (GATHER_COOLDOWN - (now - last) + 19) / 20).withColor(INDIGO));
+            return false;
+        }
+        return true;
+    }
+
+    public static void roster(ServerPlayer leader) {
+        if (!ready(leader)) return;
+        List<TribeRosterS2CPayload.Member> members = tribe(leader).stream()
+                .map(member -> new TribeRosterS2CPayload.Member(member.getUUID(), member.getGameProfile().name()))
+                .toList();
+        if (members.isEmpty()) {
+            leader.sendOverlayMessage(Component.translatable("message.brightestday.indigo.gather_empty").withColor(INDIGO));
             return;
         }
-        GATHERING.put(leader.getUUID(), now + GATHER_TICKS);
+        ServerPlayNetworking.send(leader, new TribeRosterS2CPayload(members));
+    }
+
+    public static void gather(ServerPlayer leader, Optional<UUID> target) {
+        if (!ready(leader)) return;
+        long now = leader.level().getGameTime();
+        GATHERING.put(leader.getUUID(), new Gathering(now + GATHER_TICKS, target));
         leader.sendOverlayMessage(Component.translatable("message.brightestday.indigo.gathering").withColor(INDIGO));
         leader.level().playSound(null, leader.getX(), leader.getY(), leader.getZ(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.2F, 0.6F);
     }
@@ -217,17 +249,18 @@ public final class IndigoOne {
         GATHERING.entrySet().removeIf(entry -> {
             ServerPlayer leader = server.getPlayerList().getPlayer(entry.getKey());
             if (leader == null || !leader.isAlive() || !isIndigoOne(leader)) return true;
+            Gathering gathering = entry.getValue();
             float angle = now * 0.35F;
             for (int strand = 0; strand < 3; strand++) {
                 float a = angle + strand * Mth.TWO_PI / 3.0F;
-                leader.level().sendParticles(new DustParticleOptions(INDIGO, 1.4F), leader.getX() + Mth.cos(a) * 1.2, leader.getY() + 0.2 + (entry.getValue() - now) % 20 * 0.1, leader.getZ() + Mth.sin(a) * 1.2, 1, 0.0, 0.0, 0.0, 0.0);
+                leader.level().sendParticles(new DustParticleOptions(INDIGO, 1.4F), leader.getX() + Mth.cos(a) * 1.2, leader.getY() + 0.2 + (gathering.until() - now) % 20 * 0.1, leader.getZ() + Mth.sin(a) * 1.2, 1, 0.0, 0.0, 0.0, 0.0);
             }
-            if (now < entry.getValue()) return false;
+            if (now < gathering.until()) return false;
 
             GATHERED_AT.put(leader.getUUID(), now);
             int called = 0;
-            for (ServerPlayer member : server.getPlayerList().getPlayers()) {
-                if (member == leader || member.isSpectator() || PowerRingItem.getWornCorps(member).orElse(null) != LanternCorps.INDIGO) continue;
+            for (ServerPlayer member : tribe(leader)) {
+                if (gathering.target().isPresent() && !gathering.target().get().equals(member.getUUID())) continue;
                 Vec3 offset = new Vec3(member.getRandom().nextDouble() * 3.0 - 1.5, 0.0, member.getRandom().nextDouble() * 3.0 - 1.5);
                 member.teleportTo(leader.level(), leader.getX() + offset.x, leader.getY(), leader.getZ() + offset.z, Set.of(), member.getYRot(), member.getXRot(), true);
                 member.sendSystemMessage(Component.translatable("message.brightestday.indigo.gathered", leader.getDisplayName()).withStyle(ChatFormatting.ITALIC).withColor(INDIGO));
