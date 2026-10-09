@@ -10,6 +10,9 @@ import net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.core.BlockPos;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
@@ -99,10 +102,13 @@ public final class ConstructMounts {
 
         if (placed) {
             Vec3 look = player.getLookAngle();
-            Vec3 at = ConstructRingPower.aim(player, PLACE_RANGE).end().subtract(look.scale(PLACE_BACKOFF));
+            ClipContext.Fluid fluid = kind == Kind.BOAT ? ClipContext.Fluid.ANY : ClipContext.Fluid.NONE;
+            Vec3 at = ConstructRingPower.aim(player, PLACE_RANGE, fluid).end().subtract(look.scale(PLACE_BACKOFF));
+            if (kind == Kind.BOAT) at = surface(level, at);
             entity.snapTo(at.x, at.y, at.z, player.getYRot() + 180.0F, 0.0F);
         } else {
-            entity.snapTo(player.getX(), player.getY(), player.getZ(), player.getYRot(), 0.0F);
+            Vec3 at = kind == Kind.BOAT ? surface(level, player.position()) : player.position();
+            entity.snapTo(at.x, at.y, at.z, player.getYRot(), 0.0F);
         }
         entity.addTag(TAG);
         entity.setPermanentlyInvulnerable(true);
@@ -133,6 +139,18 @@ public final class ConstructMounts {
         horse.setItemSlot(EquipmentSlot.SADDLE, new ItemStack(Items.SADDLE));
         horse.setDropChance(EquipmentSlot.SADDLE, 0.0F);
         return horse;
+    }
+
+    private static Vec3 surface(ServerLevel level, Vec3 at) {
+        BlockPos pos = BlockPos.containing(at);
+        if (!water(level, pos) && water(level, pos.below())) pos = pos.below();
+        if (!water(level, pos)) return at;
+        while (water(level, pos.above())) pos = pos.above();
+        return new Vec3(at.x, pos.getY() + level.getFluidState(pos).getHeight(level, pos), at.z);
+    }
+
+    private static boolean water(ServerLevel level, BlockPos pos) {
+        return level.getFluidState(pos).is(FluidTags.WATER);
     }
 
     private static @Nullable Entity boat(ServerLevel level, ServerPlayer player) {

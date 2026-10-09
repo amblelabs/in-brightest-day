@@ -117,12 +117,16 @@ public abstract class ConstructRingPower extends RingPower<Unit> {
     public record Aim(Vec3 eye, Vec3 look, Vec3 end, @Nullable Entity entity) {}
 
     public static Aim aim(ServerPlayer player, double range) {
+        return aim(player, range, ClipContext.Fluid.NONE);
+    }
+
+    public static Aim aim(ServerPlayer player, double range, ClipContext.Fluid fluid) {
         ServerLevel level = player.level();
         Vec3 eye = player.getEyePosition();
         Vec3 look = player.getLookAngle();
         Vec3 end = eye.add(look.scale(range));
 
-        HitResult blockHit = level.clip(new ClipContext(eye, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
+        HitResult blockHit = level.clip(new ClipContext(eye, end, ClipContext.Block.COLLIDER, fluid, player));
         if (blockHit.getType() != HitResult.Type.MISS) end = blockHit.getLocation();
 
         AABB searchArea = player.getBoundingBox().expandTowards(end.subtract(eye)).inflate(1.0);
