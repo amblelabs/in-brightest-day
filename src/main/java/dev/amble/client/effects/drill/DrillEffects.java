@@ -146,7 +146,7 @@ public final class DrillEffects {
     }
 
     private static boolean isReady(LocalPlayer player) {
-        return ArmedRingPower.handFree(player)
+        return ArmedRingPower.isArmed(player)
                 && ArmedRingPower.isArmed(player)
                 && !ArmedRingPower.isAbilityMode(player)
                 && PowerRingItem.hasCharge(player)

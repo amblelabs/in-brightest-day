@@ -50,7 +50,7 @@ public final class SculptClient {
     }
 
     private static boolean isReady(LocalPlayer player) {
-        return ArmedRingPower.handFree(player) && ArmedRingPower.isArmed(player) && !ArmedRingPower.isAbilityMode(player) && PowerRingItem.hasCharge(player) && isSelected(player);
+        return ArmedRingPower.isArmed(player) && !ArmedRingPower.isAbilityMode(player) && PowerRingItem.hasCharge(player) && isSelected(player);
     }
 
     public static SculptShape shape() {

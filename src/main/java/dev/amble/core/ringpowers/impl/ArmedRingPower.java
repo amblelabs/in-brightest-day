@@ -151,10 +151,6 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
         ContainmentSphere.stop(player);
     }
 
-    public static boolean handFree(Player player) {
-        return player.getMainHandItem().isEmpty() || isArmed(player);
-    }
-
     public static boolean isArmed(Player player) {
         return data(player).map(Data::active).orElse(false);
     }

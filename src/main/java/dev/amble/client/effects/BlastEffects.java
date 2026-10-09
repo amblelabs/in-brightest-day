@@ -127,7 +127,7 @@ public final class BlastEffects {
     }
 
     public static boolean wantsToCharge(LocalPlayer player) {
-        return ArmedRingPower.handFree(player)
+        return ArmedRingPower.isArmed(player)
                 && !ArmedRingPower.isAbilityMode(player)
                 && PowerRingItem.hasCharge(player)
                 && ArmedRingPower.selectedConstruct(player).map(construct -> !construct.usesGesture()).orElse(false)

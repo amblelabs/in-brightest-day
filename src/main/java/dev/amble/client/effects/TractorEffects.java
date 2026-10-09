@@ -65,7 +65,7 @@ public final class TractorEffects {
     }
 
     public static boolean isTractorMode(Player player) {
-        return TractorBeamRingPower.isActive(player) && ArmedRingPower.handFree(player) && PowerRingItem.hasCharge(player);
+        return TractorBeamRingPower.isActive(player) && ArmedRingPower.isArmed(player) && PowerRingItem.hasCharge(player);
     }
 
     public static boolean onScroll(int wheel) {

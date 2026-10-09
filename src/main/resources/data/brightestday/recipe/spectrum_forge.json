@@ -5,7 +5,7 @@
     "F": "minecraft:blast_furnace",
     "G": "minecraft:gold_block",
     "L": "minecraft:lava_bucket",
-    "N": "minecraft:netherite_block"
+    "N": "minecraft:netherite_ingot"
   },
   "pattern": [
     "G G",
