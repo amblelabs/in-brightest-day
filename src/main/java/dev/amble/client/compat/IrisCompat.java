@@ -5,6 +5,7 @@ import dev.amble.BrightestDay;
 import dev.amble.client.effects.attacks.utility.OreProbeRenderTypes;
 import dev.amble.client.flight.FlightRenderTypes;
 import net.fabricmc.loader.api.FabricLoader;
+import org.jspecify.annotations.Nullable;
 
 import java.lang.reflect.Method;
 
@@ -24,6 +25,23 @@ public final class IrisCompat {
             for (RenderPipeline pipeline : OreProbeRenderTypes.pipelines()) assign.invoke(instance, pipeline, basic);
         } catch (ReflectiveOperationException | RuntimeException exception) {
             BrightestDay.LOGGER.warn("Couldn't register construct render pipelines with Iris; constructs may be invisible with shaders", exception);
+        }
+    }
+
+    private static @Nullable Object api;
+    private static @Nullable Method shaderPackInUse;
+
+    public static boolean shadersActive() {
+        if (!FabricLoader.getInstance().isModLoaded(IRIS)) return false;
+        try {
+            if (api == null) {
+                Class<?> type = Class.forName("net.irisshaders.iris.api.v0.IrisApi");
+                api = type.getMethod("getInstance").invoke(null);
+                shaderPackInUse = type.getMethod("isShaderPackInUse");
+            }
+            return shaderPackInUse != null && (boolean) shaderPackInUse.invoke(api);
+        } catch (ReflectiveOperationException | RuntimeException exception) {
+            return false;
         }
     }
 

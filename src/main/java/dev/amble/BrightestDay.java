@@ -75,6 +75,7 @@ import dev.amble.core.beams.BeamManager;
 import dev.amble.core.beams.HealBeamManager;
 import dev.amble.core.ringpowers.CorpsSynergy;
 import dev.amble.core.loyalty.RingLoyalty;
+import dev.amble.core.loyalty.RingSuspension;
 import dev.amble.core.team.LanternTeams;
 import net.fabricmc.api.ModInitializer;
 
@@ -166,6 +167,7 @@ public class BrightestDay implements ModInitializer {
 		HealBeamManager.init();
 		CorpsSynergy.init();
 		RingLoyalty.init();
+		RingSuspension.init();
 		LanternTeams.init();
 	}
 

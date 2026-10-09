@@ -1,6 +1,5 @@
 package dev.amble.core.progression;
 
-import com.mojang.brigadier.arguments.StringArgumentType;
 import dev.amble.core.loyalty.RingBonds;
 import dev.amble.BrightestDay;
 import dev.amble.config.BrightestDayConfig;
@@ -11,15 +10,11 @@ import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.loyalty.RingLoyalty;
 import dev.amble.core.networking.payloads.s2c.TintFlashS2CPayload;
 import dev.amble.core.ringpowers.LanternCorps;
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
-import net.minecraft.commands.Commands;
-import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -34,18 +29,14 @@ import java.util.UUID;
 import java.util.Set;
 
 public final class RingOffers {
-    private static final long OFFER_TICKS = 20 * 60;
     private static final long RED_COOLDOWN = 24000;
     private static final int MINUTES_PER_DAY = 20;
     private static final int DUEL_WARNING_TICKS = 200;
     private static final long DUEL_TICKS = 20 * 60 * 5;
     private static final int FLASH_TICKS = 60;
 
-    private record Offer(LanternCorps corps, long expires) {}
-
     private record Challenge(UUID challenger, UUID holder, long teleportAt, long expires) {}
 
-    private static final Map<UUID, Offer> OFFERS = new HashMap<>();
     private static final Map<UUID, Long> RED_REFUSED = new HashMap<>();
     private static final Map<UUID, Challenge> CHALLENGES = new HashMap<>();
 
@@ -54,12 +45,6 @@ public final class RingOffers {
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
             if (entity instanceof ServerPlayer victim && source.getEntity() instanceof ServerPlayer killer) settleDuel(victim, killer);
         });
-        CommandRegistrationCallback.EVENT.register((dispatcher, registry, environment) -> dispatcher.register(
-                Commands.literal(BrightestDay.MOD_ID).then(Commands.literal("offer").then(Commands.argument("answer", StringArgumentType.word())
-                        .executes(context -> {
-                            answer(context.getSource().getPlayerOrException(), StringArgumentType.getString(context, "answer").equals("accept"));
-                            return 1;
-                        })))));
     }
 
     public static ItemStack forge(LanternCorps corps, Player bearer) {
@@ -79,11 +64,20 @@ public final class RingOffers {
 
     private static void offer(ServerPlayer player, LanternCorps corps, String key) {
         if (absent(player.level().getServer(), corps) || corps != LanternCorps.ORANGE && !CorpsCaps.admits(player, corps)) return;
-        OFFERS.put(player.getUUID(), new Offer(corps, player.level().getGameTime() + OFFER_TICKS));
-        MutableComponent accept = button("accept", corps.color());
-        MutableComponent refuse = button("refuse", 0xAAAAAA);
-        player.sendSystemMessage(Component.translatable("message.brightestday.offer." + key).withStyle(ChatFormatting.ITALIC).withColor(corps.color())
-                .append(" ").append(accept).append(" ").append(refuse));
+        if (RingLoyalty.awaiting(player)) return;
+        player.sendSystemMessage(Component.translatable("message.brightestday.offer." + key).withStyle(ChatFormatting.ITALIC).withColor(corps.color()));
+        RingLoyalty.offer(player, forge(corps, player), new RingLoyalty.Offer() {
+            @Override
+            public boolean accept(ServerPlayer bearer, ItemStack ring) {
+                return accepted(bearer, corps);
+            }
+
+            @Override
+            public void refuse(ServerPlayer bearer, ItemStack ring) {
+                if (corps == LanternCorps.RED) RED_REFUSED.put(bearer.getUUID(), bearer.level().getGameTime());
+                bearer.sendSystemMessage(Component.translatable("message.brightestday.offer.refused").withStyle(ChatFormatting.GRAY));
+            }
+        });
     }
 
     public static void forceOffer(ServerPlayer player, LanternCorps corps) {
@@ -94,48 +88,30 @@ public final class RingOffers {
         }
     }
 
-    private static MutableComponent button(String answer, int color) {
-        return Component.translatable("message.brightestday.offer." + answer).withStyle(style -> style
-                .withColor(color).withBold(true).withUnderlined(true)
-                .withClickEvent(new ClickEvent.RunCommand("/" + BrightestDay.MOD_ID + " offer " + answer)));
-    }
-
-    private static void answer(ServerPlayer player, boolean accepted) {
+    private static boolean accepted(ServerPlayer player, LanternCorps corps) {
         if (CHALLENGES.containsKey(player.getUUID())) {
             player.sendSystemMessage(Component.translatable("message.brightestday.duel.pending").withStyle(ChatFormatting.GRAY));
-            return;
-        }
-        Offer offer = OFFERS.remove(player.getUUID());
-        if (offer == null || player.level().getGameTime() > offer.expires()) {
-            player.sendSystemMessage(Component.translatable("message.brightestday.offer.expired").withStyle(ChatFormatting.GRAY));
-            return;
-        }
-        if (!accepted) {
-            if (offer.corps() == LanternCorps.RED) RED_REFUSED.put(player.getUUID(), player.level().getGameTime());
-            player.sendSystemMessage(Component.translatable("message.brightestday.offer.refused").withStyle(ChatFormatting.GRAY));
-            return;
+            return false;
         }
         if (!ringless(player)) {
             player.sendSystemMessage(Component.translatable("message.brightestday.offer.bound").withStyle(ChatFormatting.GRAY));
-            return;
+            return false;
         }
-
-        if (absent(player.level().getServer(), offer.corps())) {
+        if (absent(player.level().getServer(), corps)) {
             player.sendSystemMessage(Component.translatable("message.brightestday.offer.absent").withStyle(ChatFormatting.GRAY));
-            return;
+            return false;
         }
-        if (offer.corps() == LanternCorps.ORANGE && !CorpsCaps.admits(player, LanternCorps.ORANGE)) {
+        if (corps == LanternCorps.ORANGE && !CorpsCaps.admits(player, LanternCorps.ORANGE)) {
             ServerPlayer holder = orangeHolder(player.level().getServer());
             if (holder != null) challenge(player, holder);
             else player.sendSystemMessage(Component.translatable("message.brightestday.offer.absent").withStyle(ChatFormatting.GRAY));
-            return;
+            return false;
         }
-        if (!CorpsCaps.check(player, offer.corps())) return;
-        bestow(player, offer.corps());
+        return CorpsCaps.check(player, corps);
     }
 
     public static void considerOrange(ServerPlayer player) {
-        if (!ringless(player) || OFFERS.containsKey(player.getUUID()) || CHALLENGES.containsKey(player.getUUID())) return;
+        if (!ringless(player) || RingLoyalty.awaiting(player) || CHALLENGES.containsKey(player.getUUID())) return;
         if (absent(player.level().getServer(), LanternCorps.ORANGE)) return;
         float chance = Math.min(0.5F, SpectrumMeters.get(player, Emotion.AVARICE) / 2000.0F);
         if (player.getRandom().nextFloat() >= chance) return;
@@ -190,7 +166,7 @@ public final class RingOffers {
             CHALLENGES.remove(killer.getUUID());
             ItemStack ring = takeOrange(victim);
             if (ring.isEmpty()) return;
-            RingLoyalty.deliver(killer, ring);
+            RingLoyalty.deliver(killer, ring, false);
             killer.sendSystemMessage(Component.translatable("message.brightestday.duel.won").withStyle(ChatFormatting.BOLD).withColor(LanternCorps.ORANGE.color()));
             return;
         }
@@ -214,7 +190,6 @@ public final class RingOffers {
 
     private static void tick(MinecraftServer server) {
         long now = server.overworld().getGameTime();
-        OFFERS.values().removeIf(offer -> now > offer.expires());
         CHALLENGES.values().removeIf(challenge -> {
             if (now > challenge.expires()) return true;
             if (now != challenge.teleportAt()) return false;
@@ -231,7 +206,7 @@ public final class RingOffers {
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             if (!ringless(player)) continue;
             considerGreen(player);
-            if (OFFERS.containsKey(player.getUUID()) || SpectrumMeters.get(player, Emotion.RAGE) < config.redOfferRage) continue;
+            if (RingLoyalty.awaiting(player) || SpectrumMeters.get(player, Emotion.RAGE) < config.redOfferRage) continue;
             Long refused = RED_REFUSED.get(player.getUUID());
             if (refused != null && now - refused < RED_COOLDOWN) continue;
             if (player.getRandom().nextFloat() >= config.redOfferDailyChance / MINUTES_PER_DAY) continue;

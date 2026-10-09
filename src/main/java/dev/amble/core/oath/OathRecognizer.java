@@ -125,6 +125,12 @@ final class OathRecognizer {
         }
     }
 
+    interface Hearing {
+        void partial(String[] heard);
+
+        void result(String[] heard);
+    }
+
     static final class Listener {
         private final VoskLibrary library;
         private final Pointer recognizer;
@@ -135,7 +141,7 @@ final class OathRecognizer {
             this.recognizer = recognizer;
         }
 
-        void accept(short[] samples48k, OathMatcher matcher) {
+        void accept(short[] samples48k, Hearing matcher) {
             int length = samples48k.length / DOWNSAMPLE;
             short[] samples = new short[length];
             for (int i = 0; i < length; i++) {

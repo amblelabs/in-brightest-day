@@ -7,7 +7,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
-public final class OathMatcher {
+public final class OathMatcher implements OathRecognizer.Hearing {
     private static final int SKIP = 2;
     private static final int FUZZY_MIN_LENGTH = 4;
     private static final Map<String, Set<String>> ALIASES = Map.ofEntries(
@@ -62,10 +62,12 @@ public final class OathMatcher {
         return token.toLowerCase(Locale.ROOT).replaceAll("[^a-z']", "");
     }
 
+    @Override
     public void partial(String[] heard) {
         this.shown = Math.max(this.shown, this.advance(this.committed, heard));
     }
 
+    @Override
     public void result(String[] heard) {
         this.committed = Math.max(this.committed, this.advance(this.committed, heard));
         this.shown = Math.max(this.shown, this.committed);

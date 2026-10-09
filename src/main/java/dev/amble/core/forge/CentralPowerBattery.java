@@ -581,7 +581,23 @@ public final class CentralPowerBattery {
         sent.remove(DataComponents.CUSTOM_NAME);
         sent.set(BrightestDayComponents.POWER_TYPE, Math.max(PowerRingItem.getRingPower(sent), 1));
         item.discard();
-        RingLoyalty.deliver(target, sent);
+        BlockPos home = battery.pos();
+        LanternCorps corps = battery.corps();
+        RingLoyalty.offer(target, sent, new RingLoyalty.Offer() {
+            @Override
+            public boolean accept(ServerPlayer bearer, ItemStack ring) {
+                return true;
+            }
+
+            @Override
+            public void refuse(ServerPlayer bearer, ItemStack ring) {
+                ItemEntity returned = new ItemEntity(level, home.getX() + 0.5, home.getY() + 2.5, home.getZ() + 0.5, ring);
+                returned.addTag("brightestday.refused");
+                returned.setDefaultPickUpDelay();
+                level.addFreshEntity(returned);
+                announce(level, home, Component.translatable("message.brightestday.battery.refused", bearer.getDisplayName()), corps);
+            }
+        });
         if (item.getOwner() instanceof ServerPlayer sender) RingRanks.fire(sender, Trigger.SEEK, Milestone.Context.of(target));
         announce(level, battery.pos(), Component.translatable("message.brightestday.battery.sent", name), battery.corps());
     }

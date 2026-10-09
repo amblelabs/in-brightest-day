@@ -432,6 +432,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.battery.awaits", "The battery is whole, but dark. Gather and swear the oath at its core to light it.");
         builder.add("bossbar.brightestday.battery", "%s Central Power Battery");
         builder.add("message.brightestday.battery.unworthy", "The ring finds no worthy heart named %s.");
+        builder.add("message.brightestday.battery.refused", "%s refused the ring. It returns to the battery.");
         builder.add("message.brightestday.battery.sent", "The ring streaks away in search of %s.");
         builder.add("message.brightestday.battery.dormant", "Your ring is dormant. It needs a Central Power Battery.");
         builder.add("message.brightestday.sanctuary.barred", "Only those with hope may pass.");
@@ -567,6 +568,20 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.loyalty_wavers", "Your ring's loyalty wavers. Fall %s more time(s) and it will seek another bearer.");
         builder.add("message.brightestday.loyalty_departed", "Your ring has left you in search of a worthier bearer.");
         builder.add("message.brightestday.loyalty_chosen", "A ring has chosen you. Welcome to the %s.");
+        builder.add("message.brightestday.ring_gift.sent", "The %s ring takes flight toward %s");
+        builder.add("message.brightestday.ring_gift.delivered", "Your %s ring was accepted by %s");
+        builder.add("message.brightestday.ring_gift.received", "A %s ring has found you. Swear its oath to awaken it.");
+        builder.add("message.brightestday.ring_question.green", "Are you afraid?");
+        builder.add("message.brightestday.ring_question.yellow", "Can you instill great fear?");
+        builder.add("message.brightestday.ring_question.red", "Does rage burn within you?");
+        builder.add("message.brightestday.ring_question.orange", "Do you want it all?");
+        builder.add("message.brightestday.ring_question.blue", "Do you believe all will be well?");
+        builder.add("message.brightestday.ring_question.star_sapphire", "Is your heart full of love?");
+        builder.add("message.brightestday.ring_question.prompt.voice", "Say yes or no");
+        builder.add("message.brightestday.ring_question.prompt.chat", "Type yes or no in chat");
+        builder.add("message.brightestday.ring_question.refused", "The %s ring turns away and departs.");
+        builder.add("message.brightestday.ring_gift.returned", "Your %s ring was refused and has returned to you");
+        builder.add("message.brightestday.ring_gift.offline", "No one named %s is online to receive this ring");
         builder.add("message.brightestday.loyalty_lantern_found", "Your Power Battery awaits at %s, %s, %s in %s.");
         builder.add("message.brightestday.loyalty_lantern_lost", "Your ring's Power Battery was lost. A new one has been forged for you.");
         builder.add("message.brightestday.arm_to_charge", "Raise your ring to the lantern to charge it.");

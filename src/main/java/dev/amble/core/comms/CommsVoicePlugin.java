@@ -11,6 +11,7 @@ import de.maxhenkel.voicechat.api.opus.OpusEncoder;
 import de.maxhenkel.voicechat.api.packets.MicrophonePacket;
 import dev.amble.BrightestDay;
 import dev.amble.core.oath.OathCharge;
+import dev.amble.core.oath.VoiceAnswers;
 import net.minecraft.server.level.ServerPlayer;
 import org.jspecify.annotations.Nullable;
 
@@ -126,9 +127,10 @@ public class CommsVoicePlugin implements VoicechatPlugin {
         UUID id = sender.getPlayer().getUuid();
 
         boolean oath = OathCharge.listening(id);
+        boolean answering = VoiceAnswers.listening(id);
         boolean megaphone = Megaphone.isActive(id);
         VoicechatConnection radio = radioReceiver(api, sender, id);
-        if (!oath && !megaphone && radio == null) {
+        if (!oath && !answering && !megaphone && radio == null) {
             Voice idle = VOICES.remove(id);
             if (idle != null) idle.close();
             return;
@@ -143,6 +145,7 @@ public class CommsVoicePlugin implements VoicechatPlugin {
         } else {
             samples = voice.decoder.decode(opus);
             if (oath) OathCharge.hear(id, samples);
+            if (answering) VoiceAnswers.hear(id, samples);
         }
 
         if (radio != null) {
