@@ -53,6 +53,7 @@ import dev.amble.core.progression.SpectrumCommands;
 import dev.amble.core.forge.Catalysts;
 import dev.amble.core.forge.CentralPowerBattery;
 import dev.amble.core.forge.ForgeHammer;
+import dev.amble.core.forge.ForgeLight;
 import dev.amble.core.progression.SpectrumMeters;
 import dev.amble.core.progression.WorldProgress;
 import dev.amble.core.ringpowers.RingBenefits;
@@ -144,6 +145,7 @@ public class BrightestDay implements ModInitializer {
 		CentralPowerBattery.init();
 		Mannequins.init();
 		ForgeHammer.init();
+		ForgeLight.init();
 		Catalysts.init();
 		BlueSanctuary.init();
 		RedRage.init();

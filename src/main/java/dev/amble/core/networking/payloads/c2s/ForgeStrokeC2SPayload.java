@@ -1,6 +1,7 @@
 package dev.amble.core.networking.payloads.c2s;
 
 import dev.amble.BrightestDay;
+import dev.amble.core.forge.ForgeLight;
 import dev.amble.core.networking.payloads.s2c.ForgeStrokeS2CPayload;
 import dev.amble.core.ringpowers.RingPowerRegistry;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
@@ -44,6 +45,8 @@ public record ForgeStrokeC2SPayload(int action, List<Vec3> directions) implement
         if (drawing && (ArmedRingPower.isAbilityMode(player)
                 || ArmedRingPower.selectedConstruct(player).orElse(null) != RingPowerRegistry.TOOL_FORGE)) return;
         if (this.action == START) ArmedRingPower.raise(player);
+        if (drawing && !this.directions.isEmpty()) ForgeLight.follow(player, this.directions.getLast());
+        else if (!drawing) ForgeLight.clear(player);
 
         ForgeStrokeS2CPayload relay = new ForgeStrokeS2CPayload(player.getId(), this.action, this.directions);
         ServerPlayNetworking.send(player, relay);
