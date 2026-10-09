@@ -349,14 +349,15 @@ public final class CentralPowerBattery {
     public static Direction.@Nullable Axis arms(ServerLevel level, BlockPos core) {
         if (!(level.getBlockState(core).getBlock() instanceof BatteryCoreBlock block)) return null;
         Block shell = block.shell();
+        boolean strict = !formed(level, core);
         for (Direction.Axis axis : List.of(Direction.Axis.Z, Direction.Axis.X)) {
-            if (arm(level, core, shell, Direction.fromAxisAndDirection(axis, Direction.AxisDirection.POSITIVE))
-                    && arm(level, core, shell, Direction.fromAxisAndDirection(axis, Direction.AxisDirection.NEGATIVE))) return axis;
+            if (arm(level, core, shell, Direction.fromAxisAndDirection(axis, Direction.AxisDirection.POSITIVE), strict)
+                    && arm(level, core, shell, Direction.fromAxisAndDirection(axis, Direction.AxisDirection.NEGATIVE), strict)) return axis;
         }
         return null;
     }
 
-    private static boolean arm(ServerLevel level, BlockPos core, Block shell, Direction side) {
+    private static boolean arm(ServerLevel level, BlockPos core, Block shell, Direction side, boolean strict) {
         Direction.Axis across = across(side);
         for (int step = 1; step <= ARM; step++) {
             BlockPos center = core.relative(side, 1 + step);
@@ -365,7 +366,7 @@ public final class CentralPowerBattery {
                     BlockPos pos = plane(center, across, dy, da);
                     if (dy == 0 && da == 0) {
                         if (!isShell(level.getBlockState(pos), shell)) return false;
-                    } else if (!level.getBlockState(pos).getCollisionShape(level, pos).isEmpty()) {
+                    } else if (strict && !level.getBlockState(pos).getCollisionShape(level, pos).isEmpty()) {
                         return false;
                     }
                 }
@@ -380,13 +381,22 @@ public final class CentralPowerBattery {
         return true;
     }
 
+    private static boolean formed(ServerLevel level, BlockPos core) {
+        if (FORMED.contains(core)) return true;
+        for (WorldProgress.Battery battery : WorldProgress.get(level.getServer()).batteries()) {
+            if (battery.pos().equals(core)) return battery.active();
+        }
+        return false;
+    }
+
     public static boolean elevated(ServerLevel level, BlockPos core) {
         if (!(level.getBlockState(core).getBlock() instanceof BatteryCoreBlock block)) return false;
         Block shell = block.shell();
-        return pillar(level, core, shell, -1, STALK) && pillar(level, core, shell, 1, TOP_STALK);
+        boolean strict = !formed(level, core);
+        return pillar(level, core, shell, -1, STALK, strict) && pillar(level, core, shell, 1, TOP_STALK, strict);
     }
 
-    private static boolean pillar(ServerLevel level, BlockPos core, Block shell, int direction, int length) {
+    private static boolean pillar(ServerLevel level, BlockPos core, Block shell, int direction, int length, boolean strict) {
         for (int step = 1; step <= length; step++) {
             int y = direction * (1 + step);
             for (int dx = -1; dx <= 1; dx++) {
@@ -394,7 +404,7 @@ public final class CentralPowerBattery {
                     BlockPos pos = core.offset(dx, y, dz);
                     if (dx == 0 && dz == 0) {
                         if (!isShell(level.getBlockState(pos), shell)) return false;
-                    } else if (!level.getBlockState(pos).getCollisionShape(level, pos).isEmpty()) {
+                    } else if (strict && !level.getBlockState(pos).getCollisionShape(level, pos).isEmpty()) {
                         return false;
                     }
                 }
