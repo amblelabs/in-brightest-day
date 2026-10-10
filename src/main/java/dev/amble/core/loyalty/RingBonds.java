@@ -28,6 +28,7 @@ import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +36,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 public final class RingBonds {
     private static final int TRACK_INTERVAL = 20;
@@ -82,6 +84,14 @@ public final class RingBonds {
                     .initializer(() -> Status.NONE)
                     .syncWith(ByteBufCodecs.fromCodec(Status.CODEC), AttachmentSyncPredicate.targetOnly())
                     .buildAndRegister(BrightestDay.id("ring_bond_status"));
+
+    public static final AttachmentType<Set<UUID>> SUCCEEDED =
+            AttachmentRegistry.<Set<UUID>>builder()
+                    .initializer(Set::of)
+                    .persistent(UUIDUtil.STRING_CODEC.listOf().xmap(Set::copyOf, List::copyOf))
+                    .buildAndRegister(BrightestDay.id("ring_bonds_succeeded"));
+
+    private static final Pattern NAME = Pattern.compile("[A-Za-z0-9_]{1,16}");
 
     public static void init() {
         ServerTickEvents.END_SERVER_TICK.register(RingBonds::tick);
@@ -202,6 +212,30 @@ public final class RingBonds {
                 .withStyle(ChatFormatting.ITALIC).withColor(owned.getValue().corps().color()));
     }
 
+    public static void setSuccessor(ServerPlayer player, String name) {
+        ItemStack ring = BrightestDayAttachments.getRing(player);
+        BrightestDayComponents.Bond bond = ring.get(BrightestDayComponents.RING_BOND);
+        Entry entry = bond == null ? null : bonds(player.level().getServer()).get(bond.id());
+        if (entry == null || !entry.owner().equals(player.getUUID())) {
+            player.sendOverlayMessage(Component.translatable("message.brightestday.successor.no_ring").withStyle(ChatFormatting.GRAY));
+            return;
+        }
+        int color = entry.corps().color();
+        String heir = name.trim();
+        if (heir.isEmpty()) {
+            if (ring.remove(BrightestDayComponents.SUCCESSOR) != null) BrightestDayAttachments.setRing(player, ring);
+            player.sendOverlayMessage(Component.translatable("message.brightestday.successor.cleared").withColor(color));
+            return;
+        }
+        if (!NAME.matcher(heir).matches() || heir.equalsIgnoreCase(player.getScoreboardName())) {
+            player.sendOverlayMessage(Component.translatable("message.brightestday.successor.invalid", heir).withStyle(ChatFormatting.RED));
+            return;
+        }
+        ring.set(BrightestDayComponents.SUCCESSOR, heir);
+        BrightestDayAttachments.setRing(player, ring);
+        player.sendOverlayMessage(Component.translatable("message.brightestday.successor.set", heir).withColor(color));
+    }
+
     private static Optional<UUID> bondId(ItemStack stack) {
         return Optional.ofNullable(stack.get(BrightestDayComponents.RING_BOND)).map(BrightestDayComponents.Bond::id);
     }
@@ -233,6 +267,11 @@ public final class RingBonds {
         if (bond == null) return false;
         Entry entry = bonds.get(bond.id());
         if (entry == null) {
+            if (player.level().getServer().overworld().getAttachedOrElse(SUCCEEDED, Set.of()).contains(bond.id())) {
+                stack.setCount(0);
+                player.sendSystemMessage(Component.translatable("message.brightestday.successor.passed").withStyle(ChatFormatting.ITALIC, ChatFormatting.GRAY));
+                return true;
+            }
             stack.remove(BrightestDayComponents.RING_BOND);
             return true;
         }
@@ -242,6 +281,11 @@ public final class RingBonds {
             return true;
         }
         return false;
+    }
+
+    private static boolean mayInherit(ServerPlayer heir, Map<UUID, Entry> bonds) {
+        if (!PowerRingItem.getWornRing(heir).isEmpty() || RingLoyalty.awaiting(heir)) return false;
+        return bonds.values().stream().noneMatch(entry -> entry.owner().equals(heir.getUUID()));
     }
 
     private static void tick(MinecraftServer server) {
@@ -277,7 +321,28 @@ public final class RingBonds {
         }
 
         long expiry = BrightestDayConfig.get().ringBondExpiryDays * DAY_MILLIS;
-        bonds.values().removeIf(entry -> server.getPlayerList().getPlayer(entry.owner()) == null && now - entry.lastSeen() > expiry);
+        for (Map.Entry<UUID, Entry> bond : new ArrayList<>(bonds.entrySet())) {
+            Entry entry = bond.getValue();
+            if (server.getPlayerList().getPlayer(entry.owner()) != null || now - entry.lastSeen() <= expiry) continue;
+            String successor = entry.snapshot().map(ring -> ring.get(BrightestDayComponents.SUCCESSOR)).orElse(null);
+            if (successor == null) {
+                bonds.remove(bond.getKey());
+                continue;
+            }
+            ServerPlayer heir = server.getPlayerList().getPlayerByName(successor);
+            if (heir == null || !mayInherit(heir, bonds)) continue;
+            ItemStack ring = entry.snapshot().get().copy();
+            ring.remove(BrightestDayComponents.RING_BOND);
+            ring.remove(BrightestDayComponents.SUCCESSOR);
+            ring.remove(BrightestDayComponents.SWORN_TO);
+            bonds.remove(bond.getKey());
+            Set<UUID> succeeded = new HashSet<>(server.overworld().getAttachedOrElse(SUCCEEDED, Set.of()));
+            succeeded.add(bond.getKey());
+            server.overworld().setAttached(SUCCEEDED, Set.copyOf(succeeded));
+            heir.sendSystemMessage(Component.translatable("message.brightestday.successor.inherit", entry.ownerName(), entry.corps().displayName())
+                    .withStyle(ChatFormatting.ITALIC).withColor(entry.corps().color()));
+            RingLoyalty.succeed(heir, ring, entry.owner());
+        }
         if (!Objects.equals(bonds, original)) save(server, bonds);
     }
 

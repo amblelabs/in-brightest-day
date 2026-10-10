@@ -195,6 +195,14 @@ public final class RingLoyalty {
         flight.level.playSound(null, start.x, start.y, start.z, SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.5F, 1.4F);
     }
 
+    public static void succeed(ServerPlayer heir, ItemStack ring, UUID formerBearer) {
+        Vec3 start = skyEntry(heir);
+        Flight flight = new Flight(heir.level(), start, heir.getUUID(), ring, Kind.LOYALTY, asks(corps(ring)));
+        flight.formerBearer = formerBearer;
+        FLIGHTS.add(flight);
+        flight.level.playSound(null, start.x, start.y, start.z, SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.5F, 1.4F);
+    }
+
     private static @Nullable ServerPlayer findWorthy(MinecraftServer server, ServerLevel level, Vec3 origin, Set<UUID> excluded, LanternCorps corps) {
         double radius = BrightestDayConfig.get().ringLoyaltySearchRadius;
         Emotion emotion = Emotion.of(corps).orElse(null);

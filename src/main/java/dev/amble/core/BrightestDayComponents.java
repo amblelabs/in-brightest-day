@@ -118,6 +118,15 @@ public class BrightestDayComponents {
                             .build()
             );
 
+    public static final DataComponentType<String> SUCCESSOR =
+            Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE,
+                    BrightestDay.id("successor"),
+                    DataComponentType.<String>builder()
+                            .persistent(Codec.STRING)
+                            .networkSynchronized(ByteBufCodecs.STRING_UTF8)
+                            .build()
+            );
+
     public record Bond(UUID id, int generation) {
         public static final Codec<Bond> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                 UUIDUtil.CODEC.fieldOf("id").forGetter(Bond::id),

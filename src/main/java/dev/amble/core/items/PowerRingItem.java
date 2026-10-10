@@ -170,6 +170,8 @@ public class PowerRingItem extends Item {
                 builder.accept(Component.translatable("tooltip.brightestday.ring.cap_battery", corps, cap.battery()).withStyle(ChatFormatting.GRAY));
             }
         }
+        String successor = itemStack.get(BrightestDayComponents.SUCCESSOR);
+        if (successor != null) builder.accept(Component.translatable("tooltip.brightestday.ring.successor", successor).withStyle(ChatFormatting.GRAY));
         BrightestDayComponents.Sworn sworn = itemStack.get(BrightestDayComponents.SWORN_TO);
         if (sworn != null) builder.accept(Component.translatable("tooltip.brightestday.ring.sworn", sworn.name()).withStyle(ChatFormatting.GRAY));
         if (isDormant(itemStack)) {

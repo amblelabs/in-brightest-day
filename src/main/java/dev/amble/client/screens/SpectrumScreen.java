@@ -1,10 +1,12 @@
 package dev.amble.client.screens;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import dev.amble.core.BrightestDayComponents;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.loyalty.RingBonds;
 import dev.amble.core.networking.payloads.c2s.AbandonPilgrimageC2SPayload;
 import dev.amble.core.networking.payloads.c2s.RingBondC2SPayload;
+import dev.amble.core.networking.payloads.c2s.SetSuccessorC2SPayload;
 import dev.amble.core.progression.Emotion;
 import dev.amble.core.progression.Milestone;
 import dev.amble.core.progression.Milestones;
@@ -14,6 +16,9 @@ import dev.amble.core.progression.SpectrumMeters;
 import dev.amble.core.ringpowers.LanternCorps;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
@@ -48,6 +53,11 @@ public class SpectrumScreen extends Screen {
     private static final int BUTTON_GAP = 4;
     private static final long CONFIRM_MILLIS = 4000L;
     private static final int HOPE = ARGB.opaque(LanternCorps.BLUE.color());
+    private static final int SUCCESSOR_GAP = 4;
+    private static final int SUCCESSOR_HEIGHT = 18;
+    private static final int SUCCESSOR_BOX = 110;
+    private static final int SUCCESSOR_BUTTON = 44;
+    private static final Component SUCCESSOR_LABEL = Component.translatable("gui.brightestday.spectrum.successor");
 
     private final @Nullable Screen parent;
     private Emotion selected;
@@ -56,6 +66,8 @@ public class SpectrumScreen extends Screen {
     private int top;
     private long confirmUntil;
     private @Nullable String confirmKey;
+    private final List<AbstractWidget> successorRow = new ArrayList<>();
+    private @Nullable EditBox successor;
 
     private record Action(String key, Component label, int color, boolean enabled, boolean confirm, Runnable run) {}
 
@@ -68,11 +80,35 @@ public class SpectrumScreen extends Screen {
     @Override
     protected void init() {
         this.left = (this.width - WIDTH) / 2;
-        this.top = (this.height - HEIGHT) / 2;
+        this.top = (this.height - HEIGHT - SUCCESSOR_GAP - SUCCESSOR_HEIGHT) / 2;
         if (!this.chosen && this.minecraft.player != null) {
             PowerRingItem.getWornCorps(this.minecraft.player).flatMap(Emotion::of).ifPresent(emotion -> this.selected = emotion);
         }
         this.chosen = true;
+
+        String typed = this.successor != null ? this.successor.getValue()
+                : this.minecraft.player == null ? "" : PowerRingItem.getWornRing(this.minecraft.player).getOrDefault(BrightestDayComponents.SUCCESSOR, "");
+        this.successorRow.clear();
+        int y = this.top + HEIGHT + SUCCESSOR_GAP;
+        int x = this.left + MARGIN + this.font.width(SUCCESSOR_LABEL) + 6;
+        EditBox box = new EditBox(this.font, x, y, SUCCESSOR_BOX, SUCCESSOR_HEIGHT, SUCCESSOR_LABEL);
+        box.setMaxLength(16);
+        box.setHint(Component.translatable("gui.brightestday.spectrum.successor.hint"));
+        box.setValue(typed);
+        this.successor = box;
+        this.successorRow.add(this.addRenderableWidget(box));
+        x += SUCCESSOR_BOX + 4;
+        this.successorRow.add(this.addRenderableWidget(Button.builder(Component.translatable("gui.brightestday.spectrum.successor.set"),
+                button -> ClientPlayNetworking.send(new SetSuccessorC2SPayload(box.getValue()))).bounds(x, y, SUCCESSOR_BUTTON, SUCCESSOR_HEIGHT).build()));
+        x += SUCCESSOR_BUTTON + 4;
+        this.successorRow.add(this.addRenderableWidget(Button.builder(Component.translatable("gui.brightestday.spectrum.successor.clear"), button -> {
+            box.setValue("");
+            ClientPlayNetworking.send(new SetSuccessorC2SPayload(""));
+        }).bounds(x, y, SUCCESSOR_BUTTON, SUCCESSOR_HEIGHT).build()));
+    }
+
+    private boolean bonded() {
+        return this.minecraft.player != null && this.minecraft.player.getAttachedOrElse(RingBonds.STATUS, RingBonds.Status.NONE).corps().isPresent();
     }
 
     private int rowY(int index) {
@@ -81,6 +117,8 @@ public class SpectrumScreen extends Screen {
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
+        boolean bonded = this.bonded();
+        for (AbstractWidget widget : this.successorRow) widget.visible = bonded;
         super.extractRenderState(graphics, mouseX, mouseY, a);
         Player player = this.minecraft.player;
         if (player == null) return;
@@ -94,6 +132,7 @@ public class SpectrumScreen extends Screen {
         this.list(graphics, player, mouseX, mouseY);
         this.detail(graphics, player, corps, accent);
         this.actionButtons(graphics, player, mouseX, mouseY);
+        if (bonded) graphics.text(this.font, SUCCESSOR_LABEL, this.left + MARGIN, this.top + HEIGHT + SUCCESSOR_GAP + (SUCCESSOR_HEIGHT - 8) / 2, LanternWidgets.TEXT, true);
     }
 
     private void list(GuiGraphicsExtractor graphics, Player player, int mouseX, int mouseY) {

@@ -73,12 +73,6 @@ public class BrightestDayAttachments {
                     .syncWith(InsigniaAnchor.STREAM_CODEC, AttachmentSyncPredicate.all())
                     .buildAndRegister(BrightestDay.id("insignia_anchor"));
 
-    public static final AttachmentType<Long> LAST_JUMPSTART =
-            AttachmentRegistry.<Long>builder()
-                    .persistent(Codec.LONG)
-                    .copyOnDeath()
-                    .buildAndRegister(BrightestDay.id("last_jumpstart"));
-
     public static InsigniaAnchor getInsigniaAnchor(Player player) {
         return player.getAttachedOrElse(INSIGNIA_ANCHOR, InsigniaAnchor.DEFAULT);
     }

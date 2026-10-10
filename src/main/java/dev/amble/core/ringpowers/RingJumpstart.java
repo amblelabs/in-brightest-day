@@ -15,7 +15,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
 
 public final class RingJumpstart {
-    private static final long COOLDOWN_TICKS = 24000L * 10;
     private static final int JUMPSTART_CHARGE = BrightestDayComponents.MAX_POWER * 5 / 100;
 
     public static void init() {
@@ -34,11 +33,6 @@ public final class RingJumpstart {
         float hardness = level.getBlockState(pos).getDestroySpeed(level, pos);
         if (hardness >= 0.0F && hardness < Blocks.STONE.defaultDestroyTime()) return;
 
-        long now = level.getServer().overworld().getGameTime();
-        Long last = player.getAttached(BrightestDayAttachments.LAST_JUMPSTART);
-        if (last != null && now - last < COOLDOWN_TICKS) return;
-
-        player.setAttached(BrightestDayAttachments.LAST_JUMPSTART, now);
         ring.set(BrightestDayComponents.POWER_TYPE, JUMPSTART_CHARGE);
         if (ring == BrightestDayAttachments.getRing(player)) BrightestDayAttachments.setRing(player, ring);
 
