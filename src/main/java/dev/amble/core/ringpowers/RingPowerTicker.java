@@ -8,6 +8,8 @@ import dev.amble.core.ringpowers.constructs.ConstructDismissal;
 import dev.amble.core.ringpowers.constructs.ConstructTools;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.protocol.game.ClientboundSoundPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundSource;
@@ -60,8 +62,8 @@ public final class RingPowerTicker {
         float charge = PowerRingItem.getChargeFraction(ring);
         Float previous = LAST_CHARGE.put(player, charge);
         if (previous != null && previous > LOW_CHARGE && charge <= LOW_CHARGE && charge > 0.0F) {
-            player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
-                    BrightestDaySounds.RING_CHARGE_5_PERCENT, SoundSource.PLAYERS, 1.0F, 1.0F);
+            player.connection.send(new ClientboundSoundPacket(BuiltInRegistries.SOUND_EVENT.wrapAsHolder(BrightestDaySounds.RING_CHARGE_5_PERCENT),
+                    SoundSource.PLAYERS, player.getX(), player.getY(), player.getZ(), 1.0F, 1.0F, player.getRandom().nextLong()));
         }
     }
 

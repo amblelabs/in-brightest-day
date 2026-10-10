@@ -1,5 +1,6 @@
 package dev.amble.core.ringpowers.impl;
 
+import dev.amble.core.networking.payloads.s2c.AttackAnimS2CPayload;
 import dev.amble.core.progression.Milestone;
 import dev.amble.core.progression.Trigger;
 import dev.amble.core.progression.RingRanks;
@@ -259,6 +260,7 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
 
         int color = CorpsColors.of(player);
         construct.get().fire(player, radius, color);
+        AttackAnimS2CPayload.broadcast(player, construct.get().id(), AttackAnimS2CPayload.FIRE);
         CHARGE_STARTED.remove(player);
         RingRanks.fire(player, Trigger.CONSTRUCT, Milestone.Context.of(construct.get().id().getPath()));
         if (PowerRingItem.getWornCorps(player).orElse(null) == LanternCorps.INDIGO && !construct.get().isAvailableTo(LanternCorps.INDIGO)) {
@@ -278,6 +280,7 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
         return BrightestDayAttachments.get(player).stream()
                 .map(RingPowerInstance::power)
                 .filter(ConstructRingPower.class::isInstance)
+                .filter(power -> power != RingPowerRegistry.INSIGNIA)
                 .map(ConstructRingPower.class::cast)
                 .toList();
     }

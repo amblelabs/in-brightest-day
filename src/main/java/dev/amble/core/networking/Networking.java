@@ -32,6 +32,7 @@ import dev.amble.core.networking.payloads.c2s.SetInsigniaAnchorC2SPayload;
 import dev.amble.core.networking.payloads.c2s.SetColorTweakC2SPayload;
 import dev.amble.core.networking.payloads.c2s.SetFlightC2SPayload;
 import dev.amble.core.networking.payloads.c2s.StopBeamC2SPayload;
+import dev.amble.core.networking.payloads.c2s.ToggleInsigniaC2SPayload;
 import dev.amble.core.networking.payloads.c2s.ToggleLightC2SPayload;
 import dev.amble.core.networking.payloads.c2s.TractorC2SPayload;
 import dev.amble.core.networking.payloads.c2s.UsePowerC2SPayload;
@@ -41,6 +42,7 @@ import dev.amble.core.networking.payloads.s2c.BarrageBoltS2CPayload;
 import dev.amble.core.networking.payloads.s2c.BarrageS2CPayload;
 import dev.amble.core.networking.payloads.s2c.BeamS2CPayload;
 import dev.amble.core.networking.payloads.s2c.BlastS2CPayload;
+import dev.amble.core.networking.payloads.s2c.AttackAnimS2CPayload;
 import dev.amble.core.networking.payloads.s2c.ChargeS2CPayload;
 import dev.amble.core.networking.payloads.s2c.ChainBoltS2CPayload;
 import dev.amble.core.networking.payloads.s2c.ConcussiveS2CPayload;
@@ -116,6 +118,7 @@ public class Networking {
         PayloadTypeRegistry.serverboundPlay().register(OpenLanternC2SPayload.TYPE, OpenLanternC2SPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(FireConstructC2SPayload.TYPE, FireConstructC2SPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(ToggleLightC2SPayload.TYPE, ToggleLightC2SPayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(ToggleInsigniaC2SPayload.TYPE, ToggleInsigniaC2SPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(CycleConstructC2SPayload.TYPE, CycleConstructC2SPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(SetColorTweakC2SPayload.TYPE, SetColorTweakC2SPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(TractorC2SPayload.TYPE, TractorC2SPayload.CODEC);
@@ -147,6 +150,7 @@ public class Networking {
         PayloadTypeRegistry.serverboundPlay().register(RingBondC2SPayload.TYPE, RingBondC2SPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(ChargeC2SPayload.TYPE, ChargeC2SPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(ChargeS2CPayload.TYPE, ChargeS2CPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(AttackAnimS2CPayload.TYPE, AttackAnimS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(LightOrbS2CPayload.TYPE, LightOrbS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(PlayerStateS2CPayload.TYPE, PlayerStateS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(NovaS2CPayload.TYPE, NovaS2CPayload.CODEC);
@@ -221,5 +225,6 @@ public class Networking {
         ServerPlayNetworking.registerGlobalReceiver(SetInsigniaAnchorC2SPayload.TYPE, SetInsigniaAnchorC2SPayload::handle);
         ServerPlayNetworking.registerGlobalReceiver(MannequinEditC2SPayload.TYPE, MannequinEditC2SPayload::handle);
         ServerPlayNetworking.registerGlobalReceiver(ToggleLightC2SPayload.TYPE, ToggleLightC2SPayload::handle);
+        ServerPlayNetworking.registerGlobalReceiver(ToggleInsigniaC2SPayload.TYPE, ToggleInsigniaC2SPayload::handle);
     }
 }

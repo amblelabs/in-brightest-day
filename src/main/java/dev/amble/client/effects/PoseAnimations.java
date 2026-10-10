@@ -128,6 +128,24 @@ public final class PoseAnimations {
         ClientPlayNetworking.send(new PoseC2SPayload(pose(player) % states + 1));
     }
 
+    public static List<PoseLibrary.Pose> available(LocalPlayer player) {
+        if (PowerRingItem.getWornCorps(player).isEmpty() || ArmedRingPower.isArmed(player)) return List.of();
+        List<PoseLibrary.Pose> poses = poses(player, airborne(player));
+        return poses.subList(0, Math.min(poses.size(), Poses.MAX_STATE / 2));
+    }
+
+    public static int struck(Player player) {
+        int pose = pose(player);
+        return pose > 0 ? (pose - 1) / 2 : -1;
+    }
+
+    public static void strike(LocalPlayer player, int index) {
+        if (index < 0 || index >= available(player).size()) return;
+        int base = index * 2 + 1;
+        int pose = pose(player);
+        ClientPlayNetworking.send(new PoseC2SPayload(struck(player) == index && pose == base ? base + 1 : base));
+    }
+
     public static List<PoseLibrary.Pose> mannequinPoses(@Nullable LanternCorps corps) {
         Map<String, PoseLibrary.Pose> poses = new LinkedHashMap<>();
         for (PoseLibrary.Pose pose : PoseLibrary.poses(corps, false)) poses.putIfAbsent(pose.key(), pose);

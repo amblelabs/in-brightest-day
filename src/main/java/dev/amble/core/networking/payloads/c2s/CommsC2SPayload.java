@@ -13,7 +13,8 @@ public record CommsC2SPayload(Action action) implements CustomPacketPayload {
         NEXT,
         PREVIOUS,
         START,
-        STOP
+        STOP,
+        TEAM
     }
 
     public static final Type<CommsC2SPayload> TYPE =
@@ -33,6 +34,7 @@ public record CommsC2SPayload(Action action) implements CustomPacketPayload {
             case PREVIOUS -> Comms.cycle(context.player(), -1);
             case START -> Comms.start(context.player());
             case STOP -> Comms.stop(context.server(), context.player().getUUID());
+            case TEAM -> Comms.toggleTeam(context.player());
         }
     }
 }

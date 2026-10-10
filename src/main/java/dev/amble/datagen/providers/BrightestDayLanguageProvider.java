@@ -103,7 +103,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.pilgrimage.restart", "Return to the first shrine near spawn to begin again.");
         builder.add("message.brightestday.sanctuary.unwalked", "The dome only opens for those who walked the shrines.");
         builder.add("key.brightestday.spectrum", "Emotional Spectrum");
-        builder.add("key.brightestday.pose", "Strike / Cycle Pose");
+        builder.add("key.brightestday.style_wheel", "Style Wheel (hold) / Cycle Pose (tap)");
         builder.add("gui.brightestday.spectrum.title", "Emotional Spectrum");
         builder.add("gui.brightestday.spectrum.abandon", "Abandon Pilgrimage");
         builder.add("gui.brightestday.spectrum.recall", "Recall Ring");
@@ -395,9 +395,14 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("hud.brightestday.blood_hunt", "%s Prey %sm");
         builder.add("message.brightestday.oath.silent", "Your ring waits for your oath. Charge again when you are ready.");
         builder.add("hud.brightestday.comms.incoming", "%s is talking through your ring");
-        builder.add("hud.brightestday.comms.none", "Comms: scroll to dial a teammate");
-        builder.add("hud.brightestday.comms.dialed", "Comms: %s (hold use to talk)");
+        builder.add("hud.brightestday.comms.none", "Comms: scroll to dial a teammate, middle-click the air for your whole team");
+        builder.add("hud.brightestday.comms.dialed", "Comms: %s (hold use to talk, double-click to keep the line open)");
         builder.add("hud.brightestday.comms.transmitting", "Transmitting to %s...");
+        builder.add("hud.brightestday.comms.team", "your whole team");
+        builder.add("hud.brightestday.comms.locked", "Line open to %s (press use to close)");
+        builder.add("message.brightestday.comms.locked", "Comms line held open");
+        builder.add("message.brightestday.comms.team_on", "Comms: talking to your whole team");
+        builder.add("message.brightestday.comms.team_off", "Comms: talking to one teammate");
         builder.add("message.brightestday.indigo.broken", "The embrace is broken.");
         builder.add("message.brightestday.indigo.chosen", "You have been chosen. You are Indigo-1.");
         builder.add("message.brightestday.indigo.converted", "%s has joined the Indigo Tribe.");
@@ -499,6 +504,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("tooltip.brightestday.ring.cap_battery", "Held back: the %s battery is at %s%% health. Heal it to restore full charge.");
         builder.add("message.brightestday.ring.sworn", "The ring is sworn to you.");
         builder.add("message.brightestday.ring.reclaimed", "The ring forgets %s. It is sworn to you now.");
+        builder.add("message.brightestday.ring.forsaken", "You have forsaken the %s. Your oath now belongs to the %s.");
         builder.add("message.brightestday.ring.awakened", "Your ring awakens.");
         builder.add("block.brightestday.yellow_battery_core", "Yellow Battery Core");
         builder.add("block.brightestday.battery_frame", "Central Power Battery Frame");
@@ -514,6 +520,8 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("gui.brightestday.aura.flying", "Aura: Fly");
         builder.add("gui.brightestday.aura.always", "Aura: On");
         builder.add("gui.brightestday.suit", "Suit");
+        builder.add("gui.brightestday.style.pose", "Pose");
+        builder.add("gui.brightestday.style.insignia", "Insignia");
         builder.add("gui.brightestday.mask", "Mask");
         builder.add("gui.brightestday.mask_height", "Mask Height: %s");
 
@@ -1045,6 +1053,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("gui.brightestday.insignia.echoes", "Trail: %s");
         builder.add("gui.brightestday.eyes.corps", "Corps Color");
         builder.add("gui.brightestday.eyes.clear", "Clear");
+        builder.add("gui.brightestday.eyes.brightness", "Brightness: %s%%");
         builder.add("gui.brightestday.eyes.hint", "Left-click to paint, right-click to erase");
         builder.add("brightestday.server.concussive", "Concussive Blast");
         builder.add("brightestday.server.acid", "Acid Vomit");
@@ -1168,7 +1177,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.scan_cooldown", "Scanner recharging: %ss");
         builder.add("message.brightestday.raise_ring_first", "Raise your ring first.");
         builder.add("key.brightestday.ability_wheel", "Ability Wheel (hold)");
-        builder.add("key.brightestday.flight", "Flight");
+        builder.add("key.brightestday.flight", "Flight (double-tap to toggle, hold + scroll for speed)");
         builder.add("key.brightestday.raise_ring", "Raise Ring");
         builder.add("key.brightestday.toggle_light", "Toggle Spotlight");
         builder.add("key.brightestday.toggle_suit", "Toggle Suit");

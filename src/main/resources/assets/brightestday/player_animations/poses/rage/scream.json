@@ -1,0 +1,41 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"scream": {
+			"loop": true,
+			"animation_length": 1,
+			"bones": {
+				"waist": {
+					"rotation": {
+						"0.0": {
+							"post": [-6, 0, 0],
+							"lerp_mode": "catmullrom"
+						}
+					},
+					"position": {
+						"0.0": [0, 0, 0],
+						"0.5": [0, 0.3, 0],
+						"1.0": [0, 0, 0]
+					}
+				},
+				"head": {
+					"rotation": [-36, 0, 0]
+				},
+				"right_arm": {
+					"rotation": [-132.7859, 14.1536, -16.1742],
+					"position": [0.1, -5.6, 1.1]
+				},
+				"left_arm": {
+					"rotation": [-135.6508, -8.6797, 21.9613],
+					"position": [-0.3, -5.6, 2]
+				},
+				"right_leg": {
+					"rotation": [4.9879, -0.3484, 3.9848]
+				},
+				"left_leg": {
+					"rotation": [-1.0432, 0.8336, -5.942]
+				}
+			}
+		}
+	}
+}

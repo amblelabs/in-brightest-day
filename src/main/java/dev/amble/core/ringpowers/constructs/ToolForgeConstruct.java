@@ -2,6 +2,8 @@ package dev.amble.core.ringpowers.constructs;
 
 import dev.amble.BrightestDay;
 import dev.amble.core.items.PowerRingItem;
+import dev.amble.core.ringpowers.CorpsArsenal;
+import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.ringpowers.RingPowerRegistry;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
 import net.minecraft.network.chat.Component;
@@ -21,7 +23,7 @@ public class ToolForgeConstruct extends ConstructRingPower {
     private static final Map<ServerPlayer, Long> LAST_FORGED = new WeakHashMap<>();
 
     public ToolForgeConstruct() {
-        super(BrightestDay.id("tool_forge"));
+        super(BrightestDay.id("tool_forge"), CorpsArsenal.shared(LanternCorps.BLUE));
     }
 
     @Override

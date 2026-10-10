@@ -52,6 +52,11 @@ public final class InsigniaEffects {
         });
     }
 
+    public static boolean shown(Player player) {
+        Shown shown = SHOWN.get(player.getId());
+        return shown != null && shown.fade < 0;
+    }
+
     public record Projection(Identifier texture, int color, float fade, InsigniaAnchor anchor) {}
 
     public static final RenderStateDataKey<Projection> PROJECTION = RenderStateDataKey.create(() -> "brightestday:insignia");

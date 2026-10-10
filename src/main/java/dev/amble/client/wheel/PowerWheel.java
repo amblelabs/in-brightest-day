@@ -2,20 +2,26 @@ package dev.amble.client.wheel;
 
 import dev.amble.BrightestDay;
 import dev.amble.client.BrightestDayKeybinds;
+import dev.amble.client.effects.InsigniaEffects;
+import dev.amble.client.effects.PoseAnimations;
 import dev.amble.client.effects.ConstructClient;
 import dev.amble.client.effects.SculptClient;
+import dev.amble.client.poses.PoseLibrary;
+import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.drill.DrillMode;
 import dev.amble.core.drill.DrillModes;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.c2s.DrillModeC2SPayload;
 import dev.amble.core.networking.payloads.c2s.SelectAbilityC2SPayload;
 import dev.amble.core.networking.payloads.c2s.SelectConstructC2SPayload;
+import dev.amble.core.networking.payloads.c2s.ToggleInsigniaC2SPayload;
 import dev.amble.core.ringpowers.CorpsColors;
 import dev.amble.core.ringpowers.RingPower;
 import dev.amble.core.ringpowers.RingPowerRegistry;
 import dev.amble.core.ringpowers.constructs.ConstructRingPower;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
 import dev.amble.core.sculpt.SculptShape;
+import dev.amble.core.visuals.Insignia;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -125,7 +131,6 @@ public final class PowerWheel {
             new Group("construct_group.brightestday.attacks", Items.BLAZE_ROD, List.of("blast", "swarm_missiles", "piercing_lance", "chain_bolt", "boomerang_disc", "rapid_barrage", "nova_burst", "ground_slam", "plasma_burst", "crystal_prison")),
             new Group("construct_group.brightestday.weapons", Items.IRON_SWORD, List.of("giant_fist", "energy_whip", "sentry_turret")),
             new Group("construct_group.brightestday.utility", Items.COMPASS, List.of("glider", "grappling_hook", "light_orb", "lumberjack", "ore_probe", "megaphone", "construct_horse", "construct_boat", "ring_compass")),
-            new Group("construct_group.brightestday.visuals", Items.GLOW_INK_SAC, List.of("insignia")),
             new Group("construct_group.brightestday.shield", Items.SHIELD, List.of("entity_shield", "area_shield", "containment_sphere"))
     );
     private static final Map<DrillMode, Item> DRILL_MODE_ICONS = Map.of(
@@ -139,11 +144,17 @@ public final class PowerWheel {
             PowerWheel::constructEntries, player -> ArmedRingPower.selectedConstruct(player).map(construct -> construct), PowerWheel::tapConstructs);
     private static final PowerWheel ABILITIES = new PowerWheel("ability_wheel", BrightestDayKeybinds.ABILITY_WHEEL,
             PowerWheel::abilityEntries, ArmedRingPower::selectedAbility, PowerWheel::tapAbilities);
-    private static final List<PowerWheel> WHEELS = List.of(CONSTRUCTS, ABILITIES);
+    private static final PowerWheel STYLE = new PowerWheel("style_wheel", BrightestDayKeybinds.STYLE_WHEEL,
+            PowerWheel::styleEntries, player -> Optional.empty(), PoseAnimations::cycle);
+    private static final List<PowerWheel> WHEELS = List.of(CONSTRUCTS, ABILITIES, STYLE);
 
     private record Sub(Component name, Item icon, Runnable apply, BooleanSupplier current) {}
 
-    private record Entry(Component name, Item icon, Set<RingPower<?>> powers, Runnable apply, List<Sub> subs) {
+    private record Entry(Component name, Item icon, Set<RingPower<?>> powers, Runnable apply, List<Sub> subs, BooleanSupplier active) {
+        Entry(Component name, Item icon, Set<RingPower<?>> powers, Runnable apply, List<Sub> subs) {
+            this(name, icon, powers, apply, subs, () -> false);
+        }
+
         Optional<Sub> currentSub() {
             return this.subs.stream().filter(sub -> sub.current().getAsBoolean()).findFirst();
         }
@@ -224,7 +235,7 @@ public final class PowerWheel {
     }
 
     private boolean isCurrent(Player player, Entry entry) {
-        return this.selection.apply(player).map(entry.powers()::contains).orElse(false);
+        return entry.active().getAsBoolean() || this.selection.apply(player).map(entry.powers()::contains).orElse(false);
     }
 
     private void tick(Minecraft client) {
@@ -472,6 +483,32 @@ public final class PowerWheel {
         for (RingPower<?> ability : ArmedRingPower.abilities(player)) {
             built.add(new Entry(Component.translatable(ability.getTranslationKey()), icon(ability), Set.of(ability),
                     () -> selectAbility(player, ability), List.of()));
+        }
+        return built;
+    }
+
+    private static List<Entry> styleEntries(Player player) {
+        List<Entry> built = new ArrayList<>();
+        if (player instanceof LocalPlayer local) {
+            List<PoseLibrary.Pose> poses = PoseAnimations.available(local);
+            if (!poses.isEmpty()) {
+                List<Sub> subs = new ArrayList<>();
+                for (int i = 0; i < poses.size(); i++) {
+                    int index = i;
+                    subs.add(new Sub(Component.literal(poses.get(i).name()), Items.ARMOR_STAND, () -> PoseAnimations.strike(local, index),
+                            () -> PoseAnimations.struck(local) == index));
+                }
+                built.add(new Entry(Component.translatable("gui.brightestday.style.pose"), Items.ARMOR_STAND, Set.of(),
+                        () -> PoseAnimations.cycle(local), List.copyOf(subs), () -> PoseAnimations.pose(local) > 0));
+            }
+        }
+        built.add(new Entry(Component.translatable("gui.brightestday.suit"), Items.LEATHER_CHESTPLATE, Set.of(),
+                BrightestDayKeybinds::toggleSuit, List.of(), () -> BrightestDayAttachments.getColorTweak(player).suit()));
+        built.add(new Entry(Component.translatable("gui.brightestday.mask"), Items.LEATHER_HELMET, Set.of(),
+                BrightestDayKeybinds::toggleMask, List.of(), () -> BrightestDayAttachments.getColorTweak(player).mask()));
+        if (Insignia.available(player)) {
+            built.add(new Entry(Component.translatable("gui.brightestday.style.insignia"), Items.GLOW_ITEM_FRAME, Set.of(),
+                    () -> ClientPlayNetworking.send(ToggleInsigniaC2SPayload.INSTANCE), List.of(), () -> InsigniaEffects.shown(player)));
         }
         return built;
     }

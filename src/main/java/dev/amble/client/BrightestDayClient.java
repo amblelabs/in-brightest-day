@@ -1,5 +1,6 @@
 package dev.amble.client;
 
+import dev.amble.client.effects.AttackAnimations;
 import dev.amble.client.effects.ArmedPose;
 import dev.amble.client.effects.BeamEffects;
 import dev.amble.client.effects.RemoteAim;
@@ -58,6 +59,7 @@ import dev.amble.client.flight.FlightAnimator;
 import dev.amble.client.flight.AileronRolls;
 import dev.amble.client.team.ClientTeams;
 import dev.amble.client.flight.FlightTrail;
+import dev.amble.client.render.EyeFlareRenderTypes;
 import dev.amble.client.hud.FlightSpeedHud;
 import dev.amble.client.hud.EmotionVignette;
 import dev.amble.client.hud.PilgrimageHud;
@@ -99,6 +101,7 @@ public class BrightestDayClient implements ClientModInitializer {
         FlightAnimator.init();
         FlightAnimations.init();
         LanternChargeAnimations.init();
+        AttackAnimations.init();
         PoseAnimations.init();
         PoseLibrary.init();
         InsigniaEffects.init();
@@ -106,6 +109,7 @@ public class BrightestDayClient implements ClientModInitializer {
         Holograms.init();
         BlockColorRegistry.register(List.of(BlockTintSources.constant(CRYSTAL_TINT)), BrightestDayBlocks.ZAMARON_CRYSTAL_CLUSTER);
         FlightTrail.init();
+        EyeFlareRenderTypes.init();
         AileronRolls.init();
         ClientTeams.init();
         BlastEffects.init();

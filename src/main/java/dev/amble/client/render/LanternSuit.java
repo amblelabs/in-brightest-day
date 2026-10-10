@@ -29,6 +29,7 @@ import java.util.Optional;
 
 public final class LanternSuit {
     public static final RenderStateDataKey<Identifier> GLOW = RenderStateDataKey.create(() -> "brightestday:suit_glow");
+    public static final RenderStateDataKey<Identifier> FLARE = RenderStateDataKey.create(() -> "brightestday:eye_flare");
 
     private static final float FADE_TICKS = 24.0F;
     private static final float EYE_FADE_TICKS = 6.0F;
@@ -94,6 +95,7 @@ public final class LanternSuit {
     public static void extract(Avatar entity, AvatarRenderState state, float partialTicks) {
         FabricRenderState data = (FabricRenderState) state;
         data.setData(GLOW, null);
+        data.setData(FLARE, null);
 
         Fade fade = FADES.get(entity.getId());
         if (fade == null) return;
@@ -111,6 +113,7 @@ public final class LanternSuit {
         state.skin = new PlayerSkin(new ClientAsset.ResourceTexture(entry.bodyId, entry.bodyId), skin.cape(), skin.elytra(), skin.model(), skin.secure());
         boolean suitShimmer = progress > 0.0F && (progress < 1.0F || (maskProgress > 0.0F && maskProgress < 1.0F));
         if (suitShimmer || (eyeProgress > 0.0F && !fade.eyes.isEmpty())) data.setData(GLOW, entry.glowId);
+        if (eyeProgress > 0.0F && !fade.eyes.isEmpty()) data.setData(FLARE, entry.flareId);
     }
 
     private static final class Fade {

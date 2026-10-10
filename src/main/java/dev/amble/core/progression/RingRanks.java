@@ -49,6 +49,9 @@ public final class RingRanks {
             RingPowerRegistry.RING_COMPASS, 1,
             RingPowerRegistry.LIGHT_ORB, 1,
             RingPowerRegistry.INSIGNIA, 2);
+    private static final Map<LanternCorps, Map<RingPower<?>, Integer>> CORPS_GATED = Map.of(
+            LanternCorps.YELLOW, Map.of(RingPowerRegistry.GIANT_FIST, 2),
+            LanternCorps.BLUE, Map.of(RingPowerRegistry.TOOL_FORGE, 3, RingPowerRegistry.GIANT_FIST, 2));
     private static final List<String> PRIORITY = List.of(
             "blast", "entity_shield", "boomerang_disc", "energy_whip", "chain_bolt", "wall", "piercing_lance", "swarm_missiles",
             "rapid_barrage", "area_shield", "beam", "giant_fist", "nova_burst", "ground_slam", "sentry_turret", "glider",
@@ -257,8 +260,9 @@ public final class RingRanks {
                 .map(ConstructRingPower.class::cast)
                 .filter(power -> !starter(corps, power))
                 .filter(power -> !RANK_GATED.containsKey(power))
+                .filter(power -> !CORPS_GATED.getOrDefault(corps, Map.of()).containsKey(power))
                 .filter(power -> power != RingPowerRegistry.MEGAPHONE)
-                .sorted(Comparator.comparingInt((ConstructRingPower power) -> power.corps().size() <= 2 ? 0 : 1)
+                .sorted(Comparator.comparingInt((ConstructRingPower power) -> power.corps().size() <= 4 ? 0 : 1)
                         .thenComparingInt(power -> {
                             int index = PRIORITY.indexOf(power.id().getPath());
                             return index < 0 ? PRIORITY.size() : index;
@@ -269,6 +273,9 @@ public final class RingRanks {
         for (int i = unlocked; i < arsenal.size(); i++) locked.add(arsenal.get(i));
         int rank = rank(player, corps);
         RANK_GATED.forEach((power, required) -> {
+            if (rank < required) locked.add(power);
+        });
+        CORPS_GATED.getOrDefault(corps, Map.of()).forEach((power, required) -> {
             if (rank < required) locked.add(power);
         });
         return locked;

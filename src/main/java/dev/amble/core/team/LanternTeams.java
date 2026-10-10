@@ -169,6 +169,10 @@ public final class LanternTeams {
         player.setAttached(TEAM, INDIGO_TRIBE);
     }
 
+    public static void leaveTribe(ServerPlayer player) {
+        if (INDIGO_TRIBE.equals(player.getAttached(TEAM))) detach(player, false);
+    }
+
     public static void leave(ServerPlayer player, boolean announce) {
         if (inTribe(player) && INDIGO_TRIBE.equals(player.getAttached(TEAM))) {
             if (announce) player.sendOverlayMessage(Component.translatable("message.brightestday.team.tribe_bound").withColor(LanternCorps.INDIGO.color()));

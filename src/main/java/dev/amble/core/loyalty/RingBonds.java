@@ -273,6 +273,8 @@ public final class RingBonds {
                 return true;
             }
             stack.remove(BrightestDayComponents.RING_BOND);
+            stack.remove(BrightestDayComponents.SWORN_TO);
+            stack.remove(BrightestDayComponents.SUCCESSOR);
             return true;
         }
         if (bond.generation() < entry.generation()) {

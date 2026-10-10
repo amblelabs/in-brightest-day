@@ -31,10 +31,8 @@ public class LanternScreen extends AbstractContainerScreen<LanternMenu> {
     private static final int BRIGHTNESS_Y = 50;
     private static final int SATURATION_Y = 70;
     private static final int MASK_Y = 90;
-    private static final int MASK_SLIDER_GAP = 6;
     private static final int AURA_Y = 4;
     private static final int AURA_MARGIN = 7;
-    private static final int SUIT_GAP = 6;
     private static final int INFO_X = 50;
     private static final int BAR_Y = 36;
     private static final int INFO_WIDTH = 118;
@@ -50,8 +48,6 @@ public class LanternScreen extends AbstractContainerScreen<LanternMenu> {
     private @Nullable ColorTweakSlider brightness;
     private @Nullable ColorTweakSlider saturation;
     private @Nullable AuraToggle aura;
-    private @Nullable LanternToggle suit;
-    private @Nullable LanternToggle mask;
     private @Nullable MaskHeightSlider maskHeight;
 
     public LanternScreen(LanternMenu menu, Inventory inventory, Component title) {
@@ -110,29 +106,18 @@ public class LanternScreen extends AbstractContainerScreen<LanternMenu> {
                 this.leftPos + IMAGE_WIDTH - AURA_MARGIN - AuraToggle.width(this.font), this.topPos + AURA_Y,
                 this.font, AuraToggle.Mode.of(tweak.aura(), tweak.auraFlightOnly()), value -> this.updateTweak()));
 
-        Component suitLabel = Component.translatable("gui.brightestday.suit");
-        this.suit = this.addRenderableWidget(new LanternToggle(
-                this.aura.getX() - SUIT_GAP - LanternToggle.width(this.font, suitLabel), this.topPos + AURA_Y,
-                suitLabel, this.font, tweak.suit(), value -> this.updateTweak()));
-
-        Component maskLabel = Component.translatable("gui.brightestday.mask");
-        int maskWidth = LanternToggle.width(this.font, maskLabel);
-        this.mask = this.addRenderableWidget(new LanternToggle(
-                this.leftPos + SLIDER_X, this.topPos + MASK_Y, maskLabel, this.font, tweak.mask(), value -> this.updateTweak()));
-
-        int maskSliderX = SLIDER_X + maskWidth + MASK_SLIDER_GAP;
         this.maskHeight = this.addRenderableWidget(new MaskHeightSlider(
-                this.leftPos + maskSliderX, this.topPos + MASK_Y, SLIDER_X + SLIDER_WIDTH - maskSliderX, SLIDER_HEIGHT,
+                this.leftPos + SLIDER_X, this.topPos + MASK_Y, SLIDER_WIDTH, SLIDER_HEIGHT,
                 tweak.maskOffset(), ColorTweak.MAX_MASK_OFFSET, value -> this.updateTweak()));
     }
 
     private void updateTweak() {
-        if (this.brightness == null || this.saturation == null || this.aura == null || this.suit == null
-                || this.mask == null || this.maskHeight == null) return;
+        if (this.brightness == null || this.saturation == null || this.aura == null || this.maskHeight == null) return;
 
-        ColorTweak tweak = new ColorTweak(this.brightness.tweak(), this.saturation.tweak(), this.aura.mode() != AuraToggle.Mode.OFF, this.aura.mode() != AuraToggle.Mode.ALWAYS, this.suit.selected(),
-                this.mask.selected(), this.maskHeight.offset());
-        if (tweak.equals(BrightestDayAttachments.getColorTweak(this.minecraft.player))) return;
+        ColorTweak current = BrightestDayAttachments.getColorTweak(this.minecraft.player);
+        ColorTweak tweak = new ColorTweak(this.brightness.tweak(), this.saturation.tweak(), this.aura.mode() != AuraToggle.Mode.OFF, this.aura.mode() != AuraToggle.Mode.ALWAYS, current.suit(),
+                current.mask(), this.maskHeight.offset());
+        if (tweak.equals(current)) return;
 
         BrightestDayAttachments.setColorTweak(this.minecraft.player, tweak);
         ClientPlayNetworking.send(new SetColorTweakC2SPayload(tweak));

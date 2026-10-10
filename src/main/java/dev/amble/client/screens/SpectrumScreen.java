@@ -53,6 +53,8 @@ public class SpectrumScreen extends Screen {
     private static final int BUTTON_GAP = 4;
     private static final long CONFIRM_MILLIS = 4000L;
     private static final int HOPE = ARGB.opaque(LanternCorps.BLUE.color());
+    private static final int SCROLL_STEP = 12;
+    private static final int SCROLLBAR_WIDTH = 2;
     private static final int SUCCESSOR_GAP = 4;
     private static final int SUCCESSOR_HEIGHT = 18;
     private static final int SUCCESSOR_BOX = 110;
@@ -66,6 +68,9 @@ public class SpectrumScreen extends Screen {
     private int top;
     private long confirmUntil;
     private @Nullable String confirmKey;
+    private int milestoneScroll;
+    private int milestoneMax;
+    private int milestoneTop;
     private final List<AbstractWidget> successorRow = new ArrayList<>();
     private @Nullable EditBox successor;
 
@@ -197,6 +202,12 @@ public class SpectrumScreen extends Screen {
 
         graphics.text(this.font, Component.translatable("gui.brightestday.spectrum.milestones"), x, y, LanternWidgets.TEXT, true);
         y += 11;
+        this.milestoneTop = y;
+        int bottom = this.top + HEIGHT - MARGIN;
+        int listWidth = DETAIL_WIDTH - SCROLLBAR_WIDTH - 3;
+        graphics.enableScissor(x - 1, y, x + DETAIL_WIDTH + 1, bottom);
+        int start = y;
+        y -= this.milestoneScroll;
         RingRanks.Ranks ranks = RingRanks.get(player);
         for (int tier = Milestones.FIRST_TIER; tier <= Milestones.LAST_TIER; tier++) {
             Milestone milestone = ranks.milestone(corps, tier).orElse(null);
@@ -205,11 +216,24 @@ public class SpectrumScreen extends Screen {
                 y += 17;
                 continue;
             }
-            y = this.task(graphics, ranks, milestone, rank, accent, x, y);
+            y = this.task(graphics, ranks, milestone, rank, accent, x, y, listWidth);
+        }
+        graphics.disableScissor();
+
+        int content = y + this.milestoneScroll - start;
+        int view = bottom - start;
+        this.milestoneMax = Math.max(0, content - view);
+        this.milestoneScroll = Math.min(this.milestoneScroll, this.milestoneMax);
+        if (this.milestoneMax > 0) {
+            int barX = x + DETAIL_WIDTH - SCROLLBAR_WIDTH;
+            int thumb = Math.max(10, view * view / content);
+            int thumbY = start + Math.round((view - thumb) * this.milestoneScroll / (float) this.milestoneMax);
+            graphics.fill(barX, start, barX + SCROLLBAR_WIDTH, bottom, LanternWidgets.BAR_EMPTY);
+            graphics.fill(barX, thumbY, barX + SCROLLBAR_WIDTH, thumbY + thumb, accent);
         }
     }
 
-    private int task(GuiGraphicsExtractor graphics, RingRanks.Ranks ranks, Milestone task, int rank, int accent, int x, int y) {
+    private int task(GuiGraphicsExtractor graphics, RingRanks.Ranks ranks, Milestone task, int rank, int accent, int x, int y, int width) {
         boolean done = rank >= task.tier();
         boolean active = rank == task.tier() - 1;
         int progress = done ? task.goal() : active ? ranks.counter(task.key()) : 0;
@@ -219,17 +243,17 @@ public class SpectrumScreen extends Screen {
         graphics.text(this.font, glyph, x, y, color, false);
         Component label = Component.translatable("gui.brightestday.spectrum.rank_short", task.tier()).append(" ")
                 .append(Component.translatable(task.translationKey(), task.goal()));
-        for (FormattedCharSequence line : this.font.split(label, DETAIL_WIDTH - 10)) {
+        for (FormattedCharSequence line : this.font.split(label, width - 10)) {
             graphics.text(this.font, line, x + 9, y, color, false);
             y += 9;
         }
 
-        int barWidth = DETAIL_WIDTH - 46;
+        String count = progress + "/" + task.goal();
+        int barWidth = width - 9 - this.font.width(count) - 4;
         int filled = Math.round(barWidth * Math.min(1.0F, progress / (float) task.goal()));
         graphics.fill(x + 9, y + 1, x + 9 + barWidth, y + 1 + TASK_BAR_HEIGHT, LanternWidgets.BAR_EMPTY);
         graphics.fill(x + 9, y + 1, x + 9 + filled, y + 1 + TASK_BAR_HEIGHT, done ? DONE : accent);
-        String count = progress + "/" + task.goal();
-        graphics.text(this.font, count, x + DETAIL_WIDTH - this.font.width(count), y - 2, color, false);
+        graphics.text(this.font, count, x + width - this.font.width(count), y - 2, color, false);
         return y + 8;
     }
 
@@ -294,6 +318,16 @@ public class SpectrumScreen extends Screen {
     }
 
     @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
+        int x = this.left + DETAIL_X;
+        if (this.milestoneMax > 0 && mouseX >= x && mouseX < x + DETAIL_WIDTH && mouseY >= this.milestoneTop && mouseY < this.top + HEIGHT - MARGIN) {
+            this.milestoneScroll = Math.clamp(this.milestoneScroll - Math.round((float) scrollY * SCROLL_STEP), 0, this.milestoneMax);
+            return true;
+        }
+        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY);
+    }
+
+    @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         if (event.button() == InputConstants.MOUSE_BUTTON_LEFT) {
             Action action = this.minecraft.player != null ? this.actionAt(this.minecraft.player, event.x(), event.y()) : null;
@@ -316,6 +350,7 @@ public class SpectrumScreen extends Screen {
                 int y = this.rowY(i);
                 if (event.x() < x || event.x() >= x + LIST_WIDTH || event.y() < y || event.y() >= y + ROW_HEIGHT - 2) continue;
                 this.selected = emotions[i];
+                this.milestoneScroll = 0;
                 this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
                 return true;
             }

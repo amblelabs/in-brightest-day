@@ -1,5 +1,6 @@
 package dev.amble.client.flight;
 
+import dev.amble.client.BrightestDayKeybinds;
 import dev.amble.core.flight.FlightBoost;
 import dev.amble.core.networking.payloads.c2s.FlightBoostC2SPayload;
 import dev.amble.core.networking.payloads.c2s.FlightSpeedC2SPayload;
@@ -22,7 +23,7 @@ public final class FlightControls {
     public static boolean onScroll(int wheel) {
         Minecraft client = Minecraft.getInstance();
         LocalPlayer player = client.player;
-        if (player == null || wheel == 0 || !client.options.keySprint.isDown() || !ArmedRingPower.isArmed(player) || !FlightRingPower.hasFlight(player)) return false;
+        if (player == null || wheel == 0 || !BrightestDayKeybinds.FLIGHT.isDown() || !ArmedRingPower.isArmed(player) || !FlightRingPower.hasFlight(player)) return false;
         stepSpeed(client, player, Integer.signum(wheel));
         return true;
     }

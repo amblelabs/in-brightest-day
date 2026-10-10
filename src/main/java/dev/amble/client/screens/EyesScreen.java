@@ -29,6 +29,7 @@ public class EyesScreen extends Screen {
     private static final int GAP = 4;
     private static final int GRID_LINE = 0x40000000;
     private static final int HOVER = 0xA0FFFFFF;
+    private static final int BRIGHTNESS_STEP = 10;
 
     private final @Nullable Screen parent;
     private final Supplier<Identifier> skin;
@@ -70,8 +71,13 @@ public class EyesScreen extends Screen {
                 .bounds(buttonX, this.gridTop, BUTTON_WIDTH, BUTTON_HEIGHT).build());
         this.corpsButton = this.addRenderableWidget(Button.builder(Component.empty(), button -> this.selectBrush(EyePaint.CORPS))
                 .bounds(buttonX, this.gridTop + BUTTON_HEIGHT + GAP, BUTTON_WIDTH, BUTTON_HEIGHT).build());
-        this.addRenderableWidget(Button.builder(Component.translatable("gui.brightestday.eyes.clear"), button -> this.update(EyePaint.EMPTY))
+        this.addRenderableWidget(Button.builder(Component.translatable("gui.brightestday.eyes.clear"), button -> this.update(this.eyes.cleared()))
                 .bounds(buttonX, this.gridTop + (BUTTON_HEIGHT + GAP) * 2, BUTTON_WIDTH, BUTTON_HEIGHT).build());
+        int brightnessStep = Math.round((this.eyes.brightness() - EyePaint.MIN_BRIGHTNESS) / (float) BRIGHTNESS_STEP);
+        this.addRenderableWidget(new StepSlider(buttonX, this.gridTop + (BUTTON_HEIGHT + GAP) * 3, BUTTON_WIDTH, BUTTON_HEIGHT, brightnessStep,
+                (EyePaint.MAX_BRIGHTNESS - EyePaint.MIN_BRIGHTNESS) / BRIGHTNESS_STEP,
+                step -> Component.translatable("gui.brightestday.eyes.brightness", EyePaint.MIN_BRIGHTNESS + step * BRIGHTNESS_STEP),
+                step -> this.update(this.eyes.withBrightness(EyePaint.MIN_BRIGHTNESS + step * BRIGHTNESS_STEP))));
         this.addRenderableWidget(Button.builder(Component.translatable("gui.done"), button -> this.onClose())
                 .bounds(buttonX, this.gridTop + GRID - BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT).build());
         this.refreshBrushes();

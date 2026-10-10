@@ -2,7 +2,6 @@ package dev.amble.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.amble.BrightestDay;
-import dev.amble.client.effects.PoseAnimations;
 import dev.amble.client.flight.FlightControls;
 import dev.amble.client.screens.SpectrumScreen;
 import dev.amble.client.team.TeamScreen;
@@ -34,7 +33,7 @@ public final class BrightestDayKeybinds {
     public static final KeyMapping ACID_VOMIT = register("acid_vomit", InputConstants.KEY_N);
     public static final KeyMapping TEAM = register("team", InputConstants.KEY_J);
     public static final KeyMapping SPECTRUM = register("spectrum", InputConstants.KEY_K);
-    public static final KeyMapping POSE = register("pose", InputConstants.KEY_Y);
+    public static final KeyMapping STYLE_WHEEL = register("style_wheel", InputConstants.KEY_Y);
 
     public static final KeyMapping TOGGLE_LIGHT = register("toggle_light", InputConstants.KEY_V);
     public static final KeyMapping TOGGLE_SUIT = register("toggle_suit", InputConstants.KEY_PERIOD);
@@ -43,6 +42,9 @@ public final class BrightestDayKeybinds {
     public static final KeyMapping FLIGHT_BOOST = register("flight_boost", InputConstants.KEY_LALT);
 
     private static boolean raiseHeld;
+    private static final int DOUBLE_TAP_TICKS = 7;
+    private static int ticks;
+    private static int lastFlightTap = -DOUBLE_TAP_TICKS - 1;
 
     private static KeyMapping register(String name, int key) {
         return KeyMappingHelper.registerKeyMapping(new KeyMapping(
@@ -62,13 +64,19 @@ public final class BrightestDayKeybinds {
 
         FlightControls.syncBoost(client.player, FLIGHT_BOOST.isDown());
         if (client.gui.screen() != null) {
-            drain(FLIGHT, RAISE_RING, DISMISS_CONSTRUCT, CONCUSSIVE_BLAST, TEAM, TOGGLE_LIGHT, TOGGLE_SUIT, TOGGLE_MASK, SPECTRUM, POSE);
+            drain(FLIGHT, RAISE_RING, DISMISS_CONSTRUCT, CONCUSSIVE_BLAST, TEAM, TOGGLE_LIGHT, TOGGLE_SUIT, TOGGLE_MASK, SPECTRUM);
             raiseHeld = RAISE_RING.isDown();
             return;
         }
 
+        ticks++;
         while (FLIGHT.consumeClick()) {
-            ClientPlayNetworking.send(new UsePowerC2SPayload(RingPowerRegistry.FLIGHT.id()));
+            if (ticks - lastFlightTap <= DOUBLE_TAP_TICKS) {
+                ClientPlayNetworking.send(new UsePowerC2SPayload(RingPowerRegistry.FLIGHT.id()));
+                lastFlightTap = -DOUBLE_TAP_TICKS - 1;
+            } else {
+                lastFlightTap = ticks;
+            }
         }
 
         boolean raisePressed = false;
@@ -94,23 +102,13 @@ public final class BrightestDayKeybinds {
             client.gui.setScreen(new SpectrumScreen(null));
         }
 
-        while (POSE.consumeClick()) {
-            PoseAnimations.cycle(client.player);
-        }
-
         while (TOGGLE_LIGHT.consumeClick()) {
             ClientPlayNetworking.send(ToggleLightC2SPayload.INSTANCE);
         }
 
-        while (TOGGLE_SUIT.consumeClick()) {
-            ColorTweak tweak = BrightestDayAttachments.getColorTweak(client.player);
-            setTweak(client, tweak.withSuit(!tweak.suit()));
-        }
+        while (TOGGLE_SUIT.consumeClick()) toggleSuit();
 
-        while (TOGGLE_MASK.consumeClick()) {
-            ColorTweak tweak = BrightestDayAttachments.getColorTweak(client.player);
-            setTweak(client, tweak.withMask(!tweak.mask()));
-        }
+        while (TOGGLE_MASK.consumeClick()) toggleMask();
 
     }
 
@@ -119,6 +117,20 @@ public final class BrightestDayKeybinds {
             while (key.consumeClick()) {
             }
         }
+    }
+
+    public static void toggleSuit() {
+        Minecraft client = Minecraft.getInstance();
+        if (client.player == null) return;
+        ColorTweak tweak = BrightestDayAttachments.getColorTweak(client.player);
+        setTweak(client, tweak.withSuit(!tweak.suit()));
+    }
+
+    public static void toggleMask() {
+        Minecraft client = Minecraft.getInstance();
+        if (client.player == null) return;
+        ColorTweak tweak = BrightestDayAttachments.getColorTweak(client.player);
+        setTweak(client, tweak.withMask(!tweak.mask()));
     }
 
     private static void setTweak(Minecraft client, ColorTweak tweak) {

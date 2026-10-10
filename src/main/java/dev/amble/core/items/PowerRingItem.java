@@ -7,6 +7,7 @@ import dev.amble.core.loyalty.RingBonds;
 import dev.amble.core.progression.CorpsCaps;
 import dev.amble.core.ringpowers.CorpsSynergy;
 import dev.amble.core.ringpowers.LanternCorps;
+import dev.amble.core.team.LanternTeams;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -187,10 +188,22 @@ public class PowerRingItem extends Item {
             return;
         }
         ring.set(BrightestDayComponents.SWORN_TO, new BrightestDayComponents.Sworn(player.getUUID(), player.getScoreboardName()));
-        if (player instanceof ServerPlayer server) RingBonds.bind(server, ring);
+        if (player instanceof ServerPlayer server) {
+            LanternCorps former = RingBonds.owned(server.level().getServer(), server.getUUID()).map(entry -> entry.getValue().corps()).orElse(null);
+            RingBonds.bind(server, ring);
+            getCorps(ring).ifPresent(corps -> align(server, former, corps));
+        }
         int color = getCorps(ring).orElse(LanternCorps.GREEN).color();
         player.sendSystemMessage(Component.translatable(previous == null ? "message.brightestday.ring.sworn" : "message.brightestday.ring.reclaimed", previous == null ? "" : previous.name())
                 .withStyle(ChatFormatting.ITALIC).withColor(color));
+    }
+
+    private static void align(ServerPlayer player, @Nullable LanternCorps former, LanternCorps corps) {
+        if (corps == LanternCorps.INDIGO) LanternTeams.joinTribe(player);
+        else LanternTeams.leaveTribe(player);
+        if (former == null || former == corps) return;
+        player.sendSystemMessage(Component.translatable("message.brightestday.ring.forsaken", former.displayName(), corps.displayName())
+                .withStyle(ChatFormatting.ITALIC).withColor(corps.color()));
     }
 
     public static boolean isDormant(ItemStack ring) {

@@ -9,7 +9,7 @@ import net.minecraft.server.level.ServerPlayer;
 
 public class GiantFistConstruct extends ConstructRingPower {
     public GiantFistConstruct() {
-        super(BrightestDay.id("giant_fist"), CorpsArsenal.exclusive(LanternCorps.GREEN));
+        super(BrightestDay.id("giant_fist"), CorpsArsenal.exclusive(LanternCorps.GREEN, LanternCorps.YELLOW, LanternCorps.BLUE));
     }
 
     @Override

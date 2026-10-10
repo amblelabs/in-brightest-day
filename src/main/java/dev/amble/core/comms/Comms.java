@@ -13,6 +13,7 @@ import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import org.jspecify.annotations.Nullable;
@@ -21,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
@@ -30,7 +32,8 @@ public final class Comms {
     private static final int CHECK_INTERVAL = 10;
 
     private static final Map<UUID, UUID> DIALED = new ConcurrentHashMap<>();
-    private static final Map<UUID, UUID> TRANSMITTING = new ConcurrentHashMap<>();
+    private static final Map<UUID, List<UUID>> TRANSMITTING = new ConcurrentHashMap<>();
+    private static final Set<UUID> TEAM_CHANNEL = ConcurrentHashMap.newKeySet();
 
     public static void init() {
         ServerTickEvents.END_SERVER_TICK.register(Comms::tick);
@@ -38,6 +41,7 @@ public final class Comms {
             UUID id = handler.player.getUUID();
             stop(server, id);
             DIALED.remove(id);
+            TEAM_CHANNEL.remove(id);
         });
         EntityTrackingEvents.START_TRACKING.register((entity, watcher) -> {
             if (entity instanceof ServerPlayer player) ServerPlayNetworking.send(watcher, new CommsTalkingS2CPayload(player.getId(), TRANSMITTING.containsKey(player.getUUID())));
@@ -58,12 +62,29 @@ public final class Comms {
         return FabricLoader.getInstance().isModLoaded(VOICE_CHAT_MOD_ID);
     }
 
-    public static @Nullable UUID receiver(UUID sender) {
-        return TRANSMITTING.get(sender);
+    public static List<UUID> receivers(UUID sender) {
+        return TRANSMITTING.getOrDefault(sender, List.of());
+    }
+
+    public static void toggleTeam(ServerPlayer player) {
+        if (!BrightestDayAttachments.has(player, RingPowerRegistry.COMMS)) return;
+        boolean team = TEAM_CHANNEL.add(player.getUUID());
+        if (!team) TEAM_CHANNEL.remove(player.getUUID());
+        ServerPlayer dialed = dialed(player);
+        ServerPlayNetworking.send(player, new CommsTargetS2CPayload(team || dialed == null ? "" : dialed.getScoreboardName(), team));
+        player.sendOverlayMessage(Component.translatable(team ? "message.brightestday.comms.team_on" : "message.brightestday.comms.team_off"));
+        retune(player);
+    }
+
+    private static void retune(ServerPlayer player) {
+        if (!TRANSMITTING.containsKey(player.getUUID())) return;
+        stop(player.level().getServer(), player.getUUID());
+        start(player);
     }
 
     public static void cycle(ServerPlayer player, int direction) {
         if (!BrightestDayAttachments.has(player, RingPowerRegistry.COMMS)) return;
+        boolean wasTeam = TEAM_CHANNEL.remove(player.getUUID());
         List<ServerPlayer> teammates = teammates(player);
         if (teammates.isEmpty()) {
             DIALED.remove(player.getUUID());
@@ -79,37 +100,37 @@ public final class Comms {
         int next = index < 0 ? (direction >= 0 ? 0 : teammates.size() - 1) : Math.floorMod(index + direction, teammates.size());
         ServerPlayer target = teammates.get(next);
         DIALED.put(player.getUUID(), target.getUUID());
-        ServerPlayNetworking.send(player, new CommsTargetS2CPayload(target.getScoreboardName()));
+        ServerPlayNetworking.send(player, new CommsTargetS2CPayload(target.getScoreboardName(), false));
 
-        UUID transmitting = TRANSMITTING.get(player.getUUID());
-        if (transmitting != null && !transmitting.equals(target.getUUID())) {
-            stop(player.level().getServer(), player.getUUID());
-            start(player);
-        }
+        List<UUID> transmitting = TRANSMITTING.get(player.getUUID());
+        if (transmitting != null && (wasTeam || !transmitting.equals(List.of(target.getUUID())))) retune(player);
     }
 
     public static void start(ServerPlayer player) {
         if (!available() || !BrightestDayAttachments.has(player, RingPowerRegistry.COMMS) || ArmedRingPower.activeAbility(player).orElse(null) != RingPowerRegistry.COMMS) return;
-        ServerPlayer target = dialed(player);
-        if (target == null) {
+        List<ServerPlayer> targets = listeners(player);
+        if (targets.isEmpty() && !TEAM_CHANNEL.contains(player.getUUID())) {
             cycle(player, 1);
-            target = dialed(player);
-            if (target == null) return;
+            targets = listeners(player);
         }
-        if (target.getUUID().equals(TRANSMITTING.get(player.getUUID()))) return;
+        if (targets.isEmpty()) return;
+        List<UUID> ids = targets.stream().map(ServerPlayer::getUUID).toList();
+        List<UUID> current = TRANSMITTING.get(player.getUUID());
+        if (ids.equals(current)) return;
+        if (current != null) stop(player.level().getServer(), player.getUUID());
 
-        TRANSMITTING.put(player.getUUID(), target.getUUID());
-        ServerPlayNetworking.send(target, new CommsIncomingS2CPayload(player.getScoreboardName(), true));
+        TRANSMITTING.put(player.getUUID(), ids);
+        for (ServerPlayer target : targets) ServerPlayNetworking.send(target, new CommsIncomingS2CPayload(player.getScoreboardName(), true));
         broadcastTalking(player, true);
     }
 
     public static void stop(MinecraftServer server, UUID sender) {
-        UUID target = TRANSMITTING.remove(sender);
-        if (target == null) return;
-        ServerPlayer receiver = server.getPlayerList().getPlayer(target);
+        List<UUID> targets = TRANSMITTING.remove(sender);
+        if (targets == null) return;
         ServerPlayer player = server.getPlayerList().getPlayer(sender);
-        if (receiver != null) {
-            ServerPlayNetworking.send(receiver, new CommsIncomingS2CPayload(player != null ? player.getScoreboardName() : "", false));
+        for (UUID target : targets) {
+            ServerPlayer receiver = server.getPlayerList().getPlayer(target);
+            if (receiver != null) ServerPlayNetworking.send(receiver, new CommsIncomingS2CPayload(player != null ? player.getScoreboardName() : "", false));
         }
         if (player != null) broadcastTalking(player, false);
     }
@@ -119,6 +140,12 @@ public final class Comms {
         if (id == null) return null;
         ServerPlayer target = player.level().getServer().getPlayerList().getPlayer(id);
         return target != null && LanternTeams.areTeammates(player, target) ? target : null;
+    }
+
+    private static List<ServerPlayer> listeners(ServerPlayer player) {
+        if (TEAM_CHANNEL.contains(player.getUUID())) return teammates(player);
+        ServerPlayer target = dialed(player);
+        return target == null ? List.of() : List.of(target);
     }
 
     private static List<ServerPlayer> teammates(ServerPlayer player) {
@@ -144,7 +171,13 @@ public final class Comms {
         if (server.getTickCount() % CHECK_INTERVAL != 0 || TRANSMITTING.isEmpty()) return;
         for (UUID sender : List.copyOf(TRANSMITTING.keySet())) {
             ServerPlayer player = server.getPlayerList().getPlayer(sender);
-            if (player == null || !BrightestDayAttachments.has(player, RingPowerRegistry.COMMS) || dialed(player) == null) stop(server, sender);
+            if (player == null || !BrightestDayAttachments.has(player, RingPowerRegistry.COMMS)) {
+                stop(server, sender);
+                continue;
+            }
+            List<UUID> ids = listeners(player).stream().map(ServerPlayer::getUUID).toList();
+            if (ids.isEmpty()) stop(server, sender);
+            else if (!ids.equals(TRANSMITTING.get(sender))) retune(player);
         }
     }
 

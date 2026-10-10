@@ -2,6 +2,7 @@ package dev.amble.core.networking.payloads.c2s;
 
 import dev.amble.BrightestDay;
 import dev.amble.core.items.PowerRingItem;
+import dev.amble.core.networking.payloads.s2c.AttackAnimS2CPayload;
 import dev.amble.core.networking.payloads.s2c.ChargeS2CPayload;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
 import io.netty.buffer.ByteBuf;
@@ -35,6 +36,7 @@ public record ChargeC2SPayload(boolean charging, int ticks) implements CustomPac
         ServerPlayer player = context.player();
         boolean charging = this.charging && !player.isSpectator() && PowerRingItem.hasCharge(player) && !ArmedRingPower.isAbilityMode(player);
         if (charging) ArmedRingPower.startCharge(player);
+        ArmedRingPower.selectedConstruct(player).ifPresent(construct -> AttackAnimS2CPayload.broadcast(player, construct.id(), charging ? AttackAnimS2CPayload.CHARGE : AttackAnimS2CPayload.STOP));
 
         ChargeS2CPayload relay = new ChargeS2CPayload(player.getId(), charging, Mth.clamp(this.ticks, 1, MAX_TICKS));
         ServerPlayNetworking.send(player, relay);

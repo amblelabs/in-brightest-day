@@ -2,19 +2,23 @@ package dev.amble.core.visuals;
 
 import dev.amble.BrightestDay;
 import dev.amble.config.BrightestDayConfig;
+import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.s2c.InsigniaS2CPayload;
 import dev.amble.core.ringpowers.LanternCorps;
+import dev.amble.core.ringpowers.RingPowerRegistry;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.EntityTrackingEvents;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.player.Player;
 import org.jspecify.annotations.Nullable;
 
 import java.util.EnumMap;
@@ -60,6 +64,21 @@ public final class Insignia {
 
     public static long latestCreatedAt(UUID owner) {
         return ACTIVE.getOrDefault(owner, Long.MIN_VALUE);
+    }
+
+    public static boolean available(Player player) {
+        return BrightestDayAttachments.has(player, RingPowerRegistry.INSIGNIA) && PowerRingItem.getWornCorps(player).map(Insignia::has).orElse(false);
+    }
+
+    public static void request(ServerPlayer player) {
+        if (!ACTIVE.containsKey(player.getUUID())) {
+            if (!available(player)) return;
+            if (!PowerRingItem.hasCharge(player)) {
+                player.sendOverlayMessage(Component.translatable("message.brightestday.ring_depleted"));
+                return;
+            }
+        }
+        toggle(player);
     }
 
     public static void toggle(ServerPlayer player) {

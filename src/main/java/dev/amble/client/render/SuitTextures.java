@@ -41,6 +41,7 @@ final class SuitTextures {
     private static final int FACE_RIGHT = 16;
     private static final int HAT_LEFT = 40;
     private static final float EYE_GLOW_WHITEN = 0.2F;
+    private static final float EYE_FLARE_WHITEN = 0.45F;
 
     private static final Map<Integer, Entry> ENTRIES = new HashMap<>();
     private static final Map<String, Optional<int[]>> SUITS = new HashMap<>();
@@ -96,6 +97,8 @@ final class SuitTextures {
         float[] maskThresholds = maskThresholds();
         NativeImage body = entry.body.getPixels();
         NativeImage glow = entry.glow.getPixels();
+        NativeImage flare = entry.flare.getPixels();
+        float eyeGlow = eyeProgress * eyes.glow();
         int glowColor = VoxelRenderer.toWhite(color, GLOW_WHITEN);
         int scale = skin.size / SIZE;
 
@@ -114,6 +117,7 @@ final class SuitTextures {
 
                 int out = base;
                 int lit = 0;
+                int flared = 0;
                 if (suit != null && ARGB.alpha(suit[own]) > 0) {
                     out = mix(base, suit[own], reveal);
                     out = ARGB.color(ARGB.alpha(out), ARGB.srgbLerp(edge * EDGE_TINT, out, glowColor));
@@ -125,7 +129,8 @@ final class SuitTextures {
                 int eye = eyeProgress > 0.0F ? eyePixel(eyes, sx, sy, eyeColor) : 0;
                 if (eye != 0 && sx < FACE_RIGHT) {
                     out = ARGB.opaque(ARGB.srgbLerp(eyeProgress, ARGB.opaque(out), eye));
-                    lit = ARGB.color(eyeProgress, VoxelRenderer.toWhite(eye, EYE_GLOW_WHITEN));
+                    lit = ARGB.color(eyeGlow, VoxelRenderer.toWhite(eye, EYE_GLOW_WHITEN));
+                    flared = ARGB.color(eyeGlow, VoxelRenderer.toWhite(eye, EYE_FLARE_WHITEN));
                 } else if (eye != 0) {
                     out = ARGB.multiplyAlpha(out, 1.0F - eyeProgress);
                     lit = 0;
@@ -133,11 +138,13 @@ final class SuitTextures {
 
                 body.setPixel(x, y, out);
                 glow.setPixel(x, y, lit);
+                flare.setPixel(x, y, flared);
             }
         }
 
         entry.body.upload();
         entry.glow.upload();
+        entry.flare.upload();
     }
 
     private static int eyePixel(EyePaint eyes, int sx, int sy, int eyeColor) {
@@ -327,26 +334,32 @@ final class SuitTextures {
     static final class Entry {
         final Identifier bodyId;
         final Identifier glowId;
+        final Identifier flareId;
         final int size;
         final DynamicTexture body;
         final DynamicTexture glow;
+        final DynamicTexture flare;
         @Nullable Key key;
 
         private Entry(int id, int size) {
             this.bodyId = BrightestDay.id("suit/" + id);
             this.glowId = BrightestDay.id("suit_glow/" + id);
+            this.flareId = BrightestDay.id("eye_flare/" + id);
             this.size = size;
             this.body = new DynamicTexture(this.bodyId::toString, size, size, true);
             this.glow = new DynamicTexture(this.glowId::toString, size, size, true);
+            this.flare = new DynamicTexture(this.flareId::toString, size, size, true);
             TextureManager textures = Minecraft.getInstance().getTextureManager();
             textures.register(this.bodyId, this.body);
             textures.register(this.glowId, this.glow);
+            textures.register(this.flareId, this.flare);
         }
 
         private void close() {
             TextureManager textures = Minecraft.getInstance().getTextureManager();
             textures.release(this.bodyId);
             textures.release(this.glowId);
+            textures.release(this.flareId);
         }
     }
 

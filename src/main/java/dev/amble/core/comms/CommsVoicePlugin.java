@@ -129,8 +129,8 @@ public class CommsVoicePlugin implements VoicechatPlugin {
         boolean oath = OathCharge.listening(id);
         boolean answering = VoiceAnswers.listening(id);
         boolean megaphone = Megaphone.isActive(id);
-        VoicechatConnection radio = radioReceiver(api, sender, id);
-        if (!oath && !answering && !megaphone && radio == null) {
+        List<VoicechatConnection> radio = radioReceivers(api, sender, id);
+        if (!oath && !answering && !megaphone && radio.isEmpty()) {
             Voice idle = VOICES.remove(id);
             if (idle != null) idle.close();
             return;
@@ -148,21 +148,25 @@ public class CommsVoicePlugin implements VoicechatPlugin {
             if (answering) VoiceAnswers.hear(id, samples);
         }
 
-        if (radio != null) {
+        if (!radio.isEmpty()) {
             byte[] data = samples == null ? opus : voice.radio(api).encode(samples);
-            api.sendStaticSoundPacketTo(radio, packet.staticSoundPacketBuilder().opusEncodedData(data).category(CATEGORY).build());
+            for (VoicechatConnection receiver : radio) {
+                api.sendStaticSoundPacketTo(receiver, packet.staticSoundPacketBuilder().opusEncodedData(data).category(CATEGORY).build());
+            }
         }
         if (megaphone) amplify(event, api, sender, voice, samples, opus);
     }
 
-    private static @Nullable VoicechatConnection radioReceiver(VoicechatServerApi api, VoicechatConnection sender, UUID id) {
-        UUID target = Comms.receiver(id);
-        if (target == null) return null;
-        VoicechatConnection receiver = api.getConnectionOf(target);
-        if (receiver == null || !receiver.isConnected()) return null;
-        if (receiver.getPlayer().getPlayer() instanceof ServerPlayer listener && sender.getPlayer().getPlayer() instanceof ServerPlayer speaker
-                && listener.level() == speaker.level() && listener.distanceTo(speaker) <= api.getVoiceChatDistance()) return null;
-        return receiver;
+    private static List<VoicechatConnection> radioReceivers(VoicechatServerApi api, VoicechatConnection sender, UUID id) {
+        List<VoicechatConnection> receivers = new ArrayList<>();
+        for (UUID target : Comms.receivers(id)) {
+            VoicechatConnection receiver = api.getConnectionOf(target);
+            if (receiver == null || !receiver.isConnected()) continue;
+            if (receiver.getPlayer().getPlayer() instanceof ServerPlayer listener && sender.getPlayer().getPlayer() instanceof ServerPlayer speaker
+                && listener.level() == speaker.level() && listener.distanceTo(speaker) <= api.getVoiceChatDistance()) continue;
+            receivers.add(receiver);
+        }
+        return receivers;
     }
 
     private static void amplify(MicrophonePacketEvent event, VoicechatServerApi api, VoicechatConnection sender, Voice voice, short @Nullable [] samples, byte[] opus) {
