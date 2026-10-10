@@ -481,6 +481,20 @@ public final class CentralPowerBattery {
         };
     }
 
+    public static boolean forget(ServerLevel level, BlockPos pos) {
+        MinecraftServer server = level.getServer();
+        boolean tracked = WorldProgress.get(server).batteries().stream().anyMatch(battery -> battery.pos().equals(pos));
+        if (!tracked) return false;
+        WorldProgress.update(server, state -> state.withBatteries(state.batteries().stream().filter(battery -> !battery.pos().equals(pos)).toList()));
+        if (FORMED.remove(pos)) reveal(level, pos);
+        ServerBossEvent bar = BARS.remove(pos);
+        if (bar != null) bar.removeAllPlayers();
+        CEREMONIES.remove(pos);
+        AWAITING.remove(pos);
+        broadcast(server);
+        return true;
+    }
+
     public static boolean atLimit(MinecraftServer server, BlockPos pos, LanternCorps corps) {
         long existing = WorldProgress.get(server).batteries().stream()
                 .filter(battery -> battery.corps() == corps && !battery.pos().equals(pos))

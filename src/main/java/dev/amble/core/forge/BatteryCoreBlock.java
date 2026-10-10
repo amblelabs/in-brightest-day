@@ -34,6 +34,12 @@ public class BatteryCoreBlock extends Block {
     }
 
     @Override
+    protected void affectNeighborsAfterRemoval(BlockState state, ServerLevel level, BlockPos pos, boolean movedByPiston) {
+        super.affectNeighborsAfterRemoval(state, level, pos, movedByPiston);
+        if (!(level.getBlockState(pos).getBlock() instanceof BatteryCoreBlock)) CentralPowerBattery.forget(level, pos);
+    }
+
+    @Override
     public @Nullable BlockState getStateForPlacement(BlockPlaceContext context) {
         if (context.getLevel() instanceof ServerLevel server && server.dimension() == Level.OVERWORLD
                 && CentralPowerBattery.atLimit(server.getServer(), context.getClickedPos(), this.corps)) {

@@ -87,6 +87,10 @@ public final class RingBonds {
         ServerTickEvents.END_SERVER_TICK.register(RingBonds::tick);
     }
 
+    public static Map<UUID, Entry> all(MinecraftServer server) {
+        return bonds(server);
+    }
+
     private static Map<UUID, Entry> bonds(MinecraftServer server) {
         return server.overworld().getAttachedOrElse(BONDS, Map.of());
     }

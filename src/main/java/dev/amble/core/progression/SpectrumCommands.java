@@ -15,6 +15,7 @@ import dev.amble.core.forge.CentralPowerBattery;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.ringpowers.LanternCorps;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -33,6 +34,10 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.EnumMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.UUID;
 
 public final class SpectrumCommands {
     private static final DynamicCommandExceptionType UNKNOWN = new DynamicCommandExceptionType(value -> Component.literal("Unknown value: " + value));
@@ -77,7 +82,11 @@ public final class SpectrumCommands {
                                 .then(Commands.literal("clear").executes(SpectrumCommands::indigoClear)))
                         .then(admin("battery")
                                 .then(Commands.literal("list").executes(SpectrumCommands::batteryList))
-                                .then(Commands.literal("activate").executes(SpectrumCommands::batteryActivate)))
+                                .then(Commands.literal("activate").executes(SpectrumCommands::batteryActivate))
+                                .then(Commands.literal("remove").then(Commands.argument("pos", BlockPosArgument.blockPos())
+                                        .executes(context -> batteryRemove(context, BlockPosArgument.getBlockPos(context, "pos"))))))
+                        .then(Commands.literal("corps")
+                                .then(Commands.literal("list").executes(SpectrumCommands::corpsList)))
                         .then(admin("pilgrimage")
                                 .then(Commands.literal("status").then(player().executes(SpectrumCommands::pilgrimageStatus)))
                                 .then(Commands.literal("set").then(player().then(amount(0, 1000).executes(SpectrumCommands::pilgrimageSet))))
@@ -308,10 +317,53 @@ public final class SpectrumCommands {
             return 0;
         }
         for (WorldProgress.Battery battery : batteries) {
+            String status = battery.active() ? "active" : battery.lit() ? "lit, incomplete" : "unlit";
             context.getSource().sendSuccess(() -> Component.literal(battery.corps().getSerializedName() + " @ " + battery.pos().toShortString()
-                    + (battery.active() ? " (active)" : " (incomplete)")).withColor(battery.corps().color()), false);
+                    + " (" + status + ", " + Math.round(battery.strength() * 100.0F) + "% health)").withColor(battery.corps().color()), false);
         }
         return batteries.size();
+    }
+
+    private static int batteryRemove(CommandContext<CommandSourceStack> context, BlockPos pos) {
+        ServerLevel level = context.getSource().getServer().overworld();
+        if (!CentralPowerBattery.forget(level, pos)) {
+            context.getSource().sendFailure(Component.literal("No central power battery is registered at " + pos.toShortString()));
+            return 0;
+        }
+        return reply(context, Component.literal("Removed the central power battery at " + pos.toShortString()));
+    }
+
+    private static int corpsList(CommandContext<CommandSourceStack> context) {
+        MinecraftServer server = context.getSource().getServer();
+        Map<LanternCorps, Map<UUID, String>> members = new EnumMap<>(LanternCorps.class);
+        for (RingBonds.Entry entry : RingBonds.all(server).values()) {
+            members.computeIfAbsent(entry.corps(), corps -> new LinkedHashMap<>()).putIfAbsent(entry.owner(), entry.ownerName());
+        }
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            PowerRingItem.getWornCorps(player).ifPresent(corps ->
+                    members.computeIfAbsent(corps, key -> new LinkedHashMap<>()).putIfAbsent(player.getUUID(), player.getScoreboardName()));
+        }
+        if (members.isEmpty()) {
+            context.getSource().sendSuccess(() -> Component.literal("No one belongs to a corps yet"), false);
+            return 0;
+        }
+        int total = 0;
+        for (LanternCorps corps : LanternCorps.values()) {
+            Map<UUID, String> roster = members.get(corps);
+            if (roster == null || roster.isEmpty()) continue;
+            MutableComponent line = Component.empty().append(corps.displayName().copy().withColor(corps.color()))
+                    .append(Component.literal(" (" + roster.size() + "): ").withColor(0xAAAAAA));
+            boolean first = true;
+            for (Map.Entry<UUID, String> member : roster.entrySet()) {
+                if (!first) line.append(Component.literal(", ").withColor(0xAAAAAA));
+                boolean online = server.getPlayerList().getPlayer(member.getKey()) != null;
+                line.append(Component.literal(member.getValue()).withColor(online ? 0xFFFFFF : 0x777777));
+                first = false;
+            }
+            context.getSource().sendSuccess(() -> line, false);
+            total += roster.size();
+        }
+        return total;
     }
 
     private static int batteryActivate(CommandContext<CommandSourceStack> context) {
