@@ -582,6 +582,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
 
         builder.add("message.brightestday.wrong_lantern", "This lantern only answers to the %s.");
         builder.add("message.brightestday.face_lantern", "Stand before the lantern's face to charge your ring.");
+        builder.add("message.brightestday.lantern_level", "The lantern must stand level with you, not above your head or below your feet.");
         builder.add("message.brightestday.ring_equipped", "%s ring equipped.");
         builder.add("message.brightestday.loyalty_wavers", "Your ring's loyalty wavers. Fall %s more time(s) and it will seek another bearer.");
         builder.add("message.brightestday.loyalty_departed", "Your ring has left you in search of a worthier bearer.");

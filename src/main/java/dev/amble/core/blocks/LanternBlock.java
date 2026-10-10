@@ -166,6 +166,11 @@ public class LanternBlock extends BaseEntityBlock implements SimpleWaterloggedBl
         return toPlayer.normalize().dot(new Vec3(Mth.sin(yaw), 0.0, -Mth.cos(yaw))) >= FRONT_CONE;
     }
 
+    public static boolean isLevel(BlockPos pos, Player player) {
+        int rise = pos.getY() - player.getBlockY();
+        return rise == 0 || rise == 1;
+    }
+
     private InteractionResult recharge(BlockState state, Level level, BlockPos pos, Player player, ItemStack ring, boolean slotted) {
         if (!ArmedRingPower.isArmed(player)) {
             if (!level.isClientSide()) player.sendOverlayMessage(Component.translatable("message.brightestday.arm_to_charge"));
@@ -182,6 +187,11 @@ public class LanternBlock extends BaseEntityBlock implements SimpleWaterloggedBl
 
         if (!isInFront(state, pos, player)) {
             if (!level.isClientSide()) player.sendOverlayMessage(Component.translatable("message.brightestday.face_lantern"));
+            return InteractionResult.FAIL;
+        }
+
+        if (!isLevel(pos, player)) {
+            if (!level.isClientSide()) player.sendOverlayMessage(Component.translatable("message.brightestday.lantern_level"));
             return InteractionResult.FAIL;
         }
 
