@@ -14,6 +14,7 @@ import dev.amble.core.ringpowers.CorpsMimicry;
 import dev.amble.core.ringpowers.CorpsSynergy;
 import dev.amble.core.ringpowers.EyePaint;
 import dev.amble.core.ringpowers.LanternCorps;
+import dev.amble.core.ringpowers.RedBlood;
 import dev.amble.core.ringpowers.RingPower;
 import dev.amble.core.ringpowers.RingPowerCategory;
 import dev.amble.core.ringpowers.RingPowerInstance;
@@ -147,6 +148,11 @@ public class BrightestDayAttachments {
         List<RingPower<?>> available = corps == null
                 ? List.of()
                 : RingPowerRegistry.forCorps(corps, CorpsSynergy.borrowsWill(player) ? LanternCorps.GREEN : null, CorpsMimicry.mimicked(player, corps));
+        if (corps == LanternCorps.RED && RedBlood.flowing(player)) {
+            List<RingPower<?>> lent = new ArrayList<>(available);
+            for (RingPower<?> power : RedBlood.borrowed()) if (!lent.contains(power)) lent.add(power);
+            available = List.copyOf(lent);
+        }
         if (corps != null && CentralPowerBattery.required(corps) && !CentralPowerBattery.active(player.level().getServer(), corps) && !CentralPowerBattery.severed(player.level().getServer(), corps)) {
             available = List.of();
             if (player.tickCount % 200 == 0) player.sendOverlayMessage(Component.translatable("message.brightestday.battery.dormant").withColor(corps.color()));

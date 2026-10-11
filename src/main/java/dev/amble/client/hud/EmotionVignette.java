@@ -7,6 +7,7 @@ import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.s2c.TintFlashS2CPayload;
 import dev.amble.core.ringpowers.CorpsColors;
 import dev.amble.core.ringpowers.LanternCorps;
+import dev.amble.core.ringpowers.RedBlood;
 import dev.amble.core.team.LanternTeams;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -34,6 +35,7 @@ public final class EmotionVignette {
     private static final float REST_ALPHA = 0.12F;
     private static final float MAX_ALPHA = 0.55F;
     private static final float FLASH_ALPHA = 0.3F;
+    private static final float BLOOD_DANGER = 0.85F;
     private static final int HAZE_STRIPS = 16;
     private static final float HAZE_MIN_BAND = 0.1F;
     private static final float HAZE_MAX_BAND = 0.22F;
@@ -118,6 +120,7 @@ public final class EmotionVignette {
         int color = ARGB.opaque(CorpsColors.apply(corps.color(), BrightestDayAttachments.getColorTweak(player)));
 
         if (corps == LanternCorps.RED) {
+            danger = Math.max(danger, RedBlood.get(player) / (float) RedBlood.MAX * BLOOD_DANGER);
             float alpha = Mth.lerp(danger * heartbeat(time, danger), REST_ALPHA, MAX_ALPHA);
             haze(graphics, color, alpha * 0.6F, danger);
             veins(graphics, color, alpha, danger);

@@ -76,6 +76,7 @@ public final class RedRage {
     public static void onHurt(LivingEntity victim, DamageSource source, float amount) {
         if (source.getEntity() instanceof ServerPlayer attacker && attacker != victim && wearsRed(attacker)) {
             fuel(attacker, Math.round(amount * CHARGE_PER_DAMAGE_DEALT));
+            RedBlood.onDealt(attacker, amount);
             if (isBerserk(attacker)) attacker.heal(amount * BERSERK_LIFESTEAL);
         }
         if (!(victim instanceof ServerPlayer red) || !wearsRed(red)) return;

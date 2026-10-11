@@ -18,6 +18,7 @@ import dev.amble.core.ringpowers.RingPowerCategory;
 import dev.amble.core.ringpowers.RingPowerInstance;
 import dev.amble.core.comms.Megaphone;
 import dev.amble.core.ringpowers.RedRage;
+import dev.amble.core.ringpowers.RedBlood;
 import dev.amble.core.ringpowers.RingPowerRegistry;
 import dev.amble.core.ringpowers.constructs.ConstructRingPower;
 import dev.amble.core.beams.BeamManager;
@@ -261,6 +262,7 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
         int color = CorpsColors.of(player);
         construct.get().fire(player, radius, color);
         AttackAnimS2CPayload.broadcast(player, construct.get().id(), AttackAnimS2CPayload.FIRE);
+        RedBlood.onFired(player, construct.get());
         CHARGE_STARTED.remove(player);
         RingRanks.fire(player, Trigger.CONSTRUCT, Milestone.Context.of(construct.get().id().getPath()));
         if (PowerRingItem.getWornCorps(player).orElse(null) == LanternCorps.INDIGO && !construct.get().isAvailableTo(LanternCorps.INDIGO)) {

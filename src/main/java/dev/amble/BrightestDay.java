@@ -16,6 +16,7 @@ import dev.amble.core.oath.OathCharge;
 import dev.amble.core.ringpowers.BloodHunt;
 import dev.amble.core.ringpowers.CometRam;
 import dev.amble.core.ringpowers.RedRage;
+import dev.amble.core.ringpowers.RedBlood;
 import dev.amble.core.ringpowers.RingPowerRegistry;
 import dev.amble.core.ringpowers.RingPowerTicker;
 import dev.amble.core.ringpowers.impl.FlightRingPower;
@@ -149,6 +150,7 @@ public class BrightestDay implements ModInitializer {
 		Catalysts.init();
 		BlueSanctuary.init();
 		RedRage.init();
+		RedBlood.init();
 		CometRam.init();
 		BloodHunt.init();
 		Comms.init();
