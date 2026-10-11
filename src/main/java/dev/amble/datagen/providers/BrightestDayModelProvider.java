@@ -51,6 +51,10 @@ public class BrightestDayModelProvider extends FabricModelProvider {
                 itemModelGenerators.itemModelOutput.accept(tool.item(), ItemModelGenerators.createFlatModelDispatch(
                         constructModel(tool.vanillaModel()), constructModel(tool.vanillaModel() + "_in_hand")
                 ), new ClientItem.Properties(true, false, 1.95F));
+            } else if (tool == ConstructTool.SPYGLASS) {
+                itemModelGenerators.itemModelOutput.accept(tool.item(), ItemModelGenerators.createFlatModelDispatch(
+                        constructModel(tool.vanillaModel()), constructModel(tool.vanillaModel() + "_in_hand")
+                ));
             } else {
                 itemModelGenerators.itemModelOutput.accept(tool.item(), constructModel(tool.vanillaModel()));
             }

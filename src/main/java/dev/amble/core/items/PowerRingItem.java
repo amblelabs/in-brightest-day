@@ -5,6 +5,7 @@ import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.BrightestDayComponents;
 import dev.amble.core.loyalty.RingBonds;
 import dev.amble.core.progression.CorpsCaps;
+import dev.amble.core.rings.ConstructRings;
 import dev.amble.core.ringpowers.CorpsSynergy;
 import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.team.LanternTeams;
@@ -90,37 +91,52 @@ public class PowerRingItem extends Item {
         return (float) getRingPower(ring) / BrightestDayComponents.MAX_POWER;
     }
 
+    private record Source(ItemStack ring, Player owner) {
+        void save() {
+            if (this.ring == BrightestDayAttachments.getRing(this.owner)) BrightestDayAttachments.setRing(this.owner, this.ring);
+        }
+    }
+
+    private static Source source(Player player) {
+        ItemStack ring = getWornRing(player);
+        if (player instanceof ServerPlayer server && ConstructRings.isConstruct(ring)) {
+            ServerPlayer creator = ConstructRings.creator(server, ring);
+            return creator == null ? new Source(ItemStack.EMPTY, player) : new Source(BrightestDayAttachments.getRing(creator), creator);
+        }
+        return new Source(ring, player);
+    }
+
     public static void refund(Player player, int amount) {
         amount = CorpsSynergy.scaleCost(player, amount);
-        ItemStack ring = getWornRing(player);
-        if (ring.isEmpty() || player.hasInfiniteMaterials()) return;
+        Source source = source(player);
+        if (source.ring().isEmpty() || player.hasInfiniteMaterials()) return;
 
-        chargeRing(ring, amount);
-        if (ring == BrightestDayAttachments.getRing(player)) BrightestDayAttachments.setRing(player, ring);
+        chargeRing(source.ring(), amount);
+        source.save();
     }
 
     public static boolean hasCharge(Player player) {
-        return player.hasInfiniteMaterials() || player.isCreative() || getRingPower(getWornRing(player)) > 0;
+        return player.hasInfiniteMaterials() || player.isCreative() || getRingPower(source(player).ring()) > 0;
     }
 
     public static boolean drainWorn(Player player, int amount) {
         amount = CorpsSynergy.scaleCost(player, amount);
-        ItemStack ring = getWornRing(player);
-        if (ring.isEmpty()) return false;
+        Source source = source(player);
+        if (source.ring().isEmpty()) return false;
 
-        boolean paid = getRingPower(ring) >= amount;
-        drainRing(ring, amount);
-        if (ring == BrightestDayAttachments.getRing(player)) BrightestDayAttachments.setRing(player, ring);
+        boolean paid = getRingPower(source.ring()) >= amount;
+        drainRing(source.ring(), amount);
+        source.save();
         return paid;
     }
 
     public static boolean consumeCharge(Player player, int amount) {
         amount = CorpsSynergy.scaleCost(player, amount);
-        ItemStack ring = getWornRing(player);
-        if (ring.isEmpty() || getRingPower(ring) < amount) return false;
+        Source source = source(player);
+        if (source.ring().isEmpty() || getRingPower(source.ring()) < amount) return false;
 
-        drainRing(ring, amount);
-        if (ring == BrightestDayAttachments.getRing(player)) BrightestDayAttachments.setRing(player, ring);
+        drainRing(source.ring(), amount);
+        source.save();
         return true;
     }
 
@@ -155,6 +171,10 @@ public class PowerRingItem extends Item {
     @Override
     public void appendHoverText(ItemStack itemStack, TooltipContext context, TooltipDisplay display, Consumer<Component> builder, TooltipFlag tooltipFlag) {
         super.appendHoverText(itemStack, context, display, builder, tooltipFlag);
+        BrightestDayComponents.ConstructRing construct = itemStack.get(BrightestDayComponents.CONSTRUCT_RING);
+        if (construct != null) builder.accept(Component.translatable("tooltip.brightestday.ring.construct", construct.creatorName(), remaining(construct.expires())).withStyle(ChatFormatting.AQUA));
+        BrightestDayComponents.FusedWhite fused = itemStack.get(BrightestDayComponents.FUSED_WHITE);
+        if (fused != null) builder.accept(Component.translatable("tooltip.brightestday.ring.fused_white", remaining(fused.expires())).withStyle(ChatFormatting.AQUA));
         if (!usesPower(itemStack)) return;
 
         double percentage = ((double) PowerRingItem.getRingPower(itemStack) / BrightestDayComponents.MAX_POWER) * 100;
@@ -183,6 +203,7 @@ public class PowerRingItem extends Item {
     }
 
     public static boolean swear(Player player, ItemStack ring) {
+        if (ConstructRings.temporary(ring)) return true;
         BrightestDayComponents.Sworn previous = ring.get(BrightestDayComponents.SWORN_TO);
         if (previous != null && previous.owner().equals(player.getUUID())) {
             if (player instanceof ServerPlayer server && !ring.has(BrightestDayComponents.RING_BOND)) RingBonds.bind(server, ring);
@@ -206,6 +227,11 @@ public class PowerRingItem extends Item {
         player.sendSystemMessage(Component.translatable(previous == null ? "message.brightestday.ring.sworn" : "message.brightestday.ring.reclaimed", previous == null ? "" : previous.name())
                 .withStyle(ChatFormatting.ITALIC).withColor(color));
         return true;
+    }
+
+    private static String remaining(long expires) {
+        long seconds = Math.max(0L, (expires - System.currentTimeMillis()) / 1000L);
+        return String.format("%d:%02d", seconds / 60L, seconds % 60L);
     }
 
     private static void align(ServerPlayer player, @Nullable LanternCorps former, LanternCorps corps) {

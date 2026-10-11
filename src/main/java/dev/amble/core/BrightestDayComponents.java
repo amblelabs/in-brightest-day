@@ -127,6 +127,56 @@ public class BrightestDayComponents {
                             .build()
             );
 
+    public record ConstructRing(UUID id, UUID creator, String creatorName, long expires) {
+        public static final Codec<ConstructRing> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                UUIDUtil.CODEC.fieldOf("id").forGetter(ConstructRing::id),
+                UUIDUtil.CODEC.fieldOf("creator").forGetter(ConstructRing::creator),
+                Codec.STRING.fieldOf("creator_name").forGetter(ConstructRing::creatorName),
+                Codec.LONG.fieldOf("expires").forGetter(ConstructRing::expires)
+        ).apply(instance, ConstructRing::new));
+
+        public static final StreamCodec<ByteBuf, ConstructRing> STREAM_CODEC = StreamCodec.composite(
+                UUIDUtil.STREAM_CODEC, ConstructRing::id,
+                UUIDUtil.STREAM_CODEC, ConstructRing::creator,
+                ByteBufCodecs.STRING_UTF8, ConstructRing::creatorName,
+                ByteBufCodecs.LONG, ConstructRing::expires,
+                ConstructRing::new
+        );
+    }
+
+    public static final DataComponentType<ConstructRing> CONSTRUCT_RING =
+            Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE,
+                    BrightestDay.id("construct_ring"),
+                    DataComponentType.<ConstructRing>builder()
+                            .persistent(ConstructRing.CODEC)
+                            .networkSynchronized(ConstructRing.STREAM_CODEC)
+                            .build()
+            );
+
+    public record FusedWhite(UUID id, long expires, LanternCorps alignment) {
+        public static final Codec<FusedWhite> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                UUIDUtil.CODEC.fieldOf("id").forGetter(FusedWhite::id),
+                Codec.LONG.fieldOf("expires").forGetter(FusedWhite::expires),
+                LanternCorps.CODEC.fieldOf("alignment").forGetter(FusedWhite::alignment)
+        ).apply(instance, FusedWhite::new));
+
+        public static final StreamCodec<ByteBuf, FusedWhite> STREAM_CODEC = StreamCodec.composite(
+                UUIDUtil.STREAM_CODEC, FusedWhite::id,
+                ByteBufCodecs.LONG, FusedWhite::expires,
+                LanternCorps.STREAM_CODEC, FusedWhite::alignment,
+                FusedWhite::new
+        );
+    }
+
+    public static final DataComponentType<FusedWhite> FUSED_WHITE =
+            Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE,
+                    BrightestDay.id("fused_white"),
+                    DataComponentType.<FusedWhite>builder()
+                            .persistent(FusedWhite.CODEC)
+                            .networkSynchronized(FusedWhite.STREAM_CODEC)
+                            .build()
+            );
+
     public static final DataComponentType<Boolean> JUMPSTARTED =
             Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE,
                     BrightestDay.id("jumpstarted"),

@@ -2,6 +2,7 @@ package dev.amble.core.loyalty;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import dev.amble.core.rings.ConstructRings;
 import dev.amble.BrightestDay;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.BrightestDayAttachments;
@@ -198,7 +199,7 @@ public final class RingBonds {
 
     public static void bind(ServerPlayer player, ItemStack ring) {
         LanternCorps corps = PowerRingItem.getCorps(ring).orElse(null);
-        if (corps == null || PowerRingItem.isDormant(ring)) return;
+        if (corps == null || PowerRingItem.isDormant(ring) || ConstructRings.temporary(ring)) return;
         MinecraftServer server = player.level().getServer();
         Map<UUID, Entry> bonds = new HashMap<>(bonds(server));
         BrightestDayComponents.Bond bond = ring.get(BrightestDayComponents.RING_BOND);

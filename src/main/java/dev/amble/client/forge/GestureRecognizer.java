@@ -25,7 +25,8 @@ public final class GestureRecognizer {
             template(ConstructTool.HOE, false, 0, 1, 0, 0, 0.6F, 0),
             circle(ConstructTool.MACE),
             arc(ConstructTool.FLINT_AND_STEEL, 60.0F, 300.0F),
-            template(ConstructTool.SHEARS, false, 0, 1, 0.5F, 0, 1, 1)
+            template(ConstructTool.SHEARS, false, 0, 1, 0.5F, 0, 1, 1),
+            template(ConstructTool.SPYGLASS, true, 0.5F, 1, 1, 0, 0, 0, 0.5F, 1)
     );
 
     public static Optional<ConstructTool> recognize(List<float[]> stroke) {

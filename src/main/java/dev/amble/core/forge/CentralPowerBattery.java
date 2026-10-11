@@ -1,5 +1,6 @@
 package dev.amble.core.forge;
 
+import dev.amble.core.rings.ConstructRings;
 import dev.amble.core.team.LanternTeams;
 import dev.amble.core.loyalty.RingBonds;
 import dev.amble.config.BrightestDayConfig;
@@ -447,6 +448,7 @@ public final class CentralPowerBattery {
             player.sendOverlayMessage(Component.translatable("message.brightestday.wrong_lantern", corps.displayName()).withColor(corps.color()));
             return InteractionResult.FAIL;
         }
+        if (ConstructRings.refuseRecharge(player, ring)) return InteractionResult.FAIL;
         BrightestDayComponents.Sworn sworn = ring.get(BrightestDayComponents.SWORN_TO);
         boolean settled = sworn != null && sworn.owner().equals(player.getUUID()) && !PowerRingItem.isDormant(ring);
         if (settled && PowerRingItem.getRingPower(ring) >= BrightestDayComponents.MAX_POWER && RingSync.sync(ring) >= 1.0F) return InteractionResult.PASS;

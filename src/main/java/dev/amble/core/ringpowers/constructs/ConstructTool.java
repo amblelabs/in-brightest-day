@@ -14,7 +14,8 @@ public enum ConstructTool {
     SPEAR("spear", "—", "iron_spear"),
     MACE("mace", "O", "mace"),
     FLINT_AND_STEEL("flint_and_steel", "C", "flint_and_steel"),
-    SHEARS("shears", "V", "shears");
+    SHEARS("shears", "V", "shears"),
+    SPYGLASS("spyglass", "△", "spyglass");
 
     private final String name;
     private final String glyph;

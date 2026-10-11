@@ -1,6 +1,7 @@
 package dev.amble.core.loyalty;
 
 import com.mojang.math.Transformation;
+import dev.amble.core.rings.ConstructRings;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.BrightestDayBlocks;
@@ -155,6 +156,7 @@ public final class RingLoyalty {
     private static void onDeath(ServerPlayer player) {
         ItemStack ring = BrightestDayAttachments.getRing(player);
         if (ring.isEmpty()) return;
+        if (ConstructRings.temporary(ring)) return;
 
         int threshold = BrightestDayConfig.get().ringLoyaltyDeaths;
         if (threshold <= 0) return;
@@ -387,6 +389,7 @@ public final class RingLoyalty {
         return stack.getItem() instanceof PowerRingItem
                 && PowerRingItem.getCorps(stack).map(GIFTABLE::contains).orElse(false)
                 && stack.has(DataComponents.CUSTOM_NAME)
+                && !ConstructRings.temporary(stack)
                 && !stack.has(BrightestDayComponents.SWORN_TO)
                 && !stack.has(BrightestDayComponents.RING_BOND)
                 && stack.getOrDefault(BrightestDayComponents.POWER_TYPE, 0) <= 0;

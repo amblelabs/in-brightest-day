@@ -49,7 +49,8 @@ public final class RingRanks {
             RingPowerRegistry.RING_COMPASS, 1,
             RingPowerRegistry.LIGHT_ORB, 1,
             RingPowerRegistry.INSIGNIA, 2,
-            RingPowerRegistry.BULWARK, 2);
+            RingPowerRegistry.BULWARK, 2,
+            RingPowerRegistry.CONSTRUCT_RING, 4);
     private static final Map<LanternCorps, Map<RingPower<?>, Integer>> CORPS_GATED = Map.of(
             LanternCorps.YELLOW, Map.of(RingPowerRegistry.GIANT_FIST, 2),
             LanternCorps.BLUE, Map.of(RingPowerRegistry.TOOL_FORGE, 3, RingPowerRegistry.GIANT_FIST, 2));
@@ -254,6 +255,10 @@ public final class RingRanks {
     }
 
     public static Set<RingPower<?>> locked(Player player, LanternCorps corps) {
+        return locked(player, corps, rank(player, corps));
+    }
+
+    public static Set<RingPower<?>> locked(Player player, LanternCorps corps, int rank) {
         if (!ranked(corps)) return Set.of();
 
         List<ConstructRingPower> arsenal = RingPowerRegistry.forCorps(corps).stream()
@@ -269,10 +274,9 @@ public final class RingRanks {
                             return index < 0 ? PRIORITY.size() : index;
                         }))
                 .toList();
-        int unlocked = (int) Math.ceil(arsenal.size() * ARSENAL[Mth.clamp(rank(player, corps), 1, MAX_RANK)]);
+        int unlocked = (int) Math.ceil(arsenal.size() * ARSENAL[Mth.clamp(rank, 1, MAX_RANK)]);
         Set<RingPower<?>> locked = new HashSet<>();
         for (int i = unlocked; i < arsenal.size(); i++) locked.add(arsenal.get(i));
-        int rank = rank(player, corps);
         RANK_GATED.forEach((power, required) -> {
             if (rank < required) locked.add(power);
         });

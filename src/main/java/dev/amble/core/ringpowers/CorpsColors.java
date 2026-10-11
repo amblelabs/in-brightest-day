@@ -1,5 +1,6 @@
 package dev.amble.core.ringpowers;
 
+import dev.amble.core.rings.WhiteFusion;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.items.PowerRingItem;
 import net.minecraft.util.Mth;
@@ -13,7 +14,8 @@ public final class CorpsColors {
 
     public static int of(Player player) {
         LanternCorps corps = PowerRingItem.getWornCorps(player).orElse(LanternCorps.GREEN);
-        return apply(corps.color(), BrightestDayAttachments.getColorTweak(player));
+        LanternCorps aligned = WhiteFusion.alignment(player);
+        return apply((aligned != null ? aligned : corps).color(), BrightestDayAttachments.getColorTweak(player));
     }
 
     public static int apply(int rgb, ColorTweak tweak) {

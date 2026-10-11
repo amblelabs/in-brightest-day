@@ -1,5 +1,6 @@
 package dev.amble.core.ringpowers;
 
+import dev.amble.core.rings.ConstructRings;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.BrightestDayComponents;
 import dev.amble.core.BrightestDaySounds;
@@ -50,7 +51,7 @@ public final class RingJumpstart {
     private static ItemStack deadRing(ServerPlayer player) {
         ItemStack slotted = BrightestDayAttachments.getRing(player);
         ItemStack ring = slotted.getItem() instanceof PowerRingItem ? slotted : player.getMainHandItem();
-        if (!(ring.getItem() instanceof PowerRingItem) || PowerRingItem.getRingPower(ring) > 0) return ItemStack.EMPTY;
+        if (!(ring.getItem() instanceof PowerRingItem) || PowerRingItem.getRingPower(ring) > 0 || ConstructRings.temporary(ring)) return ItemStack.EMPTY;
         return ring;
     }
 

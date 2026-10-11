@@ -1,5 +1,6 @@
 package dev.amble.core.ringpowers;
 
+import dev.amble.core.rings.ConstructRings;
 import dev.amble.core.progression.Milestone;
 import dev.amble.core.progression.Trigger;
 import dev.amble.core.BrightestDayAttachments;
@@ -43,6 +44,7 @@ public final class CorpsCombat {
         if (attacker.isEmpty()) return amount;
 
         Player player = attacker.get();
+        if (ConstructRings.isConstruct(PowerRingItem.getWornRing(player))) amount *= ConstructRings.WEAK_DAMAGE;
         return switch (PowerRingItem.getWornCorps(player).orElse(LanternCorps.GREEN)) {
             case YELLOW -> amount * YELLOW_DAMAGE;
             case RED -> amount * RED_DAMAGE * (1.0F + RED_DESPERATION * (1.0F - player.getHealth() / player.getMaxHealth()));

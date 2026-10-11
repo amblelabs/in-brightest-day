@@ -15,6 +15,8 @@ import dev.amble.core.ringpowers.CorpsSynergy;
 import dev.amble.core.ringpowers.EyePaint;
 import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.ringpowers.RedBlood;
+import dev.amble.core.rings.ConstructRings;
+import dev.amble.core.rings.WhiteFusion;
 import dev.amble.core.ringpowers.RingPower;
 import dev.amble.core.ringpowers.RingPowerCategory;
 import dev.amble.core.ringpowers.RingPowerInstance;
@@ -148,6 +150,9 @@ public class BrightestDayAttachments {
         List<RingPower<?>> available = corps == null
                 ? List.of()
                 : RingPowerRegistry.forCorps(corps, CorpsSynergy.borrowsWill(player) ? LanternCorps.GREEN : null, CorpsMimicry.mimicked(player, corps));
+        ItemStack wornRing = PowerRingItem.getWornRing(player);
+        boolean constructRing = ConstructRings.isConstruct(wornRing);
+        if (corps == LanternCorps.WHITE && wornRing.has(BrightestDayComponents.FUSED_WHITE)) available = WhiteFusion.arsenal();
         if (corps == LanternCorps.RED && RedBlood.flowing(player)) {
             List<RingPower<?>> lent = new ArrayList<>(available);
             for (RingPower<?> power : RedBlood.borrowed()) if (!lent.contains(power)) lent.add(power);
@@ -158,7 +163,8 @@ public class BrightestDayAttachments {
             if (player.tickCount % 200 == 0) player.sendOverlayMessage(Component.translatable("message.brightestday.battery.dormant").withColor(corps.color()));
         }
         if (corps != null) {
-            Set<RingPower<?>> locked = RingRanks.locked(player, corps);
+            Set<RingPower<?>> locked = constructRing ? RingRanks.locked(player, corps, 1) : RingRanks.locked(player, corps);
+            if (constructRing) available = available.stream().filter(power -> power != RingPowerRegistry.CONSTRUCT_RING).toList();
             if (!locked.isEmpty()) available = available.stream().filter(power -> !locked.contains(power)).toList();
             if (!IndigoOne.isIndigoOne(player)) available = available.stream().filter(power -> power != RingPowerRegistry.GATHER).toList();
             if (!Comms.available()) available = available.stream().filter(power -> power != RingPowerRegistry.COMMS).toList();

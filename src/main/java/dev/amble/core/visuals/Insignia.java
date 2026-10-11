@@ -34,7 +34,9 @@ public final class Insignia {
             LanternCorps.ORANGE, texture("greed"),
             LanternCorps.BLUE, texture("hope"),
             LanternCorps.INDIGO, texture("compassion"),
-            LanternCorps.STAR_SAPPHIRE, texture("love")));
+            LanternCorps.STAR_SAPPHIRE, texture("love"),
+            LanternCorps.WHITE, texture("life"),
+            LanternCorps.BLACK, texture("death")));
 
     private static final Map<UUID, Long> ACTIVE = new HashMap<>();
 
@@ -67,7 +69,9 @@ public final class Insignia {
     }
 
     public static boolean available(Player player) {
-        return BrightestDayAttachments.has(player, RingPowerRegistry.INSIGNIA) && PowerRingItem.getWornCorps(player).map(Insignia::has).orElse(false);
+        LanternCorps corps = PowerRingItem.getWornCorps(player).orElse(null);
+        if (corps == null || !has(corps)) return false;
+        return corps == LanternCorps.WHITE || corps == LanternCorps.BLACK || BrightestDayAttachments.has(player, RingPowerRegistry.INSIGNIA);
     }
 
     public static void request(ServerPlayer player) {

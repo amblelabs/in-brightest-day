@@ -17,6 +17,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.FlintAndSteelItem;
 import net.minecraft.world.item.MaceItem;
 import net.minecraft.world.item.ShearsItem;
+import net.minecraft.world.item.SpyglassItem;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.ToolMaterial;
 import net.minecraft.world.item.component.Weapon;
@@ -59,10 +60,12 @@ public class BrightestDayItems {
     public static final Item CONSTRUCT_SHEARS = registerConstructTool(ConstructTool.SHEARS, properties -> properties
             .durability(238)
             .component(DataComponents.TOOL, ShearsItem.createToolProperties()), ShearsItem::new);
+    public static final Item CONSTRUCT_SPYGLASS = registerConstructTool(ConstructTool.SPYGLASS, properties -> properties.stacksTo(1), SpyglassItem::new);
 
     static {
         ConstructMimics.register(CONSTRUCT_SHEARS, Items.SHEARS);
         ConstructMimics.register(CONSTRUCT_FLINT_AND_STEEL, Items.FLINT_AND_STEEL);
+        ConstructMimics.register(CONSTRUCT_SPYGLASS, Items.SPYGLASS);
     }
 
     public static final Item PARALLAX_SHARD = register("parallax_shard", id -> new Item(new Item.Properties()

@@ -1,5 +1,6 @@
 package dev.amble.core.ringpowers.impl;
 
+import dev.amble.core.rings.WhiteFusion;
 import dev.amble.core.networking.payloads.s2c.AttackAnimS2CPayload;
 import dev.amble.core.progression.Milestone;
 import dev.amble.core.progression.Trigger;
@@ -260,6 +261,8 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
         if (RingSync.misfire(player, construct.get())) return;
 
         int color = CorpsColors.of(player);
+        LanternCorps signature = WhiteFusion.fused(player) ? WhiteFusion.signature(construct.get()) : null;
+        if (signature != null) color = CorpsColors.apply(signature.color(), BrightestDayAttachments.getColorTweak(player));
         construct.get().fire(player, radius, color);
         AttackAnimS2CPayload.broadcast(player, construct.get().id(), AttackAnimS2CPayload.FIRE);
         RedBlood.onFired(player, construct.get());

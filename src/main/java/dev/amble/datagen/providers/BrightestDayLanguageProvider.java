@@ -457,6 +457,18 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.battery.severed", "The %s has lost its Central Power Battery. This light cannot recharge your ring.");
         builder.add("message.brightestday.jumpstart.spent", "Your ring has already been jolted back once. Recharge it to restore that spark.");
         builder.add("message.brightestday.blood.dry", "The blood runs dry. Your borrowed constructs shatter.");
+        builder.add("message.brightestday.construct_ring.no_recharge", "Construct rings can't be recharged. They draw on their maker's ring.");
+        builder.add("message.brightestday.construct_ring.needs_main", "Wear your own ring in your ring slot to shape a construct ring.");
+        builder.add("message.brightestday.construct_ring.created", "A construct ring takes shape. It will last %s minutes.");
+        builder.add("message.brightestday.construct_ring.dismissed", "Construct ring dismissed.");
+        builder.add("message.brightestday.construct_ring.faded", "A construct ring fades away.");
+        builder.add("message.brightestday.white_fusion.faded", "The White light fades from the ring.");
+        builder.add("message.brightestday.white_fusion.lacking", "The rings need a whole heart. Still lacking: %s");
+        builder.add("message.brightestday.white_fusion.formed", "Every light of the spectrum becomes one. You bear the White for %s minutes.");
+        builder.add("message.brightestday.white_fusion.returned", "Rings lent to the White light have returned to you.");
+        builder.add("tooltip.brightestday.ring.construct", "Construct ring by %s · %s left");
+        builder.add("tooltip.brightestday.ring.fused_white", "Fused White · %s left");
+        builder.add("gui.brightestday.construct_ring.minutes", "%s min");
         builder.add("message.brightestday.sanctuary.barred", "Only those with hope may pass.");
         builder.add("message.brightestday.sanctuary.blessed", "You have walked the path of hope. The light is yours.");
         builder.add("message.brightestday.meteor.streak", "A pink light streaks across the night sky...");
@@ -639,6 +651,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add(RingPowerRegistry.ENTITY_SHIELD.getTranslationKey(), "Bubble Shield");
         builder.add(RingPowerRegistry.AREA_SHIELD.getTranslationKey(), "Dome Shield");
         builder.add(RingPowerRegistry.BULWARK.getTranslationKey(), "Bulwark");
+        builder.add(RingPowerRegistry.CONSTRUCT_RING.getTranslationKey(), "Construct Ring");
         builder.add(RingPowerRegistry.BEAM.getTranslationKey(), "Beam");
         builder.add(RingPowerRegistry.HEAL_BEAM.getTranslationKey(), "Healing Beam");
         builder.add(RingPowerRegistry.WALL.getTranslationKey(), "Wall");
@@ -1162,6 +1175,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("item.brightestday.construct_mace", "Construct Mace");
         builder.add("item.brightestday.construct_flint_and_steel", "Construct Flint and Steel");
         builder.add("item.brightestday.construct_shears", "Construct Shears");
+        builder.add("item.brightestday.construct_spyglass", "Construct Spyglass");
         builder.add("message.brightestday.forged", "Forged %s");
         builder.add("message.brightestday.forge_no_room", "No room for the construct.");
         builder.add("message.brightestday.unknown_pattern", "The ring doesn't recognize that pattern.");
