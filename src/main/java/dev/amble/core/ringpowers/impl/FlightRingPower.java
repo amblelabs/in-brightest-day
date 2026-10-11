@@ -24,8 +24,10 @@ import net.minecraft.world.phys.Vec3;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.function.Consumer;
 
 public class FlightRingPower extends RingPower<FlightRingPower.Data> {
+    public static Consumer<Boolean> compactSender = compact -> {};
 
     public static final double CRUISE_SPEED = 1.2;
     public static final double BOOST_SPEED = 3.5;

@@ -51,13 +51,24 @@ public abstract class PlayerMixin extends LivingEntity implements CompactFlyer {
         return this.brightestday$compact;
     }
 
-    @Inject(method = "tick", at = @At("TAIL"))
-    private void brightestday$updateCompact(CallbackInfo ci) {
-        Player self = (Player) (Object) this;
-        boolean compact = FlightRingPower.isDiving(self, this.brightestday$compact) || this.brightestday$compact && !FlightRingPower.fitsStanding(self);
+    @Override
+    public void brightestday$setCompact(boolean compact) {
         if (compact == this.brightestday$compact) return;
         this.brightestday$compact = compact;
         this.refreshDimensions();
+    }
+
+    @Inject(method = "tick", at = @At("TAIL"))
+    private void brightestday$updateCompact(CallbackInfo ci) {
+        Player self = (Player) (Object) this;
+        if (!self.level().isClientSide()) {
+            if (this.brightestday$compact && !FlightRingPower.isFlying(self) && FlightRingPower.fitsStanding(self)) this.brightestday$setCompact(false);
+            return;
+        }
+        boolean compact = FlightRingPower.isDiving(self, this.brightestday$compact) || this.brightestday$compact && !FlightRingPower.fitsStanding(self);
+        if (compact == this.brightestday$compact) return;
+        this.brightestday$setCompact(compact);
+        if (self.isLocalPlayer()) FlightRingPower.compactSender.accept(compact);
     }
 
     @Inject(method = "updateSwimming", at = @At("HEAD"), cancellable = true)
