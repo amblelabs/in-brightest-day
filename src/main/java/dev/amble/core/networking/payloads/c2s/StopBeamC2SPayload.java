@@ -2,6 +2,7 @@ package dev.amble.core.networking.payloads.c2s;
 
 import dev.amble.core.comms.Megaphone;
 import dev.amble.BrightestDay;
+import dev.amble.core.shields.BulwarkManager;
 import dev.amble.core.attacks.area.BarrageManager;
 import dev.amble.core.beams.BeamManager;
 import dev.amble.core.drill.DrillManager;
@@ -33,5 +34,6 @@ public record StopBeamC2SPayload() implements CustomPacketPayload {
         BarrageManager.stop(context.player());
         DrillManager.stop(context.player());
         Megaphone.stop(context.player());
+        BulwarkManager.stop(context.player());
     }
 }

@@ -6,7 +6,10 @@ import dev.amble.core.forge.BatteryCoreBlock;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.c2s.CycleConstructC2SPayload;
 import dev.amble.core.ringpowers.CorpsColors;
+import dev.amble.core.ringpowers.RingPowerRegistry;
 import dev.amble.core.ringpowers.constructs.AreaShieldConstruct;
+import dev.amble.core.ringpowers.constructs.BulwarkConstruct;
+import dev.amble.core.networking.payloads.c2s.BulwarkSizeC2SPayload;
 import dev.amble.core.ringpowers.constructs.ConstructRingPower;
 import dev.amble.core.ringpowers.constructs.WallConstruct;
 import dev.amble.core.ringpowers.impl.ArmedRingPower;
@@ -78,6 +81,7 @@ public final class ConstructClient {
         int resized = construct.get().clampSize(player, current + Integer.signum(wheel));
         if (resized != current) {
             SIZES.put(construct.get().id(), resized);
+            if (construct.get() == RingPowerRegistry.BULWARK && BulwarkEffects.isRaised(player)) ClientPlayNetworking.send(new BulwarkSizeC2SPayload(resized));
             Minecraft.getInstance().gui.hud.setOverlayMessage(Component.translatable("message.brightestday.construct_size",
                     Component.translatable(construct.get().getTranslationKey()), construct.get().describeSize(resized)), false);
         }
@@ -109,6 +113,8 @@ public final class ConstructClient {
                 cells.add(new ShieldEffects.Voxel(Vec3.atCenterOf(pos), WALL_PREVIEW_HALF, color));
             }
             ShieldEffects.submit(context, camera, cells, PREVIEW_ALPHA);
+        } else if (construct.get() instanceof BulwarkConstruct && !BulwarkEffects.isRaised(player)) {
+            BulwarkEffects.preview(context, camera, player, size, color, partialTicks, PREVIEW_ALPHA);
         } else if (construct.get() instanceof AreaShieldConstruct) {
             Vec3 target = player.pick(AreaShieldConstruct.RANGE, partialTicks, false).getLocation();
             ShieldEffects.submit(context, camera, ShieldEffects.sphere(target, size, size * 2.0F, time, color), PREVIEW_ALPHA);

@@ -48,7 +48,8 @@ public final class RingRanks {
             RingPowerRegistry.CONTAINMENT_SPHERE, 3,
             RingPowerRegistry.RING_COMPASS, 1,
             RingPowerRegistry.LIGHT_ORB, 1,
-            RingPowerRegistry.INSIGNIA, 2);
+            RingPowerRegistry.INSIGNIA, 2,
+            RingPowerRegistry.BULWARK, 2);
     private static final Map<LanternCorps, Map<RingPower<?>, Integer>> CORPS_GATED = Map.of(
             LanternCorps.YELLOW, Map.of(RingPowerRegistry.GIANT_FIST, 2),
             LanternCorps.BLUE, Map.of(RingPowerRegistry.TOOL_FORGE, 3, RingPowerRegistry.GIANT_FIST, 2));

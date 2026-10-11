@@ -1,6 +1,7 @@
 package dev.amble.core.ringpowers;
 
 import dev.amble.core.ringpowers.constructs.AreaShieldConstruct;
+import dev.amble.core.ringpowers.constructs.BulwarkConstruct;
 import dev.amble.core.ringpowers.constructs.BeamConstruct;
 import dev.amble.core.ringpowers.constructs.BlastConstruct;
 import dev.amble.core.ringpowers.constructs.ConstructBoatConstruct;
@@ -68,6 +69,7 @@ public final class RingPowerRegistry {
     public static final HealBeamConstruct HEAL_BEAM = register(new HealBeamConstruct());
     public static final EntityShieldConstruct ENTITY_SHIELD = register(new EntityShieldConstruct());
     public static final AreaShieldConstruct AREA_SHIELD = register(new AreaShieldConstruct());
+    public static final BulwarkConstruct BULWARK = register(new BulwarkConstruct());
     public static final WallConstruct WALL = register(new WallConstruct());
     public static final SculptConstruct SCULPT = register(new SculptConstruct());
     public static final LightOrbConstruct LIGHT_ORB = register(new LightOrbConstruct());

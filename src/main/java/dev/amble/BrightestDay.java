@@ -21,6 +21,7 @@ import dev.amble.core.ringpowers.RingPowerRegistry;
 import dev.amble.core.ringpowers.RingPowerTicker;
 import dev.amble.core.ringpowers.impl.FlightRingPower;
 import dev.amble.core.shields.ShieldManager;
+import dev.amble.core.shields.BulwarkManager;
 import dev.amble.core.tractor.TractorManager;
 import dev.amble.core.sphere.ContainmentSphere;
 import dev.amble.core.mounts.ConstructMounts;
@@ -107,6 +108,7 @@ public class BrightestDay implements ModInitializer {
 		Networking.init();
 		FlightRingPower.registerEvents();
 		ShieldManager.init();
+		BulwarkManager.init();
 		TractorManager.init();
 		ContainmentSphere.init();
 		ConstructMounts.init();

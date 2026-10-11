@@ -18,6 +18,7 @@ import dev.amble.core.sphere.ContainmentSphere;
 import dev.amble.core.visuals.Insignia;
 import dev.amble.core.sculpt.SculptManager;
 import dev.amble.core.shields.ShieldManager;
+import dev.amble.core.shields.BulwarkManager;
 import dev.amble.core.walls.WallManager;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -91,6 +92,7 @@ public final class ConstructDismissal {
         HealBeamManager.stop(player);
         SculptManager.stop(player, false);
         BarrageManager.stop(player);
+        BulwarkManager.stop(player);
         DrillManager.stop(player);
         GrappleManager.dismiss(player);
         SlamManager.stop(player);
