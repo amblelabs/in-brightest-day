@@ -1,5 +1,6 @@
 package dev.amble.core.ringpowers.constructs;
 
+import dev.amble.core.gravity.GravityBallManager;
 import dev.amble.core.rings.ConstructRings;
 import dev.amble.core.attacks.area.BarrageManager;
 import dev.amble.core.attacks.area.SlamManager;
@@ -53,13 +54,16 @@ public final class ConstructDismissal {
         long sphereCreated = ContainmentSphere.latestCreatedAt(player);
         long insigniaCreated = Insignia.latestCreatedAt(player.getUUID());
         long ringCreated = ConstructRings.latestCreatedAt(player);
-        long newest = LongStream.of(shieldCreated, wallCreated, sculptCreated, orbCreated, turretCreated, glideCreated, drillCreated, lumberjackCreated, probeCreated, toolCreated, mountCreated, sphereCreated, insigniaCreated, ringCreated).max().getAsLong();
+        long gravityCreated = GravityBallManager.latestCreatedAt(player.getUUID());
+        long newest = LongStream.of(shieldCreated, wallCreated, sculptCreated, orbCreated, turretCreated, glideCreated, drillCreated, lumberjackCreated, probeCreated, toolCreated, mountCreated, sphereCreated, insigniaCreated, ringCreated, gravityCreated).max().getAsLong();
         if (newest == Long.MIN_VALUE) {
             player.sendOverlayMessage(Component.translatable("message.brightestday.no_constructs_to_dismiss"));
             return;
         }
 
-        if (newest == ringCreated) {
+        if (newest == gravityCreated) {
+            GravityBallManager.dismissAll(player);
+        } else if (newest == ringCreated) {
             ConstructRings.dismissLatest(player);
         } else if (newest == insigniaCreated) {
             Insignia.hide(player);
@@ -96,6 +100,7 @@ public final class ConstructDismissal {
         HealBeamManager.stop(player);
         SculptManager.stop(player, false);
         BarrageManager.stop(player);
+        GravityBallManager.dismissAll(player);
         BulwarkManager.stop(player);
         DrillManager.stop(player);
         GrappleManager.dismiss(player);

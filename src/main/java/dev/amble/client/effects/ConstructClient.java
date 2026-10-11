@@ -9,6 +9,7 @@ import dev.amble.core.ringpowers.CorpsColors;
 import dev.amble.core.ringpowers.RingPowerRegistry;
 import dev.amble.core.ringpowers.constructs.AreaShieldConstruct;
 import dev.amble.core.ringpowers.constructs.BulwarkConstruct;
+import dev.amble.core.ringpowers.constructs.GravityBallConstruct;
 import dev.amble.core.networking.payloads.c2s.BulwarkSizeC2SPayload;
 import dev.amble.core.ringpowers.constructs.ConstructRingPower;
 import dev.amble.core.ringpowers.constructs.WallConstruct;
@@ -113,6 +114,9 @@ public final class ConstructClient {
                 cells.add(new ShieldEffects.Voxel(Vec3.atCenterOf(pos), WALL_PREVIEW_HALF, color));
             }
             ShieldEffects.submit(context, camera, cells, PREVIEW_ALPHA);
+        } else if (construct.get() instanceof GravityBallConstruct) {
+            Vec3 hit = player.pick(GravityBallConstruct.RANGE, partialTicks, false).getLocation();
+            GravityBallEffects.preview(context, camera, GravityBallConstruct.target(hit, player.getEyePosition(partialTicks)), size, color, time, PREVIEW_ALPHA);
         } else if (construct.get() instanceof BulwarkConstruct && !BulwarkEffects.isRaised(player)) {
             BulwarkEffects.preview(context, camera, player, size, color, partialTicks, PREVIEW_ALPHA);
         } else if (construct.get() instanceof AreaShieldConstruct) {

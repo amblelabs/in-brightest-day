@@ -41,16 +41,18 @@ public final class RingRanks {
     public static final int MAX_RANK = 4;
     private static final float[] ARSENAL = {0.0F, 1.0F / 3.0F, 0.55F, 0.78F, 1.0F};
     private static final float[] CAPACITY = {0.0F, 0.6F, 0.73F, 0.86F, 1.0F};
-    private static final Map<RingPower<?>, Integer> RANK_GATED = Map.of(
-            RingPowerRegistry.LUMBERJACK, 2,
-            RingPowerRegistry.CONSTRUCT_HORSE, 1,
-            RingPowerRegistry.CONSTRUCT_BOAT, 1,
-            RingPowerRegistry.CONTAINMENT_SPHERE, 3,
-            RingPowerRegistry.RING_COMPASS, 1,
-            RingPowerRegistry.LIGHT_ORB, 1,
-            RingPowerRegistry.INSIGNIA, 2,
-            RingPowerRegistry.BULWARK, 2,
-            RingPowerRegistry.CONSTRUCT_RING, 4);
+    private static final Map<RingPower<?>, Integer> RANK_GATED = Map.ofEntries(
+            Map.entry(RingPowerRegistry.LUMBERJACK, 2),
+            Map.entry(RingPowerRegistry.CONSTRUCT_HORSE, 1),
+            Map.entry(RingPowerRegistry.CONSTRUCT_BOAT, 1),
+            Map.entry(RingPowerRegistry.CONTAINMENT_SPHERE, 3),
+            Map.entry(RingPowerRegistry.RING_COMPASS, 1),
+            Map.entry(RingPowerRegistry.LIGHT_ORB, 1),
+            Map.entry(RingPowerRegistry.INSIGNIA, 2),
+            Map.entry(RingPowerRegistry.BULWARK, 2),
+            Map.entry(RingPowerRegistry.CONSTRUCT_RING, 4),
+            Map.entry(RingPowerRegistry.GRAVITY_BALL, 3),
+            Map.entry(RingPowerRegistry.GRAVITY_REPULSOR, 3));
     private static final Map<LanternCorps, Map<RingPower<?>, Integer>> CORPS_GATED = Map.of(
             LanternCorps.YELLOW, Map.of(RingPowerRegistry.GIANT_FIST, 2),
             LanternCorps.BLUE, Map.of(RingPowerRegistry.TOOL_FORGE, 3, RingPowerRegistry.GIANT_FIST, 2));

@@ -655,6 +655,8 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add(RingPowerRegistry.AREA_SHIELD.getTranslationKey(), "Dome Shield");
         builder.add(RingPowerRegistry.BULWARK.getTranslationKey(), "Bulwark");
         builder.add(RingPowerRegistry.CONSTRUCT_RING.getTranslationKey(), "Construct Ring");
+        builder.add(RingPowerRegistry.GRAVITY_BALL.getTranslationKey(), "Gravity Ball");
+        builder.add(RingPowerRegistry.GRAVITY_REPULSOR.getTranslationKey(), "Gravity Repulsor");
         builder.add(RingPowerRegistry.BEAM.getTranslationKey(), "Beam");
         builder.add(RingPowerRegistry.HEAL_BEAM.getTranslationKey(), "Healing Beam");
         builder.add(RingPowerRegistry.WALL.getTranslationKey(), "Wall");

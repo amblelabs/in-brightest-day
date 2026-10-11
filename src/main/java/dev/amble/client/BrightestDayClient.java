@@ -4,6 +4,7 @@ import dev.amble.client.effects.AttackAnimations;
 import dev.amble.client.effects.ArmedPose;
 import dev.amble.client.effects.BeamEffects;
 import dev.amble.client.effects.BulwarkEffects;
+import dev.amble.client.effects.GravityBallEffects;
 import dev.amble.client.effects.RemoteAim;
 import dev.amble.client.effects.HealBeamEffects;
 import dev.amble.client.effects.BlastEffects;
@@ -123,6 +124,7 @@ public class BrightestDayClient implements ClientModInitializer {
         MegaphoneClient.init();
         BeamEffects.init();
         BulwarkEffects.init();
+        GravityBallEffects.init();
         RemoteAim.init();
         HealBeamEffects.init();
         ArmedPose.init();
