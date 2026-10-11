@@ -16,6 +16,10 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.util.ARGB;
 import net.minecraft.world.item.ItemStack;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+
 public final class RingChargeHud {
     private static final int HOTBAR_HALF_WIDTH = 91;
     private static final int OFFHAND_SLOT_WIDTH = 29;
@@ -23,6 +27,7 @@ public final class RingChargeHud {
     private static final int ICON_SIZE = 16;
     private static final float LOW_CHARGE = 0.2F;
     private static final int BLOOD_COLOR = 0xFF8A0A12;
+    private static final int BLINK_TICKS = 8;
 
     public static void init() {
         HudElementRegistry.attachElementAfter(VanillaHudElements.HOTBAR, BrightestDay.id("ring_charge"), RingChargeHud::extract);
@@ -53,19 +58,23 @@ public final class RingChargeHud {
         graphics.fill(barX, y, barX + BAR_WIDTH, y + ICON_SIZE, 0x80000000);
         graphics.fill(barX, y + ICON_SIZE - filled, barX + BAR_WIDTH, y + ICON_SIZE, color);
 
+        List<CorpsSynergy.Influence> influences = new ArrayList<>(CorpsSynergy.get(player).influences());
+        influences.sort(Comparator.comparing(influence -> !influence.strengthens()));
+        boolean blink = (player.tickCount / BLINK_TICKS) % 2 == 0;
+        for (int i = 0; i < influences.size(); i++) {
+            CorpsSynergy.Influence influence = influences.get(i);
+            if (!influence.strengthens() && !blink) continue;
+            int pad = i + 1;
+            graphics.outline(barX - pad, y - pad, BAR_WIDTH + pad * 2, ICON_SIZE + pad * 2, ARGB.opaque(influence.corps().color()));
+        }
+
         int blood = RedBlood.get(player);
         if (blood > 0) {
-            int bloodX = barX + BAR_WIDTH + 1;
+            int bloodX = barX + BAR_WIDTH + 1 + influences.size();
             int bloodFilled = Math.max(1, Math.round(ICON_SIZE * blood / (float) RedBlood.MAX));
             int bloodColor = blood < RedBlood.MAX / 5 && (player.tickCount / 6) % 2 == 0 ? ARGB.color(110, BLOOD_COLOR) : BLOOD_COLOR;
             graphics.fill(bloodX, y, bloodX + BAR_WIDTH, y + ICON_SIZE, 0x80000000);
             graphics.fill(bloodX, y + ICON_SIZE - bloodFilled, bloodX + BAR_WIDTH, y + ICON_SIZE, bloodColor);
-        }
-
-        CorpsSynergy.State synergy = CorpsSynergy.get(player);
-        if (synergy.hope() || synergy.will()) {
-            int link = ARGB.opaque((synergy.hope() ? LanternCorps.BLUE : LanternCorps.GREEN).color());
-            graphics.outline(barX - 1, y - 1, BAR_WIDTH + 2, ICON_SIZE + 2, link);
         }
     }
 
