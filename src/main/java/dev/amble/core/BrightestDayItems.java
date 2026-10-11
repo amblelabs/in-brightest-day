@@ -3,6 +3,7 @@ package dev.amble.core;
 import dev.amble.BrightestDay;
 import dev.amble.core.items.ConstructMimics;
 import dev.amble.core.items.LanternMannequinItem;
+import dev.amble.core.items.LoreBookItem;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.ringpowers.constructs.ConstructTool;
@@ -74,6 +75,8 @@ public class BrightestDayItems {
             .setId(ResourceKey.create(Registries.ITEM, id)).stacksTo(16).rarity(Rarity.UNCOMMON)));
     public static final Item ZAMARON_CRYSTAL = register("zamaron_crystal", id -> new Item(new Item.Properties()
             .setId(ResourceKey.create(Registries.ITEM, id)).rarity(Rarity.RARE)));
+    public static final Item LORE_BOOK = register("lore_book", id -> new LoreBookItem(new Item.Properties()
+            .setId(ResourceKey.create(Registries.ITEM, id)).stacksTo(1).rarity(Rarity.UNCOMMON)));
 
     public static Item constructTool(ConstructTool tool) {
         return CONSTRUCT_TOOLS.get(tool);

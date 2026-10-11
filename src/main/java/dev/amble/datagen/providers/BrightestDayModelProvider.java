@@ -1,5 +1,6 @@
 package dev.amble.datagen.providers;
 
+import dev.amble.BrightestDay;
 import dev.amble.core.BrightestDayBlocks;
 import dev.amble.core.BrightestDayItems;
 import net.fabricmc.fabric.api.client.datagen.v1.provider.FabricModelProvider;
@@ -45,6 +46,8 @@ public class BrightestDayModelProvider extends FabricModelProvider {
         itemModelGenerators.generateSpyglass(BrightestDayBlocks.BLUE_LANTERN_BLOCK.asItem());
         itemModelGenerators.generateSpyglass(BrightestDayBlocks.INDIGO_LANTERN_BLOCK.asItem());
         itemModelGenerators.generateSpyglass(BrightestDayBlocks.STAR_SAPPHIRE_LANTERN_BLOCK.asItem());
+
+        itemModelGenerators.itemModelOutput.accept(BrightestDayItems.LORE_BOOK, ItemModelUtils.plainModel(BrightestDay.id("item/lore_book")));
 
         for (ConstructTool tool : ConstructTool.values()) {
             if (tool == ConstructTool.SPEAR) {

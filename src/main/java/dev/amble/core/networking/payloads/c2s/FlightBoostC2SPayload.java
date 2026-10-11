@@ -25,6 +25,6 @@ public record FlightBoostC2SPayload(boolean boosting) implements CustomPacketPay
     }
 
     public void handle(ServerPlayNetworking.Context context) {
-        FlightBoost.setBoosting(context.player(), this.boosting);
+        if (this.boosting) FlightBoost.request(context.player());
     }
 }

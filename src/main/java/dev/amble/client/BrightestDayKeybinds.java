@@ -2,10 +2,13 @@ package dev.amble.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.amble.BrightestDay;
-import dev.amble.client.flight.FlightControls;
 import dev.amble.client.screens.SpectrumScreen;
 import dev.amble.client.team.TeamScreen;
 import dev.amble.core.BrightestDayAttachments;
+import dev.amble.core.flight.FlightBoost;
+import dev.amble.core.networking.payloads.c2s.FlightBoostC2SPayload;
+import dev.amble.core.networking.payloads.s2c.FlightBoostS2CPayload;
+import dev.amble.core.ringpowers.impl.FlightRingPower;
 import dev.amble.core.networking.payloads.c2s.ConcussiveC2SPayload;
 import dev.amble.core.networking.payloads.c2s.DismissConstructC2SPayload;
 import dev.amble.core.networking.payloads.c2s.SetColorTweakC2SPayload;
@@ -53,20 +56,24 @@ public final class BrightestDayKeybinds {
     }
 
     public static void init() {
+        ClientPlayNetworking.registerGlobalReceiver(FlightBoostS2CPayload.TYPE, (payload, context) -> FlightBoost.startClient(context.player(), payload.ticks()));
         ClientTickEvents.END_CLIENT_TICK.register(BrightestDayKeybinds::tick);
     }
 
     private static void tick(Minecraft client) {
         if (client.player == null) return;
 
-        FlightControls.syncBoost(client.player, FLIGHT_BOOST.isDown());
+        FlightBoost.tickClient(client.player);
         if (client.gui.screen() != null) {
-            drain(FLIGHT, RAISE_RING, DISMISS_CONSTRUCT, CONCUSSIVE_BLAST, TEAM, TOGGLE_LIGHT, TOGGLE_SUIT, TOGGLE_MASK, SPECTRUM);
+            drain(FLIGHT, FLIGHT_BOOST, RAISE_RING, DISMISS_CONSTRUCT, CONCUSSIVE_BLAST, TEAM, TOGGLE_LIGHT, TOGGLE_SUIT, TOGGLE_MASK, SPECTRUM);
             raiseHeld = RAISE_RING.isDown();
             return;
         }
 
         drain(FLIGHT);
+        while (FLIGHT_BOOST.consumeClick()) {
+            if (FlightRingPower.isFlying(client.player)) ClientPlayNetworking.send(new FlightBoostC2SPayload(true));
+        }
 
         boolean raisePressed = false;
         while (RAISE_RING.consumeClick()) {

@@ -456,6 +456,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.battery.dormant", "Your ring is dormant. It needs a Central Power Battery.");
         builder.add("message.brightestday.battery.severed", "The %s has lost its Central Power Battery. This light cannot recharge your ring.");
         builder.add("message.brightestday.jumpstart.spent", "Your ring has already been jolted back once. Recharge it to restore that spark.");
+        builder.add("message.brightestday.boost.recharging", "Boost recharging (%ss)");
         builder.add("message.brightestday.blood.dry", "The blood runs dry. Your borrowed constructs shatter.");
         builder.add("message.brightestday.construct_ring.no_recharge", "Construct rings can't be recharged. They draw on their maker's ring.");
         builder.add("message.brightestday.construct_ring.needs_main", "Wear your own ring in your ring slot to shape a construct ring.");
@@ -873,7 +874,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("brightestday.server.drillPlacedLifetimeTicks.desc", "Ticks a placed drill runs before dissolving.");
         builder.add("brightestday.server.drillPlacedTravelTicks", "Placed Drill Travel Time");
         builder.add("brightestday.server.drillPlacedTravelTicks.desc", "Minimum ticks a placed drill takes to advance one block.");
-        builder.add("key.brightestday.flight_boost", "Flight Boost");
+        builder.add("key.brightestday.flight_boost", "Flight Boost (tap)");
         builder.add("message.brightestday.flight_speed", "Flight Speed %s/%s · %s b/s");
         builder.add("hud.brightestday.flight_speed", "%s b/s");
         builder.add("hud.brightestday.flight_cruise", "Cruise %s");
@@ -1181,6 +1182,9 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("item.brightestday.construct_flint_and_steel", "Construct Flint and Steel");
         builder.add("item.brightestday.construct_shears", "Construct Shears");
         builder.add("item.brightestday.construct_spyglass", "Construct Spyglass");
+        builder.add("item.brightestday.lore_book", "The Book of Oa");
+        builder.add("gui.brightestday.lore.contents", "Contents");
+        builder.add("gui.brightestday.lore.empty", "These pages are still blank.");
         builder.add("message.brightestday.forged", "Forged %s");
         builder.add("message.brightestday.forge_no_room", "No room for the construct.");
         builder.add("message.brightestday.unknown_pattern", "The ring doesn't recognize that pattern.");
