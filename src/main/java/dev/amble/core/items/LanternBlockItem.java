@@ -178,8 +178,9 @@ public class LanternBlockItem extends BlockItem {
         PowerRingItem.setMaxPower(ring);
         if (this.corps() == LanternCorps.ORANGE) RingSync.restore(ring);
         PowerRingItem.awaken(player, ring);
-        PowerRingItem.swear(player, ring);
-        if (ring == BrightestDayAttachments.getRing(player)) BrightestDayAttachments.setRing(player, ring);
+        boolean sworn = PowerRingItem.swear(player, ring);
+        if (ring == BrightestDayAttachments.getRing(player)) BrightestDayAttachments.setRing(player, sworn ? ring : ItemStack.EMPTY);
+        if (!sworn) return;
 
         if (announce) {
             player.sendSystemMessage(Component.translatable(this.corps().oathKey())

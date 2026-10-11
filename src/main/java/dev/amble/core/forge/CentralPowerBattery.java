@@ -462,7 +462,10 @@ public final class CentralPowerBattery {
         ring.remove(BrightestDayComponents.RING_DEATHS);
         RingSync.restore(ring);
         PowerRingItem.awaken(player, ring);
-        PowerRingItem.swear(player, ring);
+        if (!PowerRingItem.swear(player, ring)) {
+            if (slotted) BrightestDayAttachments.setRing(player, ItemStack.EMPTY);
+            return;
+        }
         RingRanks.fire(player, Trigger.RECHARGE, Milestone.Context.of("battery"));
         if (slotted) BrightestDayAttachments.setRing(player, ring);
         player.sendOverlayMessage(Component.translatable("message.brightestday.sync.restored").withColor(corps.color()));

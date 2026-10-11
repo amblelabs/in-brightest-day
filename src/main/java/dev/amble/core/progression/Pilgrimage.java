@@ -6,6 +6,7 @@ import dev.amble.BrightestDay;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.glide.GlideManager;
 import dev.amble.core.items.PowerRingItem;
+import dev.amble.core.loyalty.RingBonds;
 import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.ringpowers.impl.FlightRingPower;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
@@ -115,7 +116,7 @@ public final class Pilgrimage {
         WorldProgress world = WorldProgress.get(server);
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             if (!world.mayBeBlessed(player.getUUID(), server.overworld().getGameTime(), BlueSanctuary.BLESSING_COOLDOWN)
-                    || PowerRingItem.getWornCorps(player).orElse(null) == LanternCorps.BLUE) continue;
+                    || hopeBearer(player)) continue;
             State state = get(player);
             if (state.active() && !state.complete() && !player.isSpectator() && !player.isCreative()) {
                 String reason = violation(player);
@@ -128,6 +129,11 @@ public final class Pilgrimage {
             }
             if (check && player.level().dimension() == Level.OVERWORLD) checkIn(player, state, world);
         }
+    }
+
+    private static boolean hopeBearer(ServerPlayer player) {
+        if (PowerRingItem.getWornCorps(player).orElse(null) == LanternCorps.BLUE) return true;
+        return RingBonds.owned(player.level().getServer(), player.getUUID()).map(entry -> entry.getValue().corps() == LanternCorps.BLUE).orElse(false);
     }
 
     private static String violation(ServerPlayer player) {

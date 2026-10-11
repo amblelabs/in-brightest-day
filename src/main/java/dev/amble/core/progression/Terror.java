@@ -21,8 +21,8 @@ public final class Terror {
     private static final long DAY = 24000L;
     private static final float DIMINISH = 0.7F;
     private static final float FLOOR = 0.1F;
-    private static final long GRACE_TICKS = 1200L;
-    private static final int DECAY_INTERVAL = 60;
+    private static final long GRACE_TICKS = 6000L;
+    private static final int DECAY_INTERVAL = 300;
     private static final int DECAY_AMOUNT = 5;
     private static final long AMBUSH_COOLDOWN = 200L;
     private static final long WOUND_MEMORY = 600L;
@@ -96,9 +96,11 @@ public final class Terror {
         if (server.getTickCount() % DECAY_INTERVAL != 0) return;
         long now = server.overworld().getGameTime();
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-            if (SpectrumMeters.get(player, Emotion.FEAR) <= 0) continue;
+            int fear = SpectrumMeters.get(player, Emotion.FEAR);
+            int floor = SpectrumMeters.idleFloor(fear);
+            if (fear <= floor || SpectrumMeters.sustained(player, Emotion.FEAR) || SpectrumMeters.atBattery(player)) continue;
             if (now - SpectrumMeters.lastFed(player, Emotion.FEAR) < GRACE_TICKS) continue;
-            SpectrumMeters.drain(player, Emotion.FEAR, DECAY_AMOUNT);
+            SpectrumMeters.drain(player, Emotion.FEAR, Math.min(DECAY_AMOUNT, fear - floor));
         }
         if (server.getTickCount() % (DECAY_INTERVAL * 20) != 0) return;
         AMBUSHED.values().removeIf(time -> now - time > AMBUSH_COOLDOWN);

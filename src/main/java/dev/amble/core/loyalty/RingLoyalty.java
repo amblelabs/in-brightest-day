@@ -88,7 +88,7 @@ public final class RingLoyalty {
         void refuse(ServerPlayer player, ItemStack ring);
     }
 
-    private enum Kind { LOYALTY, BESTOW, GIFT, RETURN }
+    private enum Kind { LOYALTY, BESTOW, GIFT, RETURN, HOME }
 
     private static final class Flight {
         final ServerLevel level;
@@ -115,7 +115,7 @@ public final class RingLoyalty {
         }
 
         boolean personal() {
-            return this.kind == Kind.GIFT || this.kind == Kind.RETURN;
+            return this.kind == Kind.GIFT || this.kind == Kind.RETURN || this.kind == Kind.HOME;
         }
     }
 
@@ -308,7 +308,7 @@ public final class RingLoyalty {
             double distance = path.length();
             double speed = Math.min(START_SPEED + flight.age * ACCELERATION, MAX_SPEED);
             if (distance <= Math.max(speed, ARRIVAL_DISTANCE)) {
-                if (flight.kind == Kind.RETURN) {
+                if (flight.kind == Kind.RETURN || flight.kind == Kind.HOME) {
                     iterator.remove();
                     giveBack(target, flight);
                 } else if (flight.asks) {
@@ -521,6 +521,14 @@ public final class RingLoyalty {
         }
     }
 
+    public static void sendHome(ServerPlayer bearer, ItemStack ring, ServerLevel from, Vec3 origin) {
+        Vec3 start = bearer.level() == from ? origin : skyEntry(bearer);
+        Flight flight = new Flight(bearer.level(), start, bearer.getUUID(), ring, Kind.HOME, false);
+        flight.sender = bearer.getUUID();
+        FLIGHTS.add(flight);
+        flight.level.playSound(null, start.x, start.y, start.z, SoundEvents.BEACON_DEACTIVATE, SoundSource.PLAYERS, 1.0F, 1.4F);
+    }
+
     private static void returnGift(MinecraftServer server, ServerPlayer target, Flight flight, List<Flight> added) {
         ServerPlayer sender = flight.sender == null ? null : server.getPlayerList().getPlayer(flight.sender);
         if (sender == null || sender == target) {
@@ -538,7 +546,7 @@ public final class RingLoyalty {
         LanternCorps corps = corps(ring);
         if (!sender.addItem(ring)) sender.drop(ring, false, Prediction.SERVER_ONLY);
         sender.level().playSound(null, sender.getX(), sender.getY(), sender.getZ(), SoundEvents.AMETHYST_CLUSTER_PLACE, SoundSource.PLAYERS, 1.0F, 0.9F);
-        sender.sendSystemMessage(Component.translatable("message.brightestday.ring_gift.returned", corps.displayName()).withColor(corps.color()));
+        sender.sendSystemMessage(Component.translatable(flight.kind == Kind.HOME ? "message.brightestday.ring.came_home" : "message.brightestday.ring_gift.returned", corps.displayName()).withColor(corps.color()));
     }
 
     private static void trail(ServerLevel level, Vec3 from, Vec3 to, int color) {
@@ -554,7 +562,7 @@ public final class RingLoyalty {
         ServerPlayer target = server.getPlayerList().getPlayer(flight.target);
         finish(flight, target);
         switch (flight.kind) {
-            case RETURN -> {
+            case RETURN, HOME -> {
                 if (target != null) giveBack(target, flight);
                 else drop(flight.level, flight.position, flight.ring);
             }

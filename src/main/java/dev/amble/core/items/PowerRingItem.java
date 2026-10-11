@@ -181,11 +181,19 @@ public class PowerRingItem extends Item {
         }
     }
 
-    public static void swear(Player player, ItemStack ring) {
+    public static boolean swear(Player player, ItemStack ring) {
         BrightestDayComponents.Sworn previous = ring.get(BrightestDayComponents.SWORN_TO);
         if (previous != null && previous.owner().equals(player.getUUID())) {
             if (player instanceof ServerPlayer server && !ring.has(BrightestDayComponents.RING_BOND)) RingBonds.bind(server, ring);
-            return;
+            return true;
+        }
+        if (previous != null && player instanceof ServerPlayer server) {
+            RingBonds.Claim claim = RingBonds.claim(server.level().getServer(), ring, server);
+            if (claim == RingBonds.Claim.HELD) {
+                RingBonds.sendHome(server, ring);
+                return false;
+            }
+            RingBonds.claimed(server, ring, previous.owner(), claim);
         }
         ring.set(BrightestDayComponents.SWORN_TO, new BrightestDayComponents.Sworn(player.getUUID(), player.getScoreboardName()));
         if (player instanceof ServerPlayer server) {
@@ -196,6 +204,7 @@ public class PowerRingItem extends Item {
         int color = getCorps(ring).orElse(LanternCorps.GREEN).color();
         player.sendSystemMessage(Component.translatable(previous == null ? "message.brightestday.ring.sworn" : "message.brightestday.ring.reclaimed", previous == null ? "" : previous.name())
                 .withStyle(ChatFormatting.ITALIC).withColor(color));
+        return true;
     }
 
     private static void align(ServerPlayer player, @Nullable LanternCorps former, LanternCorps corps) {

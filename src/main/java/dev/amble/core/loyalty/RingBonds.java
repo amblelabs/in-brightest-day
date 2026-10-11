@@ -13,6 +13,7 @@ import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.core.particles.ParticleTypes;
@@ -91,10 +92,80 @@ public final class RingBonds {
                     .persistent(UUIDUtil.STRING_CODEC.listOf().xmap(Set::copyOf, List::copyOf))
                     .buildAndRegister(BrightestDay.id("ring_bonds_succeeded"));
 
+    public record Notice(String claimant, LanternCorps corps) {
+        public static final Codec<Notice> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                Codec.STRING.fieldOf("claimant").forGetter(Notice::claimant),
+                LanternCorps.CODEC.fieldOf("corps").forGetter(Notice::corps)
+        ).apply(instance, Notice::new));
+    }
+
+    public static final AttachmentType<Map<UUID, Notice>> CLAIMED =
+            AttachmentRegistry.<Map<UUID, Notice>>builder()
+                    .initializer(Map::of)
+                    .persistent(Codec.unboundedMap(UUIDUtil.STRING_CODEC, Notice.CODEC))
+                    .buildAndRegister(BrightestDay.id("ring_bonds_claimed"));
+
+    public enum Claim { FREE, HEIR, HELD }
+
     private static final Pattern NAME = Pattern.compile("[A-Za-z0-9_]{1,16}");
 
     public static void init() {
         ServerTickEvents.END_SERVER_TICK.register(RingBonds::tick);
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            Map<UUID, Notice> notices = server.overworld().getAttachedOrElse(CLAIMED, Map.of());
+            Notice notice = notices.get(handler.player.getUUID());
+            if (notice == null) return;
+            Map<UUID, Notice> remaining = new HashMap<>(notices);
+            remaining.remove(handler.player.getUUID());
+            server.overworld().setAttached(CLAIMED, Map.copyOf(remaining));
+            handler.player.sendSystemMessage(Component.translatable("message.brightestday.ring.claimed_away", notice.corps().displayName(), notice.claimant())
+                    .withStyle(ChatFormatting.ITALIC).withColor(notice.corps().color()));
+        });
+    }
+
+    public static Claim claim(MinecraftServer server, ItemStack ring, ServerPlayer claimant) {
+        BrightestDayComponents.Bond bond = ring.get(BrightestDayComponents.RING_BOND);
+        Entry entry = bond == null ? null : bonds(server).get(bond.id());
+        if (entry == null || entry.owner().equals(claimant.getUUID())) return Claim.FREE;
+        long expiry = BrightestDayConfig.get().ringBondExpiryDays * DAY_MILLIS;
+        boolean gone = server.getPlayerList().getPlayer(entry.owner()) == null && System.currentTimeMillis() - entry.lastSeen() > expiry;
+        if (!gone) return Claim.HELD;
+        String successor = entry.snapshot().map(snapshot -> snapshot.get(BrightestDayComponents.SUCCESSOR)).orElse(null);
+        if (successor == null) return Claim.FREE;
+        return successor.equalsIgnoreCase(claimant.getScoreboardName()) ? Claim.HEIR : Claim.HELD;
+    }
+
+    public static void sendHome(ServerPlayer claimant, ItemStack ring) {
+        MinecraftServer server = claimant.level().getServer();
+        BrightestDayComponents.Bond bond = ring.get(BrightestDayComponents.RING_BOND);
+        Entry entry = bond == null ? null : bonds(server).get(bond.id());
+        LanternCorps corps = PowerRingItem.getCorps(ring).orElse(LanternCorps.GREEN);
+        String bearerName = entry == null ? "" : entry.ownerName();
+        ServerPlayer bearer = entry == null ? null : server.getPlayerList().getPlayer(entry.owner());
+        if (bearer != null) RingLoyalty.sendHome(bearer, ring.copy(), claimant.level(), claimant.getEyePosition());
+        ring.setCount(0);
+        claimant.sendSystemMessage(Component.translatable("message.brightestday.ring.rejects_claim", bearerName).withStyle(ChatFormatting.ITALIC).withColor(corps.color()));
+        claimant.level().playSound(null, claimant.getX(), claimant.getY(), claimant.getZ(), SoundEvents.BEACON_DEACTIVATE, SoundSource.PLAYERS, 1.0F, 1.2F);
+    }
+
+    public static void claimed(ServerPlayer claimant, ItemStack ring, UUID formerOwner, Claim claim) {
+        MinecraftServer server = claimant.level().getServer();
+        LanternCorps corps = PowerRingItem.getCorps(ring).orElse(LanternCorps.GREEN);
+        BrightestDayComponents.Bond bond = ring.get(BrightestDayComponents.RING_BOND);
+        if (claim == Claim.HEIR && bond != null) {
+            Map<UUID, Entry> bonds = new HashMap<>(bonds(server));
+            bonds.remove(bond.id());
+            save(server, bonds);
+            Set<UUID> succeeded = new HashSet<>(server.overworld().getAttachedOrElse(SUCCEEDED, Set.of()));
+            succeeded.add(bond.id());
+            server.overworld().setAttached(SUCCEEDED, Set.copyOf(succeeded));
+        }
+        ring.remove(BrightestDayComponents.RING_BOND);
+        ring.remove(BrightestDayComponents.SUCCESSOR);
+        if (formerOwner.equals(claimant.getUUID())) return;
+        Map<UUID, Notice> notices = new HashMap<>(server.overworld().getAttachedOrElse(CLAIMED, Map.of()));
+        notices.put(formerOwner, new Notice(claimant.getScoreboardName(), corps));
+        server.overworld().setAttached(CLAIMED, Map.copyOf(notices));
     }
 
     public static Map<UUID, Entry> all(MinecraftServer server) {

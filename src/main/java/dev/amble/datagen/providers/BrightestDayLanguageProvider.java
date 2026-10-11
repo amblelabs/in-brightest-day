@@ -505,6 +505,9 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.ring.sworn", "The ring is sworn to you.");
         builder.add("message.brightestday.ring.reclaimed", "The ring forgets %s. It is sworn to you now.");
         builder.add("message.brightestday.ring.forsaken", "You have forsaken the %s. Your oath now belongs to the %s.");
+        builder.add("message.brightestday.ring.rejects_claim", "This ring is sworn to %s. It refuses your oath and flies home.");
+        builder.add("message.brightestday.ring.came_home", "Your %s ring rejected another oath and returned to you.");
+        builder.add("message.brightestday.ring.claimed_away", "While you were away, your %s ring was claimed by %s.");
         builder.add("message.brightestday.ring.awakened", "Your ring awakens.");
         builder.add("block.brightestday.yellow_battery_core", "Yellow Battery Core");
         builder.add("block.brightestday.battery_frame", "Central Power Battery Frame");

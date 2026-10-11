@@ -3,6 +3,8 @@ package dev.amble.core.progression;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.amble.BrightestDay;
+import dev.amble.core.items.PowerRingItem;
+import dev.amble.core.ringpowers.LanternCorps;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
@@ -13,6 +15,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -21,6 +24,7 @@ public final class SpectrumMeters {
     private static final int TIER = 250;
     private static final long DAY = 24000L;
     private static final int DECAY = 10;
+    private static final double BATTERY_RANGE = 16.0;
 
     public record Meters(Map<Emotion, Integer> values, Map<Emotion, Long> fed) {
         public static final Meters EMPTY = new Meters(Map.of(), Map.of());
@@ -103,6 +107,21 @@ public final class SpectrumMeters {
         EmotionTriggers.onMeterChanged(player, emotion, before, after);
     }
 
+    public static int idleFloor(int value) {
+        return value >= Emotion.GATE ? Emotion.GATE : 0;
+    }
+
+    public static boolean atBattery(ServerPlayer player) {
+        LanternCorps corps = PowerRingItem.getWornCorps(player).orElse(null);
+        if (corps == null || player.level().dimension() != Level.OVERWORLD) return false;
+        return WorldProgress.get(player.level().getServer()).batteries().stream()
+                .anyMatch(battery -> battery.corps() == corps && battery.pos().closerToCenterThan(player.position(), BATTERY_RANGE));
+    }
+
+    public static boolean sustained(ServerPlayer player, Emotion emotion) {
+        return PowerRingItem.getWornCorps(player).orElse(null) == emotion.corps();
+    }
+
     public static void reset(ServerPlayer player) {
         player.setAttached(METERS, Meters.EMPTY);
     }
@@ -112,13 +131,14 @@ public final class SpectrumMeters {
         long now = server.overworld().getGameTime();
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             Meters meters = get(player);
+            boolean resting = atBattery(player);
             Meters decayed = meters;
             for (Emotion emotion : Emotion.values()) {
                 int value = decayed.get(emotion);
-                if (value <= 0) continue;
+                if (value <= idleFloor(value) || sustained(player, emotion) || resting) continue;
                 long fed = decayed.fed().getOrDefault(emotion, 0L);
                 if (now - fed < DAY) continue;
-                decayed = decayed.with(emotion, Math.max(0, value - DECAY), fed + DAY);
+                decayed = decayed.with(emotion, Math.max(idleFloor(value), value - DECAY), fed + DAY);
             }
             if (decayed != meters) player.setAttached(METERS, decayed);
         }
