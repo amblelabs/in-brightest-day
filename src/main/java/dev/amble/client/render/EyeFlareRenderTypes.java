@@ -18,7 +18,7 @@ import java.util.Map;
 public final class EyeFlareRenderTypes {
 
     private static final RenderPipeline FLARE_PIPELINE = RenderPipelines.register(
-            RenderPipeline.builder(RenderPipelines.EYES_SNIPPET)
+            RenderPipeline.builder(RenderPipelines.ENTITY_NO_LIGHTMAP_SNIPPET, RenderPipelines.EYES_SNIPPET)
                     .withLocation(BrightestDay.id("pipeline/eye_flare"))
                     .withColorTargetState(new ColorTargetState(BlendFunction.LIGHTNING))
                     .withDepthStencilState(new DepthStencilState(CompareOp.GREATER_THAN_OR_EQUAL, false))
