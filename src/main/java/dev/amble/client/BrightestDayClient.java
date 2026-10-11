@@ -52,7 +52,6 @@ import dev.amble.client.effects.PoseAnimations;
 import dev.amble.client.effects.InsigniaEffects;
 import dev.amble.client.poses.PoseLibrary;
 import dev.amble.client.effects.CompassEffects;
-import dev.amble.client.hud.SyncHud;
 import dev.amble.client.effects.WallEffects;
 import dev.amble.client.effects.BatteryEffects;
 import dev.amble.client.effects.LanternChargeAnimations;
@@ -153,7 +152,6 @@ public class BrightestDayClient implements ClientModInitializer {
         SculptClient.init();
         PowerWheel.init();
         RingFeed.init();
-        SyncHud.init();
         OathHud.init();
         RingInput.init();
         AbilityClient.init();

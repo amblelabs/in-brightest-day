@@ -1,5 +1,6 @@
 package dev.amble.client.hud;
 
+import dev.amble.core.sync.RingSync;
 import dev.amble.BrightestDay;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.items.PowerRingItem;
@@ -50,7 +51,9 @@ public final class RingChargeHud {
         int x = graphics.guiWidth() / 2 - HOTBAR_HALF_WIDTH - OFFHAND_SLOT_WIDTH - ICON_SIZE - BAR_WIDTH - 6;
         int y = graphics.guiHeight() - ICON_SIZE - 3;
 
-        graphics.item(ring, x, y);
+        float stutter = RingSync.stutter(RingSync.sync(player), player.tickCount + deltaTracker.getGameTimeDeltaPartialTick(false));
+        if (stutter >= 1.0F) graphics.item(ring, x, y);
+        if (stutter < 1.0F) color = ARGB.multiplyAlpha(color, stutter);
         if (!PowerRingItem.usesPower(ring)) return;
 
         int barX = x + ICON_SIZE + 2;

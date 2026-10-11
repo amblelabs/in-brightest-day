@@ -9,6 +9,7 @@ import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.ringpowers.RingPowerRegistry;
 import dev.amble.core.ringpowers.constructs.ConstructRingPower;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.util.Mth;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
@@ -23,6 +24,9 @@ import net.minecraft.world.phys.Vec3;
 public final class RingSync {
     public static final float DEGRADED = 0.5F;
     public static final float UNSTABLE = 0.25F;
+    private static final float STUTTER_TICKS = 2.0F;
+    private static final float STUTTER_CHANCE = 0.6F;
+    private static final float STUTTER_DIM = 0.15F;
     private static final float MISFIRE_CHANCE = 0.15F;
     private static final float CHARGE_PENALTY = 1.5F;
     private static final int TICK_INTERVAL = 20;
@@ -35,6 +39,14 @@ public final class RingSync {
 
     public static boolean drifts(LanternCorps corps) {
         return CentralPowerBattery.required(corps) || corps == LanternCorps.ORANGE;
+    }
+
+    public static float stutter(float sync, float time) {
+        if (sync >= DEGRADED) return 1.0F;
+        float severity = (DEGRADED - Math.max(0.0F, sync)) / DEGRADED;
+        int bucket = Mth.floor(time / STUTTER_TICKS);
+        float noise = (Mth.murmurHash3Mixer(bucket) & 0xFFFF) / 65535.0F;
+        return noise < severity * STUTTER_CHANCE ? STUTTER_DIM : 1.0F;
     }
 
     public static float sync(ItemStack ring) {

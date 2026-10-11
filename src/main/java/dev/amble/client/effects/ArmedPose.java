@@ -1,5 +1,6 @@
 package dev.amble.client.effects;
 
+import dev.amble.core.sync.RingSync;
 import dev.amble.client.render.Holograms;
 import dev.amble.core.forge.BatteryRitual;
 import dev.amble.core.items.PowerRingItem;
@@ -43,6 +44,7 @@ public final class ArmedPose {
     public static final RenderStateDataKey<Boolean> CONSTRUCTING = RenderStateDataKey.create(() -> "brightestday:ring_constructing");
     public static final RenderStateDataKey<Boolean> CHARGE_ANIMATING = RenderStateDataKey.create(() -> "brightestday:charge_animating");
     public static final RenderStateDataKey<Float> COMMS = RenderStateDataKey.create(() -> "brightestday:comms_talking");
+    public static final RenderStateDataKey<Float> SYNC = RenderStateDataKey.create(() -> "brightestday:ring_sync");
 
     public static final float AIM_INWARD = 0.1F;
     private static final float RAISE_SPEED = 0.25F;
@@ -124,6 +126,7 @@ public final class ArmedPose {
             data.setData(CONSTRUCTING, ActiveConstructs.hasActive(player) || PoseAnimations.glowing(player));
             data.setData(CHARGE_ANIMATING, LanternChargeAnimations.handheld(player) || PoseAnimations.posing(player));
             data.setData(COMMS, CommsClient.talking(player, partialTicks));
+            data.setData(SYNC, RingSync.sync(player));
         } else if (Holograms.is(entity)) {
             data.setData(AMOUNT, 0.0F);
             data.setData(COLOR, Holograms.color(entity));
@@ -179,6 +182,7 @@ public final class ArmedPose {
         FabricRenderState data = state;
         float amount = Math.max(Math.min(data.getDataOrDefault(AMOUNT, 0.0F), data.getDataOrDefault(ACTIVITY, 0.0F)), data.getDataOrDefault(CONSTRUCTING, false) ? 1.0F : 0.0F);
         if (amount <= 0.001F || arm != state.mainArm || state.isInvisible || !data.getDataOrDefault(CHARGED, false)) return;
+        amount *= RingSync.stutter(data.getDataOrDefault(SYNC, 1.0F), state.ageInTicks);
 
         float pulse = 0.75F + 0.25F * Mth.sin(state.ageInTicks * 0.3F);
         int color = ARGB.opaque(data.getDataOrDefault(COLOR, LanternCorps.GREEN.color()));
