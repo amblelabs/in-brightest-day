@@ -42,9 +42,6 @@ public final class BrightestDayKeybinds {
     public static final KeyMapping FLIGHT_BOOST = register("flight_boost", InputConstants.KEY_LALT);
 
     private static boolean raiseHeld;
-    private static final int DOUBLE_TAP_TICKS = 7;
-    private static int ticks;
-    private static int lastFlightTap = -DOUBLE_TAP_TICKS - 1;
 
     private static KeyMapping register(String name, int key) {
         return KeyMappingHelper.registerKeyMapping(new KeyMapping(
@@ -69,15 +66,7 @@ public final class BrightestDayKeybinds {
             return;
         }
 
-        ticks++;
-        while (FLIGHT.consumeClick()) {
-            if (ticks - lastFlightTap <= DOUBLE_TAP_TICKS) {
-                ClientPlayNetworking.send(new UsePowerC2SPayload(RingPowerRegistry.FLIGHT.id()));
-                lastFlightTap = -DOUBLE_TAP_TICKS - 1;
-            } else {
-                lastFlightTap = ticks;
-            }
-        }
+        drain(FLIGHT);
 
         boolean raisePressed = false;
         while (RAISE_RING.consumeClick()) {

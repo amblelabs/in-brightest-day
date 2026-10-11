@@ -1177,7 +1177,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.scan_cooldown", "Scanner recharging: %ss");
         builder.add("message.brightestday.raise_ring_first", "Raise your ring first.");
         builder.add("key.brightestday.ability_wheel", "Ability Wheel (hold)");
-        builder.add("key.brightestday.flight", "Flight (double-tap to toggle, hold + scroll for speed)");
+        builder.add("key.brightestday.flight", "Flight Speed (hold + scroll)");
         builder.add("key.brightestday.raise_ring", "Raise Ring");
         builder.add("key.brightestday.toggle_light", "Toggle Spotlight");
         builder.add("key.brightestday.toggle_suit", "Toggle Suit");
