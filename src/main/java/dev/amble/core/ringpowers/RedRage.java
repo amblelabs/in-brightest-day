@@ -1,5 +1,6 @@
 package dev.amble.core.ringpowers;
 
+import dev.amble.core.forge.CentralPowerBattery;
 import dev.amble.BrightestDay;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.items.PowerRingItem;
@@ -88,7 +89,7 @@ public final class RedRage {
 
     private static void fuel(ServerPlayer player, int amount) {
         ItemStack ring = PowerRingItem.getWornRing(player);
-        if (ring.isEmpty() || amount <= 0) return;
+        if (ring.isEmpty() || amount <= 0 || CentralPowerBattery.severed(player.level().getServer(), LanternCorps.RED)) return;
         int room = RingRanks.capacity(player, LanternCorps.RED) - PowerRingItem.getRingPower(ring);
         if (room <= 0) return;
         PowerRingItem.chargeRing(ring, Math.min(amount, room));

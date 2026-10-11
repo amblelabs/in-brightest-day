@@ -127,6 +127,15 @@ public class BrightestDayComponents {
                             .build()
             );
 
+    public static final DataComponentType<Boolean> JUMPSTARTED =
+            Registry.register(BuiltInRegistries.DATA_COMPONENT_TYPE,
+                    BrightestDay.id("jumpstarted"),
+                    DataComponentType.<Boolean>builder()
+                            .persistent(Codec.BOOL)
+                            .networkSynchronized(ByteBufCodecs.BOOL)
+                            .build()
+            );
+
     public record Bond(UUID id, int generation) {
         public static final Codec<Bond> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                 UUIDUtil.CODEC.fieldOf("id").forGetter(Bond::id),

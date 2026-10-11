@@ -1,6 +1,7 @@
 package dev.amble.core.blocks;
 
 import net.minecraft.server.level.ServerPlayer;
+import dev.amble.core.forge.CentralPowerBattery;
 import dev.amble.core.progression.Milestone;
 import dev.amble.core.progression.Trigger;
 import dev.amble.core.progression.RingRanks;
@@ -184,6 +185,8 @@ public class LanternBlock extends BaseEntityBlock implements SimpleWaterloggedBl
             }
             return InteractionResult.FAIL;
         }
+
+        if (player instanceof ServerPlayer server && CentralPowerBattery.refuseCharge(server, this.corps)) return InteractionResult.FAIL;
 
         if (!isInFront(state, pos, player)) {
             if (!level.isClientSide()) player.sendOverlayMessage(Component.translatable("message.brightestday.face_lantern"));

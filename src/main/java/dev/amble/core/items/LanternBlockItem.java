@@ -1,5 +1,6 @@
 package dev.amble.core.items;
 
+import dev.amble.core.forge.CentralPowerBattery;
 import dev.amble.core.sync.RingSync;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.BrightestDayComponents;
@@ -76,6 +77,7 @@ public class LanternBlockItem extends BlockItem {
     private InteractionResult startCharging(Level level, Player player, InteractionHand hand) {
         ItemStack ring = PowerRingItem.getWornRing(player);
         if (PowerRingItem.getRingPower(ring) >= BrightestDayComponents.MAX_POWER) return InteractionResult.PASS;
+        if (player instanceof ServerPlayer server && PowerRingItem.getCorps(ring).map(corps -> CentralPowerBattery.refuseCharge(server, corps)).orElse(false)) return InteractionResult.FAIL;
 
         if (!isGrounded(player)) {
             if (!level.isClientSide()) player.sendOverlayMessage(Component.translatable("message.brightestday.stand_still_to_charge"));

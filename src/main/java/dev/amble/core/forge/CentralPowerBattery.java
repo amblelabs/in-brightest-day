@@ -477,6 +477,16 @@ public final class CentralPowerBattery {
         return WorldProgress.get(server).batteries().stream().anyMatch(battery -> battery.corps() == corps && battery.active());
     }
 
+    public static boolean severed(MinecraftServer server, LanternCorps corps) {
+        return required(corps) && !active(server, corps) && WorldProgress.get(server).kindled().contains(corps);
+    }
+
+    public static boolean refuseCharge(ServerPlayer player, LanternCorps corps) {
+        if (!severed(player.level().getServer(), corps)) return false;
+        player.sendOverlayMessage(Component.translatable("message.brightestday.battery.severed", corps.displayName()).withColor(corps.color()));
+        return true;
+    }
+
     public static boolean required(LanternCorps corps) {
         return switch (corps) {
             case GREEN, YELLOW, RED, BLUE, INDIGO, STAR_SAPPHIRE -> true;

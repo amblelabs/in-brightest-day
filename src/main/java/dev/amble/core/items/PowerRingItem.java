@@ -148,6 +148,7 @@ public class PowerRingItem extends Item {
 
     public static void setMaxPower(ItemStack ring) {
         if (!(ring.getItem() instanceof PowerRingItem) || !usesPower(ring)) return;
+        ring.remove(BrightestDayComponents.JUMPSTARTED);
         ring.set(BrightestDayComponents.POWER_TYPE, BrightestDayComponents.MAX_POWER);
     }
 

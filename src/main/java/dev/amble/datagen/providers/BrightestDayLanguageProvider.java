@@ -454,6 +454,8 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.battery.limit", "The %s cannot raise more than %s Central Power Battery cores.");
         builder.add("message.brightestday.battery.sent", "The ring streaks away in search of %s.");
         builder.add("message.brightestday.battery.dormant", "Your ring is dormant. It needs a Central Power Battery.");
+        builder.add("message.brightestday.battery.severed", "The %s has lost its Central Power Battery. This light cannot recharge your ring.");
+        builder.add("message.brightestday.jumpstart.spent", "Your ring has already been jolted back once. Recharge it to restore that spark.");
         builder.add("message.brightestday.sanctuary.barred", "Only those with hope may pass.");
         builder.add("message.brightestday.sanctuary.blessed", "You have walked the path of hope. The light is yours.");
         builder.add("message.brightestday.meteor.streak", "A pink light streaks across the night sky...");

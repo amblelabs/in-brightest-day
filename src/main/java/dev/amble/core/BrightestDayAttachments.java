@@ -147,7 +147,7 @@ public class BrightestDayAttachments {
         List<RingPower<?>> available = corps == null
                 ? List.of()
                 : RingPowerRegistry.forCorps(corps, CorpsSynergy.borrowsWill(player) ? LanternCorps.GREEN : null, CorpsMimicry.mimicked(player, corps));
-        if (corps != null && CentralPowerBattery.required(corps) && !CentralPowerBattery.active(player.level().getServer(), corps)) {
+        if (corps != null && CentralPowerBattery.required(corps) && !CentralPowerBattery.active(player.level().getServer(), corps) && !CentralPowerBattery.severed(player.level().getServer(), corps)) {
             available = List.of();
             if (player.tickCount % 200 == 0) player.sendOverlayMessage(Component.translatable("message.brightestday.battery.dormant").withColor(corps.color()));
         }

@@ -6,6 +6,7 @@ import dev.amble.core.BrightestDaySounds;
 import dev.amble.core.items.PowerRingItem;
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -32,8 +33,13 @@ public final class RingJumpstart {
 
         float hardness = level.getBlockState(pos).getDestroySpeed(level, pos);
         if (hardness >= 0.0F && hardness < Blocks.STONE.defaultDestroyTime()) return;
+        if (ring.getOrDefault(BrightestDayComponents.JUMPSTARTED, false)) {
+            player.sendOverlayMessage(Component.translatable("message.brightestday.jumpstart.spent").withColor(PowerRingItem.getCorps(ring).map(LanternCorps::color).orElse(0xFFFFFF)));
+            return;
+        }
 
         ring.set(BrightestDayComponents.POWER_TYPE, JUMPSTART_CHARGE);
+        ring.set(BrightestDayComponents.JUMPSTARTED, true);
         if (ring == BrightestDayAttachments.getRing(player)) BrightestDayAttachments.setRing(player, ring);
 
         level.playSound(null, pos, SoundEvents.STONE_HIT, SoundSource.PLAYERS, 1.5F, 0.7F);
