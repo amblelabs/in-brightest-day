@@ -19,15 +19,15 @@ public class BrightestDayConfig extends Config {
 
     public ConfigGroup blast = new ConfigGroup("blast");
     @ValidatedInt.Restrict(min = 0, max = 1000)
-    public int blastCost = 150;
+    public int blastCost = 50;
     @ValidatedDouble.Restrict(min = 8.0, max = 128.0)
     public double blastRange = 48.0;
     @ValidatedDouble.Restrict(min = 1.0, max = 16.0)
     public double blastRadius = 5.0;
     @ValidatedFloat.Restrict(min = 0.0F, max = 40.0F)
-    public float blastDirectDamage = 6.0F;
+    public float blastDirectDamage = 8.0F;
     @ValidatedFloat.Restrict(min = 0.0F, max = 40.0F)
-    public float blastSplashDamage = 3.0F;
+    public float blastSplashDamage = 4.0F;
     @ValidatedDouble.Restrict(min = 0.0, max = 5.0)
     public double blastKnockback = 1.8;
     @ValidatedFloat.Restrict(min = 0.0F, max = 8.0F)
@@ -108,12 +108,12 @@ public class BrightestDayConfig extends Config {
     public ConfigGroup flight = new ConfigGroup("flight");
     @ValidatedDouble.Restrict(min = 1.0, max = 5.0)
     public double flightBoostMultiplier = 2.5;
-    @ValidatedDouble.Restrict(min = 1.0, max = 10.0)
-    public double flightMaxBoostSpeed = 5.0;
-    @ValidatedInt.Restrict(min = 0, max = 100)
-    public int flightDrainPerSecond = 2;
-    @ValidatedInt.Restrict(min = 0, max = 200)
-    public int flightBoostDrainPerSecond = 5;
+    @ValidatedDouble.Restrict(min = 4.0, max = 16.0)
+    public double flightMaxBoostSpeed = 8.0;
+    @ValidatedDouble.Restrict(min = 0.0, max = 100.0)
+    public double flightDrainPerSecond = 0.5;
+    @ValidatedDouble.Restrict(min = 0.0, max = 200.0)
+    public double flightBoostDrainPerSecond = 1.5;
     public boolean aileronRolls = true;
     @ValidatedDouble.Restrict(min = 0.0, max = 16.0)
     @ConfigGroup.Pop

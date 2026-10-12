@@ -34,9 +34,8 @@ public class FlightRingPower extends RingPower<FlightRingPower.Data> {
     private static final double[] SPEED_STEPS = {0.2, 0.35, 0.5, 0.65, 0.9, 1.2, 1.6, 2.2, 3.0, 4.0};
     public static final int SPEED_LEVELS = SPEED_STEPS.length;
     public static final int DEFAULT_SPEED_LEVEL = 5;
-    private static final double BOOST_MIN_BONUS = 0.6;
     private static final double CRUISE_RESPONSE = 0.15;
-    private static final double BOOST_RESPONSE = 0.06;
+    private static final double BOOST_RESPONSE = 0.1;
     private static final double BRAKE_RESPONSE = 0.12;
     private static final double DRAIN_SPEED_WEIGHT = 0.25;
     public static final double DIVE_ENTER_SPEED = 0.8;
@@ -83,7 +82,9 @@ public class FlightRingPower extends RingPower<FlightRingPower.Data> {
     public int drainPerSecond(ServerPlayer player, Data data) {
         if (!isFlying(player)) return 0;
         double scale = 1.0 - DRAIN_SPEED_WEIGHT + DRAIN_SPEED_WEIGHT * speedForLevel(data.speedLevel()) / CRUISE_SPEED;
-        return (int) Math.round((isBoosting(player) ? BrightestDayConfig.get().flightBoostDrainPerSecond : BrightestDayConfig.get().flightDrainPerSecond) * scale);
+        double drain = (isBoosting(player) ? BrightestDayConfig.get().flightBoostDrainPerSecond : BrightestDayConfig.get().flightDrainPerSecond) * scale;
+        int whole = Mth.floor(drain);
+        return whole + (player.getRandom().nextDouble() < drain - whole ? 1 : 0);
     }
 
     @Override
@@ -132,7 +133,8 @@ public class FlightRingPower extends RingPower<FlightRingPower.Data> {
     }
 
     public static double boostSpeed(double cruise) {
-        return Math.min(Math.max(cruise * BrightestDayConfig.get().flightBoostMultiplier, cruise + BOOST_MIN_BONUS), BrightestDayConfig.get().flightMaxBoostSpeed);
+        double top = SPEED_STEPS[SPEED_LEVELS - 1];
+        return Math.min(top + cruise * (BrightestDayConfig.get().flightBoostMultiplier - 1.0), Math.max(top, BrightestDayConfig.get().flightMaxBoostSpeed));
     }
 
     public static boolean isBoosting(Player player) {

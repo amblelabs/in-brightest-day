@@ -710,7 +710,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("brightestday.server.gliderMobFallSpeed.desc", "The fastest a mob with a glider can fall, in blocks per tick.");
         builder.add("brightestday.server.flight", "Flight");
         builder.add("brightestday.server.flightBoostMultiplier", "Boost Multiplier");
-        builder.add("brightestday.server.flightBoostMultiplier.desc", "How many times faster than your cruise speed boosting flies.");
+        builder.add("brightestday.server.flightBoostMultiplier.desc", "Boosting always reaches top speed, then adds your cruise speed times (this - 1) on top.");
         builder.add("brightestday.server.flightMaxBoostSpeed", "Max Boost Speed");
         builder.add("brightestday.server.flightMaxBoostSpeed.desc", "The fastest boosting can ever go, in blocks per tick (20 ticks = 1 second).");
         builder.add("brightestday.server.flightDrainPerSecond", "Cruise Drain");

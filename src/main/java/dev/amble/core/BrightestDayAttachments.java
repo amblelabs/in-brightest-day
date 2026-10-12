@@ -164,7 +164,7 @@ public class BrightestDayAttachments {
         }
         if (corps != null) {
             Set<RingPower<?>> locked = constructRing ? RingRanks.locked(player, corps, 1) : RingRanks.locked(player, corps);
-            if (constructRing) available = available.stream().filter(power -> power != RingPowerRegistry.CONSTRUCT_RING).toList();
+            if (constructRing) available = available.stream().filter(power -> power != RingPowerRegistry.CONSTRUCT_RING && power != RingPowerRegistry.RING_COMPASS).toList();
             if (!locked.isEmpty()) available = available.stream().filter(power -> !locked.contains(power)).toList();
             if (!IndigoOne.isIndigoOne(player)) available = available.stream().filter(power -> power != RingPowerRegistry.GATHER).toList();
             if (!Comms.available()) available = available.stream().filter(power -> power != RingPowerRegistry.COMMS).toList();

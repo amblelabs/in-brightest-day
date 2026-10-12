@@ -21,7 +21,7 @@ import java.util.WeakHashMap;
 
 public final class FlightBoost {
     public static final int BURST_TICKS = 40;
-    private static final int BURST_COST = 100;
+    private static final int BURST_COST = 40;
     private static final int MIN_COOLDOWN = 100;
     private static final int MAX_COOLDOWN = 300;
 
