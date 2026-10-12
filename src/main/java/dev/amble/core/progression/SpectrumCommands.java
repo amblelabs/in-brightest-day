@@ -318,7 +318,7 @@ public final class SpectrumCommands {
         }
         for (WorldProgress.Battery battery : batteries) {
             String status = battery.active() ? "active" : battery.lit() ? "lit, incomplete" : "unlit";
-            context.getSource().sendSuccess(() -> Component.literal(battery.corps().getSerializedName() + " @ " + battery.pos().toShortString()
+            context.getSource().sendSuccess(() -> Component.literal(battery.corps().getSerializedName() + " @ " + battery.dimension().identifier() + " " + battery.pos().toShortString()
                     + " (" + status + ", " + Math.round(battery.strength() * 100.0F) + "% health)").withColor(battery.corps().color()), false);
         }
         return batteries.size();

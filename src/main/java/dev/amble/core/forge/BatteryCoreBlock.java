@@ -41,8 +41,8 @@ public class BatteryCoreBlock extends Block {
 
     @Override
     public @Nullable BlockState getStateForPlacement(BlockPlaceContext context) {
-        if (context.getLevel() instanceof ServerLevel server && server.dimension() == Level.OVERWORLD
-                && CentralPowerBattery.atLimit(server.getServer(), context.getClickedPos(), this.corps)) {
+        if (context.getLevel() instanceof ServerLevel server && CentralPowerBattery.allowed(server.dimension())
+                && CentralPowerBattery.atLimit(server, context.getClickedPos(), this.corps)) {
             if (context.getPlayer() != null) {
                 context.getPlayer().sendOverlayMessage(Component.translatable("message.brightestday.battery.limit", this.corps.displayName(), BrightestDayConfig.get().batteriesPerCorps).withColor(this.corps.color()));
             }

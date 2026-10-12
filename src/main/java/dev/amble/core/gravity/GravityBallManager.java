@@ -235,8 +235,8 @@ public final class GravityBallManager {
     }
 
     private static boolean nearBattery(ServerLevel level, BlockPos pos) {
-        if (level.dimension() != Level.OVERWORLD) return false;
         for (WorldProgress.Battery battery : WorldProgress.get(level.getServer()).batteries()) {
+            if (!battery.in(level)) continue;
             BlockPos core = battery.pos();
             int dy = pos.getY() - core.getY();
             if (Math.abs(pos.getX() - core.getX()) <= BATTERY_CLEARANCE && Math.abs(pos.getZ() - core.getZ()) <= BATTERY_CLEARANCE

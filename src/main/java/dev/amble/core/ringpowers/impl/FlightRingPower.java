@@ -4,6 +4,8 @@ import dev.amble.config.BrightestDayConfig;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.amble.BrightestDay;
+import dev.amble.core.space.Cosmos;
+import dev.amble.core.space.SpaceWarp;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.flight.FlightBoost;
 import dev.amble.core.items.PowerRingItem;
@@ -181,12 +183,15 @@ public class FlightRingPower extends RingPower<FlightRingPower.Data> {
             target = Vec3.ZERO;
             response = BRAKE_RESPONSE;
         } else {
-            target = wish.normalize().scale(boosting ? boostSpeed(cruise) : cruise);
+            double speed = boosting ? boostSpeed(cruise) : cruise;
+            target = wish.normalize().scale(SpaceWarp.limit(player.level(), player.position(), Cosmos.knownMogo, speed));
             response = boosting ? BOOST_RESPONSE : CRUISE_RESPONSE;
         }
 
         Vec3 velocity = player.getDeltaMovement();
         velocity = velocity.add(target.subtract(velocity).scale(response));
+        double ceiling = SpaceWarp.limit(player.level(), player.position(), Cosmos.knownMogo, Math.max(cruise, boostSpeed(cruise)));
+        if (Cosmos.isSector(player.level().dimension()) && velocity.length() > ceiling) velocity = velocity.normalize().scale(ceiling);
 
         player.setDeltaMovement(velocity);
         player.move(MoverType.SELF, velocity);

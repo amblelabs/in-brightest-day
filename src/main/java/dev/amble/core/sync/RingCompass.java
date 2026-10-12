@@ -16,7 +16,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
@@ -42,8 +41,8 @@ public final class RingCompass {
         boolean lantern = corps == LanternCorps.ORANGE;
         BlockPos target = lantern ? lantern(player) : core(player, corps);
         if (target == null) {
-            if (!lantern && player.level().dimension() != Level.OVERWORLD && !WorldProgress.get(player.level().getServer()).batteries().isEmpty()) {
-                player.sendOverlayMessage(Component.translatable("message.brightestday.compass.overworld").withColor(corps.color()));
+            if (!lantern && WorldProgress.get(player.level().getServer()).batteries().stream().anyMatch(battery -> battery.corps() == corps)) {
+                player.sendOverlayMessage(Component.translatable("message.brightestday.compass.elsewhere").withColor(corps.color()));
             } else {
                 player.sendOverlayMessage(Component.translatable(lantern ? "message.brightestday.compass.no_lantern" : "message.brightestday.compass.no_core").withColor(corps.color()));
             }
@@ -67,12 +66,11 @@ public final class RingCompass {
     }
 
     private static @Nullable BlockPos core(ServerPlayer player, LanternCorps corps) {
-        if (player.level().dimension() != Level.OVERWORLD) return null;
         BlockPos best = null;
         double bestDistance = Double.MAX_VALUE;
         boolean bestActive = false;
         for (WorldProgress.Battery battery : WorldProgress.get(player.level().getServer()).batteries()) {
-            if (battery.corps() != corps) continue;
+            if (battery.corps() != corps || !battery.in(player.level())) continue;
             double distance = player.position().distanceToSqr(Vec3.atCenterOf(battery.pos()));
             if (battery.active() && !bestActive || battery.active() == bestActive && distance < bestDistance) {
                 best = battery.pos();

@@ -1,5 +1,6 @@
 package dev.amble.client;
 
+import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import dev.amble.core.networking.payloads.c2s.FlightCompactC2SPayload;
 import dev.amble.core.ringpowers.impl.FlightRingPower;
@@ -8,6 +9,8 @@ import dev.amble.client.effects.ArmedPose;
 import dev.amble.client.effects.BeamEffects;
 import dev.amble.client.effects.BulwarkEffects;
 import dev.amble.client.effects.GravityBallEffects;
+import dev.amble.client.space.SpaceSkyRenderer;
+import dev.amble.client.space.CosmosClient;
 import dev.amble.client.lore.LoreBookScreen;
 import dev.amble.client.lore.LoreLibrary;
 import dev.amble.core.items.LoreBookItem;
@@ -131,6 +134,8 @@ public class BrightestDayClient implements ClientModInitializer {
         BeamEffects.init();
         BulwarkEffects.init();
         GravityBallEffects.init();
+        LevelRenderEvents.COLLECT_SUBMITS.register(SpaceSkyRenderer::render);
+        CosmosClient.init();
         LoreLibrary.init();
         FlightRingPower.compactSender = compact -> {
             if (ClientPlayNetworking.canSend(FlightCompactC2SPayload.TYPE)) ClientPlayNetworking.send(new FlightCompactC2SPayload(compact));

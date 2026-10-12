@@ -15,7 +15,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.Level;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -113,9 +112,9 @@ public final class SpectrumMeters {
 
     public static boolean atBattery(ServerPlayer player) {
         LanternCorps corps = PowerRingItem.getWornCorps(player).orElse(null);
-        if (corps == null || player.level().dimension() != Level.OVERWORLD) return false;
+        if (corps == null) return false;
         return WorldProgress.get(player.level().getServer()).batteries().stream()
-                .anyMatch(battery -> battery.corps() == corps && battery.pos().closerToCenterThan(player.position(), BATTERY_RANGE));
+                .anyMatch(battery -> battery.corps() == corps && battery.in(player.level()) && battery.pos().closerToCenterThan(player.position(), BATTERY_RANGE));
     }
 
     public static boolean sustained(ServerPlayer player, Emotion emotion) {

@@ -1,0 +1,8 @@
+{
+  "type": "brightestday:planet",
+  "generator": {
+    "type": "minecraft:noise",
+    "biome_source": {"type": "minecraft:checkerboard", "scale": 3, "biomes": ["minecraft:ice_spikes", "minecraft:frozen_peaks", "minecraft:snowy_plains"]},
+    "settings": "minecraft:overworld"
+  }
+}

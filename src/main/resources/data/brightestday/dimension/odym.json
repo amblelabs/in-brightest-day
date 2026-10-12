@@ -1,0 +1,8 @@
+{
+  "type": "brightestday:planet",
+  "generator": {
+    "type": "minecraft:noise",
+    "biome_source": {"type":"minecraft:checkerboard","scale":3,"biomes":["minecraft:jungle","minecraft:bamboo_jungle","minecraft:sparse_jungle"]},
+    "settings": "minecraft:overworld"
+  }
+}

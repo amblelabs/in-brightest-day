@@ -1,0 +1,11 @@
+{
+  "type": "brightestday:space",
+  "generator": {
+    "type": "minecraft:noise",
+    "biome_source": {
+      "type": "minecraft:fixed",
+      "biome": "brightestday:antimatter"
+    },
+    "settings": "brightestday:antimatter"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "type": "brightestday:space",
+  "generator": {
+    "type": "minecraft:flat",
+    "settings": {
+      "biome": "brightestday:space",
+      "lakes": false,
+      "features": false,
+      "layers": [],
+      "structures": {
+        "structures": {}
+      }
+    }
+  }
+}

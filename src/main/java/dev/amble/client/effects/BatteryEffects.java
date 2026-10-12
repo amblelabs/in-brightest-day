@@ -26,7 +26,6 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.LightCoordsUtil;
 import net.minecraft.util.Mth;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
@@ -65,7 +64,10 @@ public final class BatteryEffects {
     private static @Nullable CentralPowerBatteryModel model;
 
     public static boolean isBattery(BlockPos pos) {
+        Minecraft client = Minecraft.getInstance();
+        if (client.level == null) return false;
         for (BatteriesS2CPayload.Entry battery : batteries) {
+            if (battery.dimension() != client.level.dimension()) continue;
             BlockPos core = battery.pos();
             int dx = Math.abs(pos.getX() - core.getX());
             int dz = Math.abs(pos.getZ() - core.getZ());
@@ -84,13 +86,14 @@ public final class BatteryEffects {
 
     private static void render(LevelRenderContext context) {
         Minecraft client = Minecraft.getInstance();
-        if (batteries.isEmpty() || client.level == null || client.level.dimension() != Level.OVERWORLD || !BatteryTextures.ready()) return;
+        if (batteries.isEmpty() || client.level == null || !BatteryTextures.ready()) return;
         if (model == null) model = new CentralPowerBatteryModel();
 
         Vec3 camera = context.levelState().cameraRenderState.pos;
         float time = client.level.getGameTime() + client.getDeltaTracker().getGameTimeDeltaPartialTick(false);
         PoseStack poseStack = context.poseStack();
         for (BatteriesS2CPayload.Entry battery : batteries) {
+            if (battery.dimension() != client.level.dimension()) continue;
             Vec3 center = Vec3.atCenterOf(battery.pos());
             if (center.distanceTo(camera) > RENDER_DISTANCE) continue;
             int color = ARGB.opaque(battery.color());

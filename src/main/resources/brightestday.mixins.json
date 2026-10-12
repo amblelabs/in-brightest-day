@@ -19,7 +19,9 @@
 		"AbstractHorseMixin",
 		"MannequinAccessor",
 		"MinecraftServerStatusMixin",
-		"ConstructItemStackMixin"
+		"ConstructItemStackMixin",
+		"SpaceChunkCacheMixin",
+		"SpaceGravityMixin"
 	],
 	"client": [
 		"client.AbstractClientPlayerMixin",
@@ -42,7 +44,10 @@
 		"client.EntityTurnMixin",
 		"client.EntityRendererMixin",
 		"client.LivingEntityRendererMixin",
-		"client.AbstractBoatRendererMixin"
+		"client.AbstractBoatRendererMixin",
+		"client.SpaceClientPacketListenerMixin",
+		"client.SpaceEnvironmentAttributeProbeMixin",
+		"client.SpaceSkyRendererMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

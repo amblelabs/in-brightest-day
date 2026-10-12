@@ -9,13 +9,16 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.Level;
 
 import java.util.List;
 
 public record BatteriesS2CPayload(List<Entry> batteries) implements CustomPacketPayload {
 
-    public record Entry(BlockPos pos, int color, boolean active, Direction.Axis arms) {
+    public record Entry(ResourceKey<Level> dimension, BlockPos pos, int color, boolean active, Direction.Axis arms) {
         public static final Codec<Entry> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                Level.RESOURCE_KEY_CODEC.fieldOf("dimension").forGetter(Entry::dimension),
                 BlockPos.CODEC.fieldOf("pos").forGetter(Entry::pos),
                 Codec.INT.fieldOf("color").forGetter(Entry::color),
                 Codec.BOOL.optionalFieldOf("active", true).forGetter(Entry::active),

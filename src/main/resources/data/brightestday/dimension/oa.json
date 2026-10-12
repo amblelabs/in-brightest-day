@@ -1,0 +1,8 @@
+{
+  "type": "brightestday:oa",
+  "generator": {
+    "type": "minecraft:noise",
+    "biome_source": {"type": "minecraft:fixed", "biome": "brightestday:oa_barrens"},
+    "settings": "brightestday:oa"
+  }
+}

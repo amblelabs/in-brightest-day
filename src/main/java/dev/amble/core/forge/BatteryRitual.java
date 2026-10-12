@@ -15,11 +15,13 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.util.Unit;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.HashMap;
@@ -35,6 +37,7 @@ public final class BatteryRitual {
     private static final int CHIME_INTERVAL = 20;
 
     private static final class Session {
+        final ResourceKey<Level> dimension;
         final BlockPos core;
         final LanternCorps corps;
         final boolean oath;
@@ -42,7 +45,8 @@ public final class BatteryRitual {
         long lastHeld;
         int age;
 
-        Session(BlockPos core, LanternCorps corps, boolean oath, boolean ceremony, long lastHeld) {
+        Session(ResourceKey<Level> dimension, BlockPos core, LanternCorps corps, boolean oath, boolean ceremony, long lastHeld) {
+            this.dimension = dimension;
             this.core = core;
             this.corps = corps;
             this.oath = oath;
@@ -69,21 +73,21 @@ public final class BatteryRitual {
     }
 
     public static void hold(ServerPlayer player, BlockPos core, LanternCorps corps, boolean ceremony) {
-        long now = player.level().getGameTime();
+        long now = player.level().getServer().getTickCount();
         Session session = SESSIONS.get(player.getUUID());
-        if (session != null && session.core.equals(core) && session.ceremony == ceremony) {
+        if (session != null && session.dimension == player.level().dimension() && session.core.equals(core) && session.ceremony == ceremony) {
             session.lastHeld = now;
             return;
         }
         if (session != null && session.oath) OathCharge.end(player);
         boolean oath = OathCharge.begin(player, corps, true);
         if (!oath) player.sendSystemMessage(Component.translatable(corps.oathKey()).withStyle(ChatFormatting.BOLD).withColor(corps.color()));
-        SESSIONS.put(player.getUUID(), new Session(core.immutable(), corps, oath, ceremony, now));
+        SESSIONS.put(player.getUUID(), new Session(player.level().dimension(), core.immutable(), corps, oath, ceremony, now));
         player.setAttached(PERFORMING, Unit.INSTANCE);
     }
 
     private static void tick(MinecraftServer server) {
-        long now = server.overworld().getGameTime();
+        long now = server.getTickCount();
         Iterator<Map.Entry<UUID, Session>> iterator = SESSIONS.entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry<UUID, Session> entry = iterator.next();
@@ -95,7 +99,7 @@ public final class BatteryRitual {
             }
 
             boolean released = now - session.lastHeld > HOLD_GRACE_TICKS;
-            boolean broken = !player.isAlive() || player.hurtTime > 0 || player.level() != server.overworld()
+            boolean broken = !player.isAlive() || player.hurtTime > 0 || player.level().dimension() != session.dimension
                     || PowerRingItem.getCorps(PowerRingItem.getWornRing(player)).orElse(null) != session.corps
                     || player.getEyePosition().distanceTo(Vec3.atCenterOf(session.core)) > MAX_DISTANCE;
             boolean silent = !released && !broken && session.oath && !OathCharge.tick(player, session.corps.color());
