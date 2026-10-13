@@ -10,11 +10,13 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 
 import java.util.Locale;
+import java.util.function.Consumer;
 
 public final class CosmosClient {
     private static final int READOUT_INTERVAL = 5;
@@ -42,6 +44,10 @@ public final class CosmosClient {
         double speed = player.getDeltaMovement().length();
         if (speed < READOUT_SPEED) return;
         client.gui.hud.setOverlayMessage(Component.translatable("hud.brightestday.warp", String.format(Locale.ROOT, "%.1f", speed * Cosmos.COMPRESSION / SpaceWarp.MACH)).withColor(0x9FD8FF), false);
+    }
+
+    public static void snapshot(Consumer<CustomPacketPayload> out) {
+        out.accept(new CosmosS2CPayload(mogoSector.identifier(), antimatterOpen));
     }
 
     public static ResourceKey<Level> mogoSector() {

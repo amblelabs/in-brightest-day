@@ -74,7 +74,7 @@ public final class FlightRenderTypes {
 
     public static final RenderType SKY_SOLID = RenderType.create(
             "brightestday_sky_solid",
-            RenderSetup.builder(SKY_SOLID_PIPELINE).sortOnUpload().createRenderSetup()
+            RenderSetup.builder(SKY_SOLID_PIPELINE).setOitPipelines(RenderPipelines.OIT_DEBUG_QUADS).sortOnUpload().createRenderSetup()
     );
 
     public static RenderType glass() {

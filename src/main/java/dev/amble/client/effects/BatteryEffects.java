@@ -18,6 +18,7 @@ import dev.amble.BrightestDay;
 import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
@@ -31,6 +32,7 @@ import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 public final class BatteryEffects {
     private static final int LIGHT_SAMPLE_OFFSET = 4;
@@ -82,6 +84,10 @@ public final class BatteryEffects {
         ClientPlayNetworking.registerGlobalReceiver(BatteriesS2CPayload.TYPE, (payload, context) -> batteries = payload.batteries());
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> batteries = List.of());
         LevelRenderEvents.COLLECT_SUBMITS.register(BatteryEffects::render);
+    }
+
+    public static void snapshot(Consumer<CustomPacketPayload> out) {
+        if (!batteries.isEmpty()) out.accept(new BatteriesS2CPayload(batteries));
     }
 
     private static void render(LevelRenderContext context) {

@@ -1,6 +1,7 @@
 package dev.amble.client.compat;
 
 import dev.amble.BrightestDay;
+import dev.amble.client.effects.BatteryEffects;
 import dev.amble.client.effects.LightOrbEffects;
 import dev.amble.client.effects.ShieldEffects;
 import dev.amble.client.effects.WallEffects;
@@ -8,6 +9,7 @@ import dev.amble.client.effects.attacks.utility.LumberjackEffects;
 import dev.amble.client.effects.attacks.utility.OreProbeEffects;
 import dev.amble.client.effects.attacks.weapon.TurretEffects;
 import dev.amble.client.effects.glide.GlideEffects;
+import dev.amble.client.space.CosmosClient;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.networking.payloads.s2c.PlayerStateS2CPayload;
 import dev.amble.core.ringpowers.CorpsSynergy;
@@ -125,6 +127,8 @@ public final class ReplaySnapshot {
         GlideEffects.snapshot(out);
         LumberjackEffects.snapshot(out);
         OreProbeEffects.snapshot(out);
+        BatteryEffects.snapshot(out);
+        CosmosClient.snapshot(out);
     }
 
     private ReplaySnapshot() {}
