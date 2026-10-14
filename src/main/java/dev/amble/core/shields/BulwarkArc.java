@@ -1,6 +1,7 @@
 package dev.amble.core.shields;
 
 import net.minecraft.util.Mth;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 
 public record BulwarkArc(Vec3 center, double radius, float yaw, double halfAngle, double bottom, double top) {
@@ -11,17 +12,22 @@ public record BulwarkArc(Vec3 center, double radius, float yaw, double halfAngle
     private static final double MIN_HALF_ANGLE = 60.0;
     private static final double MAX_HALF_ANGLE = 90.0;
     private static final double BELOW = 0.1;
-    private static final double HEIGHT = 2.3;
+    private static final double HEAD_ROOM = 0.5;
+    private static final double SIDE_ROOM = 0.4;
+    private static final double STANDARD_WIDTH = 0.6;
     private static final double SHELTER_MARGIN = 0.15;
     private static final double WALL_MARGIN = 0.3;
     private static final double OVERHANG = 1.0;
 
-    public static BulwarkArc of(Vec3 feet, float yaw, int size) {
+    public static BulwarkArc of(Entity holder, Vec3 feet, float yaw, int size) {
         int clamped = Mth.clamp(size, MIN_SIZE, MAX_SIZE);
-        double radius = FRONT + (clamped - MIN_SIZE) * RADIUS_PER_SIZE;
+        double width = holder.getBbWidth();
+        double scale = width / STANDARD_WIDTH;
+        double front = Math.max(FRONT * scale, width / 2.0 + SIDE_ROOM);
+        double radius = front + (clamped - MIN_SIZE) * RADIUS_PER_SIZE * scale;
         double half = Math.toRadians(Mth.lerp((clamped - MIN_SIZE) / (double) (MAX_SIZE - MIN_SIZE), MIN_HALF_ANGLE, MAX_HALF_ANGLE));
-        Vec3 center = feet.add(forward(yaw, 0.0).scale(FRONT - radius));
-        return new BulwarkArc(center, radius, yaw, half, feet.y - BELOW, feet.y + HEIGHT);
+        Vec3 center = feet.add(forward(yaw, 0.0).scale(front - radius));
+        return new BulwarkArc(center, radius, yaw, half, feet.y - BELOW, feet.y + holder.getBbHeight() + HEAD_ROOM);
     }
 
     public static Vec3 forward(float yaw, double offset) {

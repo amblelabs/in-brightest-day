@@ -82,6 +82,7 @@ public final class CentralPowerBattery {
     public static final int TOP_STALK = 1;
     public static final int ARM = 1;
     private static final int SOLO_RANK = 2;
+    private static final int MOVE_RANK = RingRanks.MAX_RANK;
 
     private static final Map<GlobalPos, ServerBossEvent> BARS = new HashMap<>();
     private static final Map<GlobalPos, Map<UUID, Long>> CEREMONIES = new HashMap<>();
@@ -128,8 +129,13 @@ public final class CentralPowerBattery {
         PlayerBlockBreakEvents.BEFORE.register((level, player, pos, state, blockEntity) -> {
             if (!(level instanceof ServerLevel server) || player.isCreative()) return true;
             WorldProgress.Battery battery = at(server, pos, false);
-            if (battery == null || PowerRingItem.getWornCorps(player).orElse(null) == battery.corps()) return true;
-            player.sendOverlayMessage(Component.translatable("message.brightestday.battery.warded").withColor(battery.corps().color()));
+            if (battery == null) return true;
+            if (PowerRingItem.getWornCorps(player).orElse(null) != battery.corps()) {
+                player.sendOverlayMessage(Component.translatable("message.brightestday.battery.warded").withColor(battery.corps().color()));
+                return false;
+            }
+            if (battery.founder(player.getUUID()) || RingRanks.rank(player, battery.corps()) >= MOVE_RANK) return true;
+            player.sendOverlayMessage(Component.translatable("message.brightestday.battery.unproven", MOVE_RANK).withColor(battery.corps().color()));
             return false;
         });
     }
@@ -222,7 +228,7 @@ public final class CentralPowerBattery {
         }
         CEREMONIES.remove(battery.global());
         AWAITING.remove(battery.global());
-        WorldProgress.update(level.getServer(), state -> state.withBattery(battery.withLit(true)).withKindled(battery.corps()));
+        WorldProgress.update(level.getServer(), state -> state.withBattery(battery.withLit(true).withFounders(sworn.keySet())).withKindled(battery.corps()));
         announce(level, battery.pos(), Component.translatable("message.brightestday.battery.lit").withStyle(ChatFormatting.BOLD), battery.corps());
         level.playSound(null, battery.pos(), SoundEvents.BEACON_POWER_SELECT, SoundSource.BLOCKS, 2.0F, 0.7F);
     }
@@ -521,7 +527,7 @@ public final class CentralPowerBattery {
         return existing >= BrightestDayConfig.get().batteriesPerCorps;
     }
 
-    static void track(ServerLevel level, BlockPos pos, LanternCorps corps) {
+    static void track(ServerLevel level, BlockPos pos, LanternCorps corps, @Nullable Player builder) {
         if (!allowed(level.dimension())) {
             announce(level, pos, Component.translatable("message.brightestday.battery.forbidden"), corps);
             return;
@@ -533,7 +539,9 @@ public final class CentralPowerBattery {
         } else if (arms(level, pos) == null) {
             announce(level, pos, Component.translatable("message.brightestday.battery.armless"), corps);
         }
-        WorldProgress.update(level.getServer(), state -> state.withBattery(WorldProgress.Battery.fresh(level.dimension(), pos, corps)));
+        WorldProgress.Battery fresh = WorldProgress.Battery.fresh(level.dimension(), pos, corps);
+        WorldProgress.Battery founded = builder == null ? fresh : fresh.withFounders(List.of(builder.getUUID()));
+        WorldProgress.update(level.getServer(), state -> state.withBattery(founded));
     }
 
     public static boolean allowed(ResourceKey<Level> dimension) {

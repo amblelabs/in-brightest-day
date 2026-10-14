@@ -109,7 +109,7 @@ public final class BulwarkManager {
         for (Map.Entry<ServerPlayer, Bulwark> entry : BULWARKS.entrySet()) {
             ServerPlayer holder = entry.getKey();
             if (holder.level() != victim.level() || source.getEntity() == holder) continue;
-            BulwarkArc arc = BulwarkArc.of(holder.position(), holder.getYRot(), entry.getValue().size);
+            BulwarkArc arc = BulwarkArc.of(holder, holder.position(), holder.getYRot(), entry.getValue().size);
             if (!arc.shelters(victim.position(), victim.getBbHeight(), origin)) continue;
 
             victim.level().playSound(null, victim.getX(), victim.getY(), victim.getZ(), SoundEvents.SHIELD_BLOCK.value(), SoundSource.PLAYERS, 1.0F, 0.9F + victim.getRandom().nextFloat() * 0.2F);
