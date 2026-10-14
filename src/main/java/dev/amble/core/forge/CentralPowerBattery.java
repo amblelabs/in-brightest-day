@@ -90,10 +90,12 @@ public final class CentralPowerBattery {
     public static void init() {
         ServerTickEvents.END_SERVER_TICK.register(CentralPowerBattery::tick);
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> ServerPlayNetworking.send(handler.player, payload(server)));
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> LAST_STRIKE.remove(handler.player.getUUID()));
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             BARS.values().forEach(ServerBossEvent::removeAllPlayers);
             BARS.clear();
             CEREMONIES.clear();
+            LAST_STRIKE.clear();
             AWAITING.clear();
             FORMED.clear();
         });
@@ -126,7 +128,7 @@ public final class CentralPowerBattery {
         PlayerBlockBreakEvents.BEFORE.register((level, player, pos, state, blockEntity) -> {
             if (!(level instanceof ServerLevel server) || server.dimension() != Level.OVERWORLD || player.isCreative()) return true;
             WorldProgress.Battery battery = at(server, pos, false);
-            if (battery == null) return true;
+            if (battery == null || !part(server, battery, pos, state)) return true;
             if (PowerRingItem.getWornCorps(player).orElse(null) != battery.corps()) {
                 player.sendOverlayMessage(Component.translatable("message.brightestday.battery.warded").withColor(battery.corps().color()));
                 return false;
@@ -299,6 +301,11 @@ public final class CentralPowerBattery {
     public static boolean isShell(BlockState state, Block shell) {
         if (state.getBlock() instanceof BatteryFrameBlock) return matches(BatteryFrameBlock.original(state), shell);
         return matches(state.getBlock(), shell);
+    }
+
+    private static boolean part(ServerLevel level, WorldProgress.Battery battery, BlockPos pos, BlockState state) {
+        if (pos.equals(battery.pos()) || state.getBlock() instanceof BatteryFrameBlock) return true;
+        return level.getBlockState(battery.pos()).getBlock() instanceof BatteryCoreBlock core && matches(state.getBlock(), core.shell());
     }
 
     private static boolean matches(Block block, Block shell) {

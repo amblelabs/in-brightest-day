@@ -15,6 +15,7 @@ import dev.amble.core.comms.Megaphone;
 import dev.amble.core.oath.OathCharge;
 import dev.amble.core.ringpowers.BloodHunt;
 import dev.amble.core.ringpowers.CometRam;
+import dev.amble.core.ringpowers.CorpsCombat;
 import dev.amble.core.ringpowers.RedRage;
 import dev.amble.core.ringpowers.RedBlood;
 import dev.amble.core.ringpowers.RingPowerRegistry;
@@ -151,6 +152,7 @@ public class BrightestDay implements ModInitializer {
 		EmotionSources.init();
 		Terror.init();
 		RingOffers.init();
+		CorpsCombat.init();
 		RingBonds.init();
 		IndigoOne.init();
 		CentralPowerBattery.init();

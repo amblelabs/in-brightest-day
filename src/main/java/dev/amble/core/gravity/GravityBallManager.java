@@ -9,6 +9,7 @@ import dev.amble.core.team.RingDamage;
 import dev.amble.core.team.RingTargets;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.BlockPos;
@@ -42,7 +43,7 @@ import java.util.UUID;
 public final class GravityBallManager {
     public static final int MIN_LEVEL = 1;
     public static final int MAX_LEVEL = 5;
-    private static final int LIFETIME = 200;
+    public static final int LIFETIME = 200;
     private static final double BASE_RADIUS = 10.0;
     private static final double RADIUS_PER_LEVEL = 3.0;
     private static final double BASE_PULL = 0.05;
@@ -221,7 +222,8 @@ public final class GravityBallManager {
         for (int attempt = 0; attempt < 8; attempt++) {
             BlockPos pos = BlockPos.containing(ball.center.add((random.nextDouble() * 2.0 - 1.0) * reach, (random.nextDouble() * 2.0 - 1.0) * reach, (random.nextDouble() * 2.0 - 1.0) * reach));
             BlockState state = ball.level.getBlockState(pos);
-            if (!tearable(ball.level, pos, state, TEAR_HARDNESS[tier]) || !ball.level.mayInteract(owner, pos) || nearBattery(ball.level, pos)) continue;
+            if (!tearable(ball.level, pos, state, TEAR_HARDNESS[tier]) || !ball.level.mayInteract(owner, pos) || nearBattery(ball.level, pos)
+                    || !PlayerBlockBreakEvents.BEFORE.invoker().beforeBlockBreak(ball.level, owner, pos, state, null)) continue;
             FallingBlockEntity.fall(ball.level, pos, state);
             ball.torn++;
             return;

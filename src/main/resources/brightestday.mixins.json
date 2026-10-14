@@ -19,7 +19,9 @@
 		"AbstractHorseMixin",
 		"MannequinAccessor",
 		"MinecraftServerStatusMixin",
-		"ConstructItemStackMixin"
+		"ConstructItemStackMixin",
+		"ConstructContainerItemMixin",
+		"ConstructFurnaceMixin"
 	],
 	"client": [
 		"client.AbstractClientPlayerMixin",

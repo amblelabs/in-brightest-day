@@ -12,6 +12,7 @@ import dev.amble.core.oath.VoiceAnswers;
 import dev.amble.core.progression.Emotion;
 import dev.amble.core.progression.SpectrumMeters;
 import dev.amble.core.ringpowers.LanternCorps;
+import dev.amble.core.ringpowers.CorpsCombat;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -74,6 +75,8 @@ public final class RingLoyalty {
     private static final float HOVER_SPIN = 4.0F;
     private static final double HOVER_BOB = 0.04;
     private static final String HOVER_TAG = "brightestday_ring_question";
+    private static final int GIFT_ASK_COOLDOWN = 20 * 30;
+    private static final int ASK_COMBAT_GRACE = 20 * 5;
     private static final Set<LanternCorps> GIFTABLE = EnumSet.of(LanternCorps.YELLOW, LanternCorps.STAR_SAPPHIRE);
     private static final Set<LanternCorps> SILENT = EnumSet.of(LanternCorps.INDIGO, LanternCorps.BLACK, LanternCorps.WHITE);
 
@@ -82,6 +85,7 @@ public final class RingLoyalty {
     private static final Set<UUID> ASKED = new HashSet<>();
     private static final Set<UUID> DISPLAYS = new HashSet<>();
     private static final Map<UUID, VoiceAnswers.Answer> CHAT_ANSWERS = new HashMap<>();
+    private static final Map<UUID, Long> GIFT_ASKED = new HashMap<>();
 
     public interface Offer {
         boolean accept(ServerPlayer player, ItemStack ring);
@@ -138,6 +142,7 @@ public final class RingLoyalty {
         });
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
             PENDING.clear();
+            GIFT_ASKED.clear();
             for (Flight flight : List.copyOf(FLIGHTS)) land(server, flight);
             FLIGHTS.clear();
         });
@@ -276,6 +281,10 @@ public final class RingLoyalty {
 
     private static void tick(MinecraftServer server) {
         sendPending(server);
+        if (server.getTickCount() % 1200 == 0) {
+            long now = server.overworld().getGameTime();
+            GIFT_ASKED.values().removeIf(last -> now - last >= GIFT_ASK_COOLDOWN);
+        }
         Iterator<Flight> iterator = FLIGHTS.iterator();
         List<Flight> lost = new ArrayList<>();
         List<Flight> added = new ArrayList<>();
@@ -314,7 +323,7 @@ public final class RingLoyalty {
                     iterator.remove();
                     giveBack(target, flight);
                 } else if (flight.asks) {
-                    if (!ASKED.contains(target.getUUID())) ask(target, flight);
+                    if (!ASKED.contains(target.getUUID()) && askable(target, flight)) ask(target, flight);
                 } else {
                     iterator.remove();
                     arrive(target, flight.ring);
@@ -431,7 +440,16 @@ public final class RingLoyalty {
         if (sender != null) sender.sendOverlayMessage(Component.translatable("message.brightestday.ring_gift.sent", corps(ring).displayName(), target.getDisplayName()).withColor(color));
     }
 
+    private static boolean askable(ServerPlayer target, Flight flight) {
+        if (flight.kind != Kind.GIFT) return true;
+        if (!target.onGround() || CorpsCombat.recentlyFought(target)) return false;
+        if (target.getLastHurtByMob() != null && target.tickCount - target.getLastHurtByMobTimestamp() < ASK_COMBAT_GRACE) return false;
+        Long last = GIFT_ASKED.get(target.getUUID());
+        return last == null || flight.level.getGameTime() - last >= GIFT_ASK_COOLDOWN;
+    }
+
     private static void ask(ServerPlayer target, Flight flight) {
+        if (flight.kind == Kind.GIFT) GIFT_ASKED.put(target.getUUID(), flight.level.getGameTime());
         LanternCorps corps = corps(flight.ring);
         boolean voice = VoiceAnswers.listen(target);
         ASKED.add(target.getUUID());

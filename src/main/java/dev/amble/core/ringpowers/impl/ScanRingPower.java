@@ -32,8 +32,10 @@ import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.UUID;
 
 public class ScanRingPower extends RingPower<Unit> {
     public static final int SCAN_TICKS = 20;
@@ -44,7 +46,7 @@ public class ScanRingPower extends RingPower<Unit> {
     private static final int USE_COST = 15;
 
     private static final Map<ServerPlayer, Pending> PENDING = new WeakHashMap<>();
-    private static final Map<ServerPlayer, Long> READY_AT = new WeakHashMap<>();
+    private static final Map<UUID, Long> READY_AT = new HashMap<>();
 
     private record Pending(@Nullable Entity entity, BlockPos pos, long start) {}
 
@@ -71,8 +73,8 @@ public class ScanRingPower extends RingPower<Unit> {
 
         ServerLevel level = player.level();
         long now = level.getGameTime();
-        long readyAt = READY_AT.getOrDefault(player, 0L);
-        if (now < readyAt) {
+        long readyAt = READY_AT.getOrDefault(player.getUUID(), 0L);
+        if (now < readyAt && readyAt - now <= COOLDOWN_TICKS) {
             player.sendOverlayMessage(Component.translatable("message.brightestday.scan_cooldown", (readyAt - now + 19) / 20));
             return;
         }
@@ -118,7 +120,8 @@ public class ScanRingPower extends RingPower<Unit> {
             player.sendOverlayMessage(Component.translatable("message.brightestday.ring_depleted"));
             return;
         }
-        READY_AT.put(player, now + COOLDOWN_TICKS);
+        READY_AT.values().removeIf(ready -> ready <= now);
+        READY_AT.put(player.getUUID(), now + COOLDOWN_TICKS);
         RingRanks.fire(player, Trigger.SCAN, Milestone.Context.NONE);
 
         ScanReport report = entity != null ? ScanReport.of(player, entity) : ScanReport.of(player, level, pending.pos());

@@ -360,6 +360,7 @@ final class SuitTextures {
             textures.release(this.bodyId);
             textures.release(this.glowId);
             textures.release(this.flareId);
+            EyeFlareRenderTypes.forget(this.flareId);
         }
     }
 

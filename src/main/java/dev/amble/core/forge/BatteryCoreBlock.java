@@ -1,6 +1,7 @@
 package dev.amble.core.forge;
 
 import dev.amble.config.BrightestDayConfig;
+import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.ringpowers.LanternCorps;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -42,6 +43,13 @@ public class BatteryCoreBlock extends Block {
 
     @Override
     public @Nullable BlockState getStateForPlacement(BlockPlaceContext context) {
+        Player placer = context.getPlayer();
+        if (placer != null && !placer.isCreative() && PowerRingItem.getWornCorps(placer).orElse(null) != this.corps) {
+            if (context.getLevel() instanceof ServerLevel) {
+                placer.sendOverlayMessage(Component.translatable("message.brightestday.battery.foreign", this.corps.displayName()).withColor(this.corps.color()));
+            }
+            return null;
+        }
         if (context.getLevel() instanceof ServerLevel server && server.dimension() == Level.OVERWORLD
                 && CentralPowerBattery.atLimit(server.getServer(), context.getClickedPos(), this.corps)) {
             if (context.getPlayer() != null) {

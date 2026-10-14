@@ -45,6 +45,9 @@ public final class MegaphoneClient {
             else ACTIVE.remove(payload.playerId());
         });
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> ACTIVE.clear());
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            if (client.level != null && client.level.getGameTime() % 20 == 0) ACTIVE.removeIf(id -> client.level.getEntity(id) == null);
+        });
         ClientTickEvents.END_CLIENT_TICK.register(MegaphoneClient::tick);
         LevelRenderEvents.COLLECT_SUBMITS.register(MegaphoneClient::render);
     }

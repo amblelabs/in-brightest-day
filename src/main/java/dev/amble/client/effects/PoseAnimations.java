@@ -85,6 +85,9 @@ public final class PoseAnimations {
             else POSES.put(payload.playerId(), payload.pose());
         });
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> POSES.clear());
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            if (client.level != null && client.level.getGameTime() % 20 == 0) POSES.keySet().removeIf(id -> client.level.getEntity(id) == null);
+        });
         ClientTickEvents.END_CLIENT_TICK.register(PoseAnimations::tick);
     }
 

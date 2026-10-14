@@ -12,6 +12,7 @@ import dev.amble.core.loyalty.RingLoyalty;
 import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.ringpowers.impl.FlightRingPower;
 import dev.amble.core.team.LanternTeams;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import dev.amble.core.networking.payloads.s2c.TribeRosterS2CPayload;
@@ -20,10 +21,12 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -34,9 +37,16 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.List;
@@ -56,6 +66,8 @@ public final class IndigoOne {
     private static final Identifier HOLD = BrightestDay.id("indigo_hold");
     private static final int GATHER_TICKS = 60;
     private static final long GATHER_COOLDOWN = 20L * 60 * 5;
+    private static final int GATHER_ATTEMPTS = 6;
+    private static final int GATHER_DROP = 3;
 
     private record Channel(UUID target, long ends, float indigoHealth, float targetHealth, boolean frozen) {}
 
@@ -69,6 +81,12 @@ public final class IndigoOne {
 
     public static void init() {
         ServerTickEvents.END_SERVER_TICK.register(IndigoOne::tick);
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+            CHANNELS.clear();
+            LAST_GIFT.clear();
+            GATHERING.clear();
+            GATHERED_AT.clear();
+        });
         UseEntityCallback.EVENT.register((player, level, hand, entity, hit) -> {
             if (hand != InteractionHand.MAIN_HAND || !(player instanceof ServerPlayer indigo) || !(entity instanceof ServerPlayer target)) return InteractionResult.PASS;
             return embrace(indigo, target) ? InteractionResult.SUCCESS_SERVER : InteractionResult.PASS;
@@ -161,6 +179,8 @@ public final class IndigoOne {
 
         if (server.getTickCount() % 100 != 0 || !multiplayer(server)) return;
         Optional<UUID> current = WorldProgress.get(server).indigoOne();
+        LAST_GIFT.keySet().removeIf(id -> current.isEmpty() || !current.get().equals(id));
+        GATHERED_AT.values().removeIf(last -> now - last >= GATHER_COOLDOWN);
         if (current.isPresent()) {
             ServerPlayer bearer = server.getPlayerList().getPlayer(current.get());
             if (bearer != null && !bearer.isSpectator() && BrightestDayAttachments.getRing(bearer).isEmpty() && !RingBonds.bonded(bearer) && !RingLoyalty.inFlight(LanternCorps.INDIGO)) {
@@ -261,8 +281,12 @@ public final class IndigoOne {
             int called = 0;
             for (ServerPlayer member : tribe(leader)) {
                 if (gathering.target().isPresent() && !gathering.target().get().equals(member.getUUID())) continue;
-                Vec3 offset = new Vec3(member.getRandom().nextDouble() * 3.0 - 1.5, 0.0, member.getRandom().nextDouble() * 3.0 - 1.5);
-                member.teleportTo(leader.level(), leader.getX() + offset.x, leader.getY(), leader.getZ() + offset.z, Set.of(), member.getYRot(), member.getXRot(), true);
+                Vec3 landing = landing(leader, member);
+                if (landing == null) {
+                    leader.sendSystemMessage(Component.translatable("message.brightestday.indigo.gather_unsafe", member.getDisplayName()).withColor(INDIGO));
+                    continue;
+                }
+                member.teleportTo(leader.level(), landing.x, landing.y, landing.z, Set.of(), member.getYRot(), member.getXRot(), true);
                 member.sendSystemMessage(Component.translatable("message.brightestday.indigo.gathered", leader.getDisplayName()).withStyle(ChatFormatting.ITALIC).withColor(INDIGO));
                 member.level().playSound(null, member.getX(), member.getY(), member.getZ(), SoundEvents.PLAYER_TELEPORT, SoundSource.PLAYERS, 1.0F, 0.8F);
                 called++;
@@ -271,6 +295,33 @@ public final class IndigoOne {
             leader.level().playSound(null, leader.getX(), leader.getY(), leader.getZ(), SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 1.2F, 0.7F);
             return true;
         });
+    }
+
+    private static @Nullable Vec3 landing(ServerPlayer leader, ServerPlayer member) {
+        for (int attempt = 0; attempt < GATHER_ATTEMPTS; attempt++) {
+            Vec3 offset = attempt == GATHER_ATTEMPTS - 1 ? Vec3.ZERO
+                    : new Vec3(member.getRandom().nextDouble() * 3.0 - 1.5, 0.0, member.getRandom().nextDouble() * 3.0 - 1.5);
+            Vec3 at = leader.position().add(offset);
+            if (safe(leader.level(), member, at)) return at;
+        }
+        return null;
+    }
+
+    private static boolean safe(ServerLevel level, ServerPlayer member, Vec3 at) {
+        AABB box = member.getDimensions(Pose.STANDING).makeBoundingBox(at);
+        if (!level.noCollision(member, box) || level.getBlockStates(box).anyMatch(IndigoOne::hazard)) return false;
+        BlockPos feet = BlockPos.containing(at);
+        for (int depth = 1; depth <= GATHER_DROP; depth++) {
+            BlockState ground = level.getBlockState(feet.below(depth));
+            if (ground.getCollisionShape(level, feet.below(depth)).isEmpty()) continue;
+            return !hazard(ground);
+        }
+        return false;
+    }
+
+    private static boolean hazard(BlockState state) {
+        return state.getFluidState().is(FluidTags.LAVA) || state.is(BlockTags.FIRE) || state.is(BlockTags.CAMPFIRES) || state.is(Blocks.MAGMA_BLOCK)
+                || state.is(Blocks.CACTUS) || state.is(Blocks.SWEET_BERRY_BUSH) || state.is(Blocks.WITHER_ROSE) || state.is(Blocks.POWDER_SNOW);
     }
 
     private static void convert(ServerPlayer indigo, ServerPlayer target) {

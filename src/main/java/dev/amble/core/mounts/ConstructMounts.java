@@ -9,6 +9,7 @@ import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentSyncPredicate;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.FluidTags;
@@ -80,6 +81,10 @@ public final class ConstructMounts {
         ServerTickEvents.END_SERVER_TICK.register(ConstructMounts::tick);
         ServerEntityEvents.ENTITY_LOAD.register((entity, level) -> {
             if (entity.entityTags().contains(TAG) && !MOUNTS.containsKey(entity.getUUID())) entity.discard();
+        });
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+            for (Mount mount : new ArrayList<>(MOUNTS.values())) dissolve(mount);
+            MOUNTS.clear();
         });
     }
 

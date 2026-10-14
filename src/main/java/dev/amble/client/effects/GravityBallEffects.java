@@ -35,6 +35,7 @@ public final class GravityBallEffects {
     }
 
     private static final Map<Integer, Ball> BALLS = new HashMap<>();
+    private static final int STALE_GRACE = 40;
     private static @Nullable ClientLevel level;
 
     public static void init() {
@@ -48,7 +49,7 @@ public final class GravityBallEffects {
                 BALLS.clear();
                 level = client.level;
             }
-            if (!client.isPaused()) BALLS.values().forEach(ball -> ball.age++);
+            if (!client.isPaused()) BALLS.values().removeIf(ball -> ++ball.age > GravityBallManager.LIFETIME + STALE_GRACE);
         });
         LevelRenderEvents.COLLECT_SUBMITS.register(GravityBallEffects::render);
     }

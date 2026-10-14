@@ -18,6 +18,7 @@ import dev.amble.core.ringpowers.constructs.ConstructRingPower;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.ChatFormatting;
@@ -118,6 +119,16 @@ public final class WhiteFusion {
         });
         ServerTickEvents.END_SERVER_TICK.register(WhiteFusion::tick);
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> deliverPending(server, handler.player));
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+            for (Fusing fusing : FUSING) {
+                fusing.items.forEach(item -> {
+                    if (!item.isRemoved()) item.setNoGravity(false);
+                });
+            }
+            FUSING.clear();
+            TRACKED.clear();
+            NOTICED.clear();
+        });
     }
 
     public static boolean valid(MinecraftServer server, ItemStack stack) {
@@ -194,6 +205,10 @@ public final class WhiteFusion {
             seekClusters(server);
         }
         if (server.getTickCount() % 20 == 0) expire(server);
+        if (server.getTickCount() % 1200 == 0) {
+            long now = server.overworld().getGameTime();
+            NOTICED.values().removeIf(noticed -> now - noticed >= NOTICE_COOLDOWN);
+        }
     }
 
     private static boolean fusingItem(ItemEntity item) {

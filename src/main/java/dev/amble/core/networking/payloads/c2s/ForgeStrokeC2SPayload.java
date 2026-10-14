@@ -1,6 +1,7 @@
 package dev.amble.core.networking.payloads.c2s;
 
 import dev.amble.BrightestDay;
+import dev.amble.core.networking.RelayLimit;
 import dev.amble.core.forge.ForgeLight;
 import dev.amble.core.networking.payloads.s2c.ForgeStrokeS2CPayload;
 import dev.amble.core.ringpowers.RingPowerRegistry;
@@ -23,6 +24,7 @@ public record ForgeStrokeC2SPayload(int action, List<Vec3> directions) implement
     public static final int END_SUCCESS = 2;
     public static final int END_FAIL = 3;
     public static final int MAX_POINTS = 64;
+    private static final RelayLimit LIMIT = new RelayLimit(2);
 
     public static final Type<ForgeStrokeC2SPayload> TYPE =
             new Type<>(BrightestDay.id("forge_stroke"));
@@ -42,6 +44,7 @@ public record ForgeStrokeC2SPayload(int action, List<Vec3> directions) implement
     public void handle(ServerPlayNetworking.Context context) {
         ServerPlayer player = context.player();
         boolean drawing = this.action == START || this.action == POINTS;
+        if (drawing && !LIMIT.allow(player)) return;
         if (drawing && (ArmedRingPower.isAbilityMode(player)
                 || ArmedRingPower.selectedConstruct(player).orElse(null) != RingPowerRegistry.TOOL_FORGE)) return;
         if (this.action == START) ArmedRingPower.raise(player);

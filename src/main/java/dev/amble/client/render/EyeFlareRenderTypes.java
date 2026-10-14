@@ -39,6 +39,10 @@ public final class EyeFlareRenderTypes {
         ));
     }
 
+    public static void forget(Identifier texture) {
+        FLARES.remove(texture);
+    }
+
     public static void init() {}
 
     private EyeFlareRenderTypes() {}

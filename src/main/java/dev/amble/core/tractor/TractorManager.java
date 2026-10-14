@@ -11,6 +11,7 @@ import dev.amble.core.ringpowers.impl.ArmedRingPower;
 import dev.amble.core.ringpowers.impl.TractorBeamRingPower;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -119,6 +120,10 @@ public final class TractorManager {
         BlockPos pos = blockHit.getBlockPos();
         BlockState state = level.getBlockState(pos);
         if (state.isAir() || state.hasBlockEntity() || state.is(IMMUNE) || state.getDestroySpeed(level, pos) < 0.0F || !level.mayInteract(player, pos)) return null;
+        if (!PlayerBlockBreakEvents.BEFORE.invoker().beforeBlockBreak(level, player, pos, state, null)) {
+            PlayerBlockBreakEvents.CANCELED.invoker().onBlockBreakCanceled(level, player, pos, state, null);
+            return null;
+        }
 
         FallingBlockEntity block = FallingBlockEntity.fall(level, pos, state);
         block.setNoGravity(true);
