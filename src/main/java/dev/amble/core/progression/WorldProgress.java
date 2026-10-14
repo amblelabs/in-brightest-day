@@ -13,10 +13,13 @@ import net.minecraft.server.MinecraftServer;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.EnumMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
 
@@ -39,7 +42,7 @@ public record WorldProgress(Optional<UUID> indigoOne, boolean meteorFallen, Opti
         ).apply(instance, Shrine::new));
     }
 
-    public record Battery(BlockPos pos, LanternCorps corps, boolean active, int health, boolean lit, Direction.Axis arms, long repaired) {
+    public record Battery(BlockPos pos, LanternCorps corps, boolean active, int health, boolean lit, Direction.Axis arms, long repaired, List<UUID> founders) {
         public static final int MAX_HEALTH = 200;
 
         public static final Codec<Battery> CODEC = RecordCodecBuilder.create(instance -> instance.group(
@@ -49,31 +52,42 @@ public record WorldProgress(Optional<UUID> indigoOne, boolean meteorFallen, Opti
                 Codec.INT.optionalFieldOf("health", MAX_HEALTH).forGetter(Battery::health),
                 Codec.BOOL.optionalFieldOf("lit", true).forGetter(Battery::lit),
                 Direction.Axis.CODEC.optionalFieldOf("arms", Direction.Axis.Z).forGetter(Battery::arms),
-                Codec.LONG.optionalFieldOf("repaired", 0L).forGetter(Battery::repaired)
+                Codec.LONG.optionalFieldOf("repaired", 0L).forGetter(Battery::repaired),
+                UUIDUtil.CODEC.listOf().optionalFieldOf("founders", List.of()).forGetter(Battery::founders)
         ).apply(instance, Battery::new));
 
         public static Battery fresh(BlockPos pos, LanternCorps corps) {
-            return new Battery(pos, corps, false, MAX_HEALTH, false, Direction.Axis.Z, 0L);
+            return new Battery(pos, corps, false, MAX_HEALTH, false, Direction.Axis.Z, 0L, List.of());
         }
 
         public Battery withActive(boolean active) {
-            return new Battery(this.pos, this.corps, active, this.health, this.lit, this.arms, this.repaired);
+            return new Battery(this.pos, this.corps, active, this.health, this.lit, this.arms, this.repaired, this.founders);
         }
 
         public Battery withHealth(int health) {
-            return new Battery(this.pos, this.corps, this.active, Math.clamp(health, 0, MAX_HEALTH), this.lit, this.arms, this.repaired);
+            return new Battery(this.pos, this.corps, this.active, Math.clamp(health, 0, MAX_HEALTH), this.lit, this.arms, this.repaired, this.founders);
         }
 
         public Battery withLit(boolean lit) {
-            return new Battery(this.pos, this.corps, this.active, this.health, lit, this.arms, this.repaired);
+            return new Battery(this.pos, this.corps, this.active, this.health, lit, this.arms, this.repaired, this.founders);
         }
 
         public Battery withArms(Direction.Axis arms) {
-            return new Battery(this.pos, this.corps, this.active, this.health, this.lit, arms, this.repaired);
+            return new Battery(this.pos, this.corps, this.active, this.health, this.lit, arms, this.repaired, this.founders);
         }
 
         public Battery withRepaired(long repaired) {
-            return new Battery(this.pos, this.corps, this.active, this.health, this.lit, this.arms, repaired);
+            return new Battery(this.pos, this.corps, this.active, this.health, this.lit, this.arms, repaired, this.founders);
+        }
+
+        public Battery withFounders(Collection<UUID> added) {
+            Set<UUID> founders = new LinkedHashSet<>(this.founders);
+            if (!founders.addAll(added)) return this;
+            return new Battery(this.pos, this.corps, this.active, this.health, this.lit, this.arms, this.repaired, List.copyOf(founders));
+        }
+
+        public boolean founder(UUID player) {
+            return this.founders.contains(player);
         }
 
         public float strength() {

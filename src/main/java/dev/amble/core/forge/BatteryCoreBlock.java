@@ -6,6 +6,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.Level;
@@ -54,6 +55,6 @@ public class BatteryCoreBlock extends Block {
     @Override
     public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack itemStack) {
         super.setPlacedBy(level, pos, state, placer, itemStack);
-        if (level instanceof ServerLevel server) CentralPowerBattery.track(server, pos, this.corps);
+        if (level instanceof ServerLevel server) CentralPowerBattery.track(server, pos, this.corps, placer instanceof Player player ? player : null);
     }
 }

@@ -1,6 +1,7 @@
 package dev.amble.client.compat;
 
 import dev.amble.BrightestDay;
+import dev.amble.client.effects.BatteryEffects;
 import dev.amble.client.effects.LightOrbEffects;
 import dev.amble.client.effects.ShieldEffects;
 import dev.amble.client.effects.WallEffects;
@@ -125,6 +126,7 @@ public final class ReplaySnapshot {
         GlideEffects.snapshot(out);
         LumberjackEffects.snapshot(out);
         OreProbeEffects.snapshot(out);
+        BatteryEffects.snapshot(out);
     }
 
     private ReplaySnapshot() {}

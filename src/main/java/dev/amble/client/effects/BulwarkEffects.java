@@ -91,7 +91,7 @@ public final class BulwarkEffects {
     }
 
     private static BulwarkArc arc(Player player, int size, float partialTicks) {
-        return BulwarkArc.of(player.getPosition(partialTicks), Mth.rotLerp(partialTicks, player.yRotO, player.getYRot()), size);
+        return BulwarkArc.of(player, player.getPosition(partialTicks), Mth.rotLerp(partialTicks, player.yRotO, player.getYRot()), size);
     }
 
     private static List<ShieldEffects.Voxel> voxels(BulwarkArc arc, @Nullable LanternCorps corps, int color, float time, float rise) {
