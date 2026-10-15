@@ -129,7 +129,6 @@ public final class ReplaySnapshot {
         OreProbeEffects.snapshot(out);
         BatteryEffects.snapshot(out);
         CosmosClient.snapshot(out);
-        BatteryEffects.snapshot(out);
     }
 
     private ReplaySnapshot() {}

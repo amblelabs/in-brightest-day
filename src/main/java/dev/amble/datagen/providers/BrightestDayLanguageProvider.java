@@ -446,7 +446,6 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.battery.warded", "This battery is warded against outsiders.");
         builder.add("message.brightestday.battery.unproven", "Only its founders or rank %s members can move this battery.");
         builder.add("message.brightestday.battery.foreign", "Only a member of the %s can build this battery.");
-        builder.add("message.brightestday.battery.unproven", "Only its founders or rank %s members can move this battery.");
         builder.add("message.brightestday.battery.destroyed", "%s has shattered the central power battery!");
         builder.add("message.brightestday.battery.offer_empty", "You have nothing left to give it.");
         builder.add("message.brightestday.battery.ceremony", "%s swears the oath at the battery (%s of %s).");

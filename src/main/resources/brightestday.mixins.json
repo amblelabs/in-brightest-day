@@ -21,8 +21,7 @@
 		"MinecraftServerStatusMixin",
 		"ConstructItemStackMixin",
 		"ConstructContainerItemMixin",
-		"ConstructFurnaceMixin"
-		"ConstructItemStackMixin",
+		"ConstructFurnaceMixin",
 		"SpaceChunkCacheMixin",
 		"SpaceGravityMixin"
 	],

@@ -45,7 +45,7 @@ public record WorldProgress(Optional<UUID> indigoOne, boolean meteorFallen, Opti
         ).apply(instance, Shrine::new));
     }
 
-    public record Battery(BlockPos pos, LanternCorps corps, boolean active, int health, boolean lit, Direction.Axis arms, long repaired, List<UUID> founders) {
+    public record Battery(BlockPos pos, LanternCorps corps, boolean active, int health, boolean lit, Direction.Axis arms, long repaired, ResourceKey<Level> dimension, List<UUID> founders) {
         public static final int MAX_HEALTH = 200;
 
         public static final Codec<Battery> CODEC = RecordCodecBuilder.create(instance -> instance.group(
@@ -60,38 +60,50 @@ public record WorldProgress(Optional<UUID> indigoOne, boolean meteorFallen, Opti
                 UUIDUtil.CODEC.listOf().optionalFieldOf("founders", List.of()).forGetter(Battery::founders)
         ).apply(instance, Battery::new));
 
-        public static Battery fresh(BlockPos pos, LanternCorps corps) {
-            return new Battery(pos, corps, false, MAX_HEALTH, false, Direction.Axis.Z, 0L, List.of());
+        public static Battery fresh(ResourceKey<Level> dimension, BlockPos pos, LanternCorps corps) {
+            return new Battery(pos, corps, false, MAX_HEALTH, false, Direction.Axis.Z, 0L, dimension, List.of());
         }
 
         public Battery withActive(boolean active) {
-            return new Battery(this.pos, this.corps, active, this.health, this.lit, this.arms, this.repaired, this.founders);
+            return new Battery(this.pos, this.corps, active, this.health, this.lit, this.arms, this.repaired, this.dimension, this.founders);
         }
 
         public Battery withHealth(int health) {
-            return new Battery(this.pos, this.corps, this.active, Math.clamp(health, 0, MAX_HEALTH), this.lit, this.arms, this.repaired, this.founders);
+            return new Battery(this.pos, this.corps, this.active, Math.clamp(health, 0, MAX_HEALTH), this.lit, this.arms, this.repaired, this.dimension, this.founders);
         }
 
         public Battery withLit(boolean lit) {
-            return new Battery(this.pos, this.corps, this.active, this.health, lit, this.arms, this.repaired, this.founders);
+            return new Battery(this.pos, this.corps, this.active, this.health, lit, this.arms, this.repaired, this.dimension, this.founders);
         }
 
         public Battery withArms(Direction.Axis arms) {
-            return new Battery(this.pos, this.corps, this.active, this.health, this.lit, arms, this.repaired, this.founders);
+            return new Battery(this.pos, this.corps, this.active, this.health, this.lit, arms, this.repaired, this.dimension, this.founders);
         }
 
         public Battery withRepaired(long repaired) {
-            return new Battery(this.pos, this.corps, this.active, this.health, this.lit, this.arms, repaired, this.founders);
+            return new Battery(this.pos, this.corps, this.active, this.health, this.lit, this.arms, repaired, this.dimension, this.founders);
         }
 
         public Battery withFounders(Collection<UUID> added) {
             Set<UUID> founders = new LinkedHashSet<>(this.founders);
             if (!founders.addAll(added)) return this;
-            return new Battery(this.pos, this.corps, this.active, this.health, this.lit, this.arms, this.repaired, List.copyOf(founders));
+            return new Battery(this.pos, this.corps, this.active, this.health, this.lit, this.arms, this.repaired, this.dimension, List.copyOf(founders));
         }
 
         public boolean founder(UUID player) {
             return this.founders.contains(player);
+        }
+
+        public boolean at(ResourceKey<Level> dimension, BlockPos pos) {
+            return this.dimension == dimension && this.pos.equals(pos);
+        }
+
+        public boolean in(Level level) {
+            return this.dimension == level.dimension();
+        }
+
+        public GlobalPos global() {
+            return GlobalPos.of(this.dimension, this.pos);
         }
 
         public float strength() {
