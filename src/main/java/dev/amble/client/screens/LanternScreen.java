@@ -116,7 +116,7 @@ public class LanternScreen extends AbstractContainerScreen<LanternMenu> {
 
         ColorTweak current = BrightestDayAttachments.getColorTweak(this.minecraft.player);
         ColorTweak tweak = new ColorTweak(this.brightness.tweak(), this.saturation.tweak(), this.aura.mode() != AuraToggle.Mode.OFF, this.aura.mode() != AuraToggle.Mode.ALWAYS, current.suit(),
-                current.mask(), this.maskHeight.offset());
+                current.mask(), this.maskHeight.offset(), current.style());
         if (tweak.equals(current)) return;
 
         BrightestDayAttachments.setColorTweak(this.minecraft.player, tweak);

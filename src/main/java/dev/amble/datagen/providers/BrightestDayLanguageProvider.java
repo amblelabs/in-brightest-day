@@ -545,6 +545,10 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("gui.brightestday.style.pose", "Pose");
         builder.add("gui.brightestday.style.insignia", "Insignia");
         builder.add("gui.brightestday.mask", "Mask");
+        builder.add("gui.brightestday.suit_style", "Suit Style");
+        builder.add("gui.brightestday.suit_style.movie", "Movie");
+        builder.add("gui.brightestday.suit_style.comic", "Comic");
+        builder.add("gui.brightestday.suit_style.variant", "Comic: %s");
         builder.add("gui.brightestday.mask_height", "Mask Height: %s");
 
         builder.add(LanternCorps.GREEN.getTranslationKey(), "Green Lantern Corps");

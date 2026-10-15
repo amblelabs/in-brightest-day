@@ -33,6 +33,7 @@ public final class LanternSuit {
 
     private static final float FADE_TICKS = 24.0F;
     private static final float EYE_FADE_TICKS = 6.0F;
+    private static final float FLASH_TICKS = 10.0F;
     private static final Map<Integer, Fade> FADES = new HashMap<>();
     private static @Nullable ClientLevel level;
 
@@ -56,13 +57,13 @@ public final class LanternSuit {
                     && PowerRingItem.hasCharge(player);
             EyePaint eyes = BrightestDayAttachments.getEyes(player);
             boolean eyesWanted = !eyes.isEmpty() && RingBenefits.isActive(player);
-            track(player.getId(), corps.orElse(null), CorpsColors.of(player), wanted, tweak.mask(), tweak.maskOffset(), eyes, eyesWanted);
+            track(player.getId(), corps.orElse(null), tweak.style(), CorpsColors.of(player), wanted, tweak.mask(), tweak.maskOffset(), eyes, eyesWanted);
         }
 
         for (Mannequin mannequin : Holograms.all(level)) {
             HologramSettings settings = Holograms.of(mannequin).settings();
             boolean lit = Holograms.lit(mannequin);
-            track(mannequin.getId(), Holograms.corps(mannequin).orElse(null), Holograms.color(mannequin), lit && settings.suit(), settings.mask(), settings.maskOffset(),
+            track(mannequin.getId(), Holograms.corps(mannequin).orElse(null), ColorTweak.MOVIE, Holograms.color(mannequin), lit && settings.suit(), settings.mask(), settings.maskOffset(),
                     settings.eyes(), lit && !settings.eyes().isEmpty());
         }
 
@@ -73,7 +74,7 @@ public final class LanternSuit {
         });
     }
 
-    private static void track(int id, @Nullable LanternCorps corps, int color, boolean wanted, boolean mask, int maskOffset, EyePaint eyes, boolean eyesWanted) {
+    private static void track(int id, @Nullable LanternCorps corps, String style, int color, boolean wanted, boolean mask, int maskOffset, EyePaint eyes, boolean eyesWanted) {
         Fade fade = FADES.get(id);
         if (fade == null) {
             if (!wanted && !eyesWanted) return;
@@ -81,6 +82,8 @@ public final class LanternSuit {
             FADES.put(id, fade);
         }
         if (wanted && corps != null) {
+            if (fade.current > 0.0F && (!style.equals(fade.style) || corps != fade.corps)) fade.flashCurrent = 1.0F;
+            fade.style = style;
             fade.corps = corps;
             fade.color = color;
             fade.maskOffset = maskOffset;
@@ -105,13 +108,15 @@ public final class LanternSuit {
         if (progress <= 0.0F && eyeProgress <= 0.0F) return;
 
         float maskProgress = fade.maskProgress(partialTicks);
-        SuitTextures.Entry entry = SuitTextures.update(entity.getId(), state.skin, fade.corps, state.mainArm, fade.maskOffset, maskProgress, progress, fade.color,
-                fade.eyes, eyeProgress, fade.eyeColor);
+        boolean comic = SuitStyles.comic(SuitStyles.resolve(fade.corps, fade.style));
+        float flash = Math.max(fade.flash(partialTicks), comic && progress < 1.0F ? 1.0F - progress : 0.0F);
+        SuitTextures.Entry entry = SuitTextures.update(entity.getId(), state.skin, fade.corps, fade.style, state.mainArm, fade.maskOffset, maskProgress, progress, fade.color,
+                fade.eyes, eyeProgress, fade.eyeColor, flash);
         if (entry == null) return;
 
         PlayerSkin skin = state.skin;
         state.skin = new PlayerSkin(new ClientAsset.ResourceTexture(entry.bodyId, entry.bodyId), skin.cape(), skin.elytra(), skin.model(), skin.secure());
-        boolean suitShimmer = progress > 0.0F && (progress < 1.0F || (maskProgress > 0.0F && maskProgress < 1.0F));
+        boolean suitShimmer = progress > 0.0F && (progress < 1.0F || flash > 0.0F || (maskProgress > 0.0F && maskProgress < 1.0F));
         if (suitShimmer || (eyeProgress > 0.0F && !fade.eyes.isEmpty())) data.setData(GLOW, entry.glowId);
         if (eyeProgress > 0.0F && !fade.eyes.isEmpty()) data.setData(FLARE, entry.flareId);
     }
@@ -121,6 +126,9 @@ public final class LanternSuit {
         private float current;
         private LanternCorps corps = LanternCorps.GREEN;
         private int color = LanternCorps.GREEN.color();
+        private String style = ColorTweak.MOVIE;
+        private float flashPrevious;
+        private float flashCurrent;
         private int maskOffset;
         private float maskPrevious;
         private float maskCurrent;
@@ -140,10 +148,16 @@ public final class LanternSuit {
             this.maskCurrent = Mth.approach(this.maskCurrent, mask ? 1.0F : 0.0F, 1.0F / FADE_TICKS);
             this.eyePrevious = this.eyeCurrent;
             this.eyeCurrent = Mth.approach(this.eyeCurrent, eyesWanted ? 1.0F : 0.0F, 1.0F / EYE_FADE_TICKS);
+            this.flashPrevious = this.flashCurrent;
+            this.flashCurrent = Mth.approach(this.flashCurrent, 0.0F, 1.0F / FLASH_TICKS);
         }
 
         private float progress(float partialTicks) {
             return Mth.lerp(partialTicks, this.previous, this.current);
+        }
+
+        private float flash(float partialTicks) {
+            return Mth.lerp(partialTicks, this.flashPrevious, this.flashCurrent);
         }
 
         private float eyeProgress(float partialTicks) {
