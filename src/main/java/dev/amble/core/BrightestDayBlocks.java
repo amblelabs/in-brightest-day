@@ -77,36 +77,36 @@ public class BrightestDayBlocks {
                     .sound(SoundType.AMETHYST_CLUSTER).lightLevel(_ -> 6).pushReaction(PushReaction.POPPED).mapColor(MapColor.COLOR_PINK)));
 
     public static final Block YELLOW_BATTERY_CORE = registerBlockWithItem("yellow_battery_core",
-            properties -> new BatteryCoreBlock(LanternCorps.YELLOW, () -> Blocks.GOLD_BLOCK, properties.strength(5.0F, 1200.0F).requiresCorrectToolForDrops()
+            properties -> new BatteryCoreBlock(LanternCorps.YELLOW, () -> Blocks.GOLD_BLOCK, properties.strength(5.0F, 1200.0F).requiresCorrectToolForDrops().pushReaction(PushReaction.IMMOVEABLE)
                     .sound(SoundType.METAL).lightLevel(_ -> 15)),
             new Item.Properties());
 
     public static final Block BATTERY_FRAME = registerBlock("battery_frame",
-            properties -> new BatteryFrameBlock(properties.strength(5.0F, 1200.0F).noOcclusion().sound(SoundType.METAL)
+            properties -> new BatteryFrameBlock(properties.strength(5.0F, 1200.0F).pushReaction(PushReaction.IMMOVEABLE).noOcclusion().sound(SoundType.METAL)
                     .isValidSpawn((state, level, pos, type) -> false).isViewBlocking((state, level, pos, box) -> false)));
 
     public static final Block SAPPHIRE_BATTERY_CORE = registerBlockWithItem("sapphire_battery_core",
-            properties -> new BatteryCoreBlock(LanternCorps.STAR_SAPPHIRE, () -> Blocks.AMETHYST_BLOCK, properties.strength(5.0F, 1200.0F).requiresCorrectToolForDrops()
+            properties -> new BatteryCoreBlock(LanternCorps.STAR_SAPPHIRE, () -> Blocks.AMETHYST_BLOCK, properties.strength(5.0F, 1200.0F).requiresCorrectToolForDrops().pushReaction(PushReaction.IMMOVEABLE)
                     .sound(SoundType.AMETHYST).lightLevel(_ -> 15)),
             new Item.Properties());
 
     public static final Block GREEN_BATTERY_CORE = registerBlockWithItem("green_battery_core",
-            properties -> new BatteryCoreBlock(LanternCorps.GREEN, () -> Blocks.COPPER_BLOCK.weathering().oxidized(), properties.strength(5.0F, 1200.0F).requiresCorrectToolForDrops()
+            properties -> new BatteryCoreBlock(LanternCorps.GREEN, () -> Blocks.COPPER_BLOCK.weathering().oxidized(), properties.strength(5.0F, 1200.0F).requiresCorrectToolForDrops().pushReaction(PushReaction.IMMOVEABLE)
                     .sound(SoundType.METAL).lightLevel(_ -> 15)),
             new Item.Properties());
 
     public static final Block RED_BATTERY_CORE = registerBlockWithItem("red_battery_core",
-            properties -> new BatteryCoreBlock(LanternCorps.RED, () -> Blocks.REDSTONE_BLOCK, properties.strength(5.0F, 1200.0F).requiresCorrectToolForDrops()
+            properties -> new BatteryCoreBlock(LanternCorps.RED, () -> Blocks.REDSTONE_BLOCK, properties.strength(5.0F, 1200.0F).requiresCorrectToolForDrops().pushReaction(PushReaction.IMMOVEABLE)
                     .sound(SoundType.METAL).lightLevel(_ -> 15)),
             new Item.Properties());
 
     public static final Block BLUE_BATTERY_CORE = registerBlockWithItem("blue_battery_core",
-            properties -> new BatteryCoreBlock(LanternCorps.BLUE, () -> Blocks.LAPIS_BLOCK, properties.strength(5.0F, 1200.0F).requiresCorrectToolForDrops()
+            properties -> new BatteryCoreBlock(LanternCorps.BLUE, () -> Blocks.LAPIS_BLOCK, properties.strength(5.0F, 1200.0F).requiresCorrectToolForDrops().pushReaction(PushReaction.IMMOVEABLE)
                     .sound(SoundType.STONE).lightLevel(_ -> 15)),
             new Item.Properties());
 
     public static final Block INDIGO_BATTERY_CORE = registerBlockWithItem("indigo_battery_core",
-            properties -> new BatteryCoreBlock(LanternCorps.INDIGO, () -> Blocks.OBSIDIAN, properties.strength(5.0F, 1200.0F).requiresCorrectToolForDrops()
+            properties -> new BatteryCoreBlock(LanternCorps.INDIGO, () -> Blocks.OBSIDIAN, properties.strength(5.0F, 1200.0F).requiresCorrectToolForDrops().pushReaction(PushReaction.IMMOVEABLE)
                     .sound(SoundType.STONE).lightLevel(_ -> 15)),
             new Item.Properties());
 

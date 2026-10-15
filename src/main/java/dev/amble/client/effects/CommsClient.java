@@ -63,6 +63,9 @@ public final class CommsClient {
             wasHolding = false;
         });
         ClientTickEvents.START_CLIENT_TICK.register(CommsClient::pickTeam);
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            if (client.level != null && client.level.getGameTime() % 20 == 0) TALKING.removeIf(id -> client.level.getEntity(id) == null);
+        });
         ClientTickEvents.END_CLIENT_TICK.register(CommsClient::tick);
     }
 

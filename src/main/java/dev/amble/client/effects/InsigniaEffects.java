@@ -44,6 +44,9 @@ public final class InsigniaEffects {
         });
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> SHOWN.clear());
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            if (client.level != null && client.level.getGameTime() % 20 == 0) SHOWN.keySet().removeIf(id -> client.level.getEntity(id) == null);
+        });
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (client.isPaused()) return;
             SHOWN.values().removeIf(shown -> {
                 shown.age++;

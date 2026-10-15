@@ -42,6 +42,8 @@ final class SuitTextures {
     private static final int HAT_LEFT = 40;
     private static final float EYE_GLOW_WHITEN = 0.2F;
     private static final float EYE_FLARE_WHITEN = 0.45F;
+    private static final float FLASH_WHITEN = 0.85F;
+    private static final float[] INSTANT = new float[SIZE * SIZE];
 
     private static final Map<Integer, Entry> ENTRIES = new HashMap<>();
     private static final Map<String, Optional<int[]>> SUITS = new HashMap<>();
@@ -49,19 +51,21 @@ final class SuitTextures {
     private static final Map<Integer, float[]> THRESHOLDS = new HashMap<>();
     private static float @Nullable [] maskThresholds;
 
-    static @Nullable Entry update(int id, PlayerSkin playerSkin, LanternCorps corps, HumanoidArm ringArm, int maskOffset, float maskProgress, float progress, int color,
-                                  EyePaint eyes, float eyeProgress, int eyeColor) {
+    static @Nullable Entry update(int id, PlayerSkin playerSkin, LanternCorps corps, String style, HumanoidArm ringArm, int maskOffset, float maskProgress, float progress, int color,
+                                  EyePaint eyes, float eyeProgress, int eyeColor, float flash) {
         Identifier skinPath = playerSkin.body().texturePath();
         Skin skin = skin(skinPath);
         if (skin == null) return null;
 
         boolean slim = playerSkin.model() == PlayerModelType.SLIM;
-        int[] suit = progress > 0.0F ? suit(corps, ringArm, slim, maskOffset) : null;
+        String resolved = SuitStyles.resolve(corps, style);
+        boolean comic = SuitStyles.comic(resolved);
+        int[] suit = progress > 0.0F ? suit(corps, resolved, ringArm, slim, maskOffset) : null;
         if (suit == null) progress = 0.0F;
         if (progress <= 0.0F && (eyeProgress <= 0.0F || eyes.isEmpty())) return null;
 
-        Key key = new Key(skinPath, corps, ringArm, slim, maskOffset, Math.round(maskProgress * STEPS), Math.round(progress * STEPS), color,
-                eyes, Math.round(eyeProgress * STEPS), eyeColor);
+        Key key = new Key(skinPath, corps, resolved, ringArm, slim, maskOffset, Math.round(maskProgress * STEPS), Math.round(progress * STEPS), color,
+                eyes, Math.round(eyeProgress * STEPS), eyeColor, Math.round(flash * STEPS));
         Entry entry = ENTRIES.get(id);
         if (entry != null && entry.size != skin.size) {
             entry.close();
@@ -73,8 +77,8 @@ final class SuitTextures {
         }
         if (!key.equals(entry.key)) {
             entry.key = key;
-            build(entry, skin, suit, thresholds(slim, ringArm), key.step / (float) STEPS, key.maskStep / (float) STEPS, color,
-                    eyes, key.eyeStep / (float) STEPS, eyeColor);
+            build(entry, skin, suit, comic ? INSTANT : thresholds(slim, ringArm), key.step / (float) STEPS, key.maskStep / (float) STEPS, color,
+                    eyes, key.eyeStep / (float) STEPS, eyeColor, key.flashStep / (float) STEPS);
         }
         return entry;
     }
@@ -90,10 +94,11 @@ final class SuitTextures {
         ENTRIES.clear();
         SUITS.clear();
         SKINS.clear();
+        SuitStyles.clear();
     }
 
     private static void build(Entry entry, Skin skin, int @Nullable [] suit, float[] thresholds, float progress, float maskProgress, int color,
-                              EyePaint eyes, float eyeProgress, int eyeColor) {
+                              EyePaint eyes, float eyeProgress, int eyeColor, float flash) {
         float[] maskThresholds = maskThresholds();
         NativeImage body = entry.body.getPixels();
         NativeImage glow = entry.glow.getPixels();
@@ -121,7 +126,8 @@ final class SuitTextures {
                 if (suit != null && ARGB.alpha(suit[own]) > 0) {
                     out = mix(base, suit[own], reveal);
                     out = ARGB.color(ARGB.alpha(out), ARGB.srgbLerp(edge * EDGE_TINT, out, glowColor));
-                    lit = ARGB.color(edge, glowColor);
+                    if (flash > 0.0F) out = ARGB.color(ARGB.alpha(out), ARGB.srgbLerp(flash * reveal * FLASH_WHITEN, out, glowColor));
+                    lit = ARGB.color(Math.max(edge, flash * reveal), glowColor);
                 } else if (suit != null && inner >= 0 && ARGB.alpha(suit[inner]) > 0) {
                     out = ARGB.multiplyAlpha(base, 1.0F - reveal);
                 }
@@ -227,15 +233,20 @@ final class SuitTextures {
         return ((hash ^ (hash >>> 16)) & 0xFFFF) / 65536.0F;
     }
 
-    private static int @Nullable [] suit(LanternCorps corps, HumanoidArm ringArm, boolean slim, int maskOffset) {
-        String key = corps.getSerializedName() + "/" + ringArm.ordinal() + "/" + slim + "/" + maskOffset;
+    private static int @Nullable [] suit(LanternCorps corps, String style, HumanoidArm ringArm, boolean slim, int maskOffset) {
+        String key = corps.getSerializedName() + "/" + style + "/" + ringArm.ordinal() + "/" + slim + "/" + maskOffset;
         return SUITS.computeIfAbsent(key, unused -> {
-            int[] pixels = loadSuit(corps, ringArm);
+            int[] pixels = SuitStyles.comic(style) ? loadComic(corps, style) : loadSuit(corps, ringArm);
             if (pixels == null) pixels = loadSuit(corps, ringArm.getOpposite());
             if (pixels == null) return Optional.empty();
             if (!slim) pixels = widen(pixels);
             return Optional.of(shiftHead(pixels, maskOffset));
         }).orElse(null);
+    }
+
+    private static int @Nullable [] loadComic(LanternCorps corps, String style) {
+        int[] pixels = read(SuitStyles.comicTexture(corps, style));
+        return pixels != null && pixels.length == SIZE * SIZE ? pixels : null;
     }
 
     private static int @Nullable [] loadSuit(LanternCorps corps, HumanoidArm side) {
@@ -328,8 +339,8 @@ final class SuitTextures {
 
     private record Skin(int[] pixels, int size) {}
 
-    private record Key(Identifier skin, LanternCorps corps, HumanoidArm ringArm, boolean slim, int maskOffset, int maskStep, int step, int color,
-                       EyePaint eyes, int eyeStep, int eyeColor) {}
+    private record Key(Identifier skin, LanternCorps corps, String style, HumanoidArm ringArm, boolean slim, int maskOffset, int maskStep, int step, int color,
+                       EyePaint eyes, int eyeStep, int eyeColor, int flashStep) {}
 
     static final class Entry {
         final Identifier bodyId;
@@ -360,6 +371,7 @@ final class SuitTextures {
             textures.release(this.bodyId);
             textures.release(this.glowId);
             textures.release(this.flareId);
+            EyeFlareRenderTypes.forget(this.flareId);
         }
     }
 

@@ -6,6 +6,7 @@ import dev.amble.core.progression.RingRanks;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.team.RingDamage;
 import dev.amble.core.team.RingTargets;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -38,6 +39,7 @@ public final class CrystalManager {
     private static final int MASH_TICKS = 8;
     private static final float DAMAGE_TAKEN = 0.5F;
     private static final int SHELL_INTERVAL = 4;
+    private static final String PRISON_TAG = "brightestday.crystal_prison";
 
     private static final List<Shard> SHARDS = new ArrayList<>();
     private static final Map<LivingEntity, Prison> PRISONS = new HashMap<>();
@@ -80,6 +82,16 @@ public final class CrystalManager {
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
             SHARDS.removeIf(shard -> shard.owner == handler.player);
             release(handler.player);
+        });
+        ServerEntityEvents.ENTITY_LOAD.register((entity, level) -> {
+            if (entity instanceof Mob mob && mob.entityTags().contains(PRISON_TAG) && !PRISONS.containsKey(mob)) {
+                mob.setNoAi(false);
+                mob.removeTag(PRISON_TAG);
+            }
+        });
+        ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+            for (Map.Entry<LivingEntity, Prison> entry : List.copyOf(PRISONS.entrySet())) free(entry.getKey(), entry.getValue());
+            PRISONS.clear();
         });
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             SHARDS.clear();
@@ -148,7 +160,10 @@ public final class CrystalManager {
         boolean hadNoAi = target instanceof Mob mob && mob.isNoAi();
         Prison previous = PRISONS.get(target);
         PRISONS.put(target, new Prison(target.position(), color, previous != null ? previous.hadNoAi : hadNoAi, BrightestDayConfig.get().crystalPrisonTicks));
-        if (target instanceof Mob mob) mob.setNoAi(true);
+        if (target instanceof Mob mob) {
+            if (previous == null && !hadNoAi) mob.addTag(PRISON_TAG);
+            mob.setNoAi(true);
+        }
         target.level().playSound(null, target.getX(), target.getY(), target.getZ(), SoundEvents.AMETHYST_CLUSTER_PLACE, SoundSource.PLAYERS, 1.5F, 0.8F);
     }
 
@@ -193,7 +208,10 @@ public final class CrystalManager {
     }
 
     private static void free(LivingEntity entity, Prison prison) {
-        if (entity instanceof Mob mob) mob.setNoAi(prison.hadNoAi);
+        if (entity instanceof Mob mob) {
+            mob.setNoAi(prison.hadNoAi);
+            mob.removeTag(PRISON_TAG);
+        }
         entity.level().playSound(null, entity.getX(), entity.getY(), entity.getZ(), SoundEvents.AMETHYST_BLOCK_BREAK, SoundSource.PLAYERS, 1.5F, 1.0F);
         if (entity.level() instanceof ServerLevel level) {
             level.sendParticles(new DustParticleOptions(prison.color, 2.0F), entity.getX(), entity.getY(0.5), entity.getZ(), 30, 0.4, 0.6, 0.4, 0.0);

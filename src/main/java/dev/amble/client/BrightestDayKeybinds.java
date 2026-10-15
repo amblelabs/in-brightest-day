@@ -22,6 +22,8 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 
+import java.util.List;
+
 public final class BrightestDayKeybinds {
 
     private static final KeyMapping.Category CATEGORY =
@@ -127,6 +129,19 @@ public final class BrightestDayKeybinds {
         if (client.player == null) return;
         ColorTweak tweak = BrightestDayAttachments.getColorTweak(client.player);
         setTweak(client, tweak.withMask(!tweak.mask()));
+    }
+
+    public static void setSuitStyle(String style) {
+        Minecraft client = Minecraft.getInstance();
+        if (client.player == null) return;
+        setTweak(client, BrightestDayAttachments.getColorTweak(client.player).withStyle(style));
+    }
+
+    public static void cycleSuitStyle(List<String> styles) {
+        Minecraft client = Minecraft.getInstance();
+        if (client.player == null || styles.isEmpty()) return;
+        int index = styles.indexOf(BrightestDayAttachments.getColorTweak(client.player).style());
+        setSuitStyle(styles.get((index + 1) % styles.size()));
     }
 
     private static void setTweak(Minecraft client, ColorTweak tweak) {

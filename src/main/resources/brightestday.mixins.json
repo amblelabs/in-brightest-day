@@ -20,6 +20,9 @@
 		"MannequinAccessor",
 		"MinecraftServerStatusMixin",
 		"ConstructItemStackMixin",
+		"ConstructContainerItemMixin",
+		"ConstructFurnaceMixin"
+		"ConstructItemStackMixin",
 		"SpaceChunkCacheMixin",
 		"SpaceGravityMixin"
 	],

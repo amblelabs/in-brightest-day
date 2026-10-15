@@ -1,6 +1,7 @@
 package dev.amble.core.networking.payloads.c2s;
 
 import dev.amble.BrightestDay;
+import dev.amble.core.networking.RelayLimit;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.s2c.AttackAnimS2CPayload;
 import dev.amble.core.networking.payloads.s2c.ChargeS2CPayload;
@@ -16,6 +17,7 @@ import net.minecraft.util.Mth;
 
 public record ChargeC2SPayload(boolean charging, int ticks) implements CustomPacketPayload {
     private static final int MAX_TICKS = 200;
+    private static final RelayLimit LIMIT = new RelayLimit(2);
 
     public static final Type<ChargeC2SPayload> TYPE =
             new Type<>(BrightestDay.id("charge"));
@@ -34,6 +36,7 @@ public record ChargeC2SPayload(boolean charging, int ticks) implements CustomPac
 
     public void handle(ServerPlayNetworking.Context context) {
         ServerPlayer player = context.player();
+        if (this.charging && !LIMIT.allow(player)) return;
         boolean charging = this.charging && !player.isSpectator() && PowerRingItem.hasCharge(player) && !ArmedRingPower.isAbilityMode(player);
         if (charging) ArmedRingPower.startCharge(player);
         ArmedRingPower.selectedConstruct(player).ifPresent(construct -> AttackAnimS2CPayload.broadcast(player, construct.id(), charging ? AttackAnimS2CPayload.CHARGE : AttackAnimS2CPayload.STOP));

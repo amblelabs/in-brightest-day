@@ -9,6 +9,8 @@ import dev.amble.core.progression.EmotionSources;
 import dev.amble.core.progression.RingRanks;
 import dev.amble.core.team.LanternTeams;
 import dev.amble.core.team.RingDamage;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -38,6 +40,15 @@ public final class CorpsCombat {
     private static final long COMBAT_TICKS = 100;
 
     private static final Map<UUID, Long> LAST_RING_HIT = new HashMap<>();
+
+    public static void init() {
+        ServerTickEvents.END_SERVER_TICK.register(server -> {
+            if (server.getTickCount() % 200 != 0 || LAST_RING_HIT.isEmpty()) return;
+            long now = server.overworld().getGameTime();
+            LAST_RING_HIT.values().removeIf(last -> now - last > COMBAT_TICKS);
+        });
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> LAST_RING_HIT.clear());
+    }
 
     public static float scaleDamage(DamageSource source, float amount) {
         Optional<Player> attacker = ringAttacker(source);

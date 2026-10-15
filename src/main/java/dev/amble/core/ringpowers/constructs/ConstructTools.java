@@ -1,17 +1,23 @@
 package dev.amble.core.ringpowers.constructs;
 
 import dev.amble.core.BrightestDayComponents;
+import dev.amble.core.BrightestDayItems;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.ringpowers.CorpsColors;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
+import net.fabricmc.fabric.api.event.player.UseBlockCallback;
+import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Container;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.animal.allay.Allay;
+import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.level.entity.EntityTypeTest;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Inventory;
@@ -19,6 +25,9 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.DyedItemColor;
 import net.minecraft.world.item.component.TooltipDisplay;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.DecoratedPotBlockEntity;
+import net.minecraft.world.level.block.entity.ShelfBlockEntity;
 
 import java.util.UUID;
 
@@ -33,10 +42,17 @@ public final class ConstructTools {
                 item.discard();
             }
         });
+        UseEntityCallback.EVENT.register((player, level, hand, entity, hit) ->
+                isConstruct(player.getItemInHand(hand)) && (entity instanceof ItemFrame || entity instanceof ArmorStand || entity instanceof Allay) ? InteractionResult.FAIL : InteractionResult.PASS);
+        UseBlockCallback.EVENT.register((player, level, hand, hit) -> {
+            if (!isConstruct(player.getItemInHand(hand))) return InteractionResult.PASS;
+            BlockEntity target = level.getBlockEntity(hit.getBlockPos());
+            return target instanceof DecoratedPotBlockEntity || target instanceof ShelfBlockEntity ? InteractionResult.FAIL : InteractionResult.PASS;
+        });
     }
 
     public static boolean isConstruct(ItemStack stack) {
-        return stack.has(BrightestDayComponents.CONSTRUCT_TOOL);
+        return stack.has(BrightestDayComponents.CONSTRUCT_TOOL) || BrightestDayItems.isConstructTool(stack.getItem());
     }
 
     public static ItemStack create(ServerPlayer player, ConstructTool tool) {
@@ -82,16 +98,9 @@ public final class ConstructTools {
         return data != null && data.owner().equals(owner);
     }
 
-    private static boolean isStale(ItemStack stack, MinecraftServer server, long now) {
-        ConstructToolData data = stack.get(BrightestDayComponents.CONSTRUCT_TOOL);
-        return data != null && (now >= data.expiresAt() || server.getPlayerList().getPlayer(data.owner()) == null);
-    }
-
-    private static void purgeOpenContainer(ServerPlayer player, long now) {
-        if (player.containerMenu == player.inventoryMenu) return;
-        MinecraftServer server = player.level().getServer();
+    private static void purgeOpenContainer(ServerPlayer player) {
         for (Slot slot : player.containerMenu.slots) {
-            if (slot.container != player.getInventory() && isStale(slot.getItem(), server, now)) slot.set(ItemStack.EMPTY);
+            if (slot.container != player.getInventory() && isConstruct(slot.getItem())) slot.set(ItemStack.EMPTY);
         }
     }
 
@@ -101,14 +110,14 @@ public final class ConstructTools {
         boolean charged = PowerRingItem.hasCharge(player);
         boolean carrying = false;
         boolean dissolved = false;
-        purgeOpenContainer(player, now);
+        purgeOpenContainer(player);
 
         for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
             ItemStack stack = inventory.getItem(slot);
             ConstructToolData data = stack.get(BrightestDayComponents.CONSTRUCT_TOOL);
-            if (data == null) continue;
+            if (data == null && !isConstruct(stack)) continue;
 
-            if (!charged || now >= data.expiresAt() || !data.owner().equals(player.getUUID())) {
+            if (data == null || !charged || now >= data.expiresAt() || !data.owner().equals(player.getUUID())) {
                 inventory.setItem(slot, ItemStack.EMPTY);
                 dissolved = true;
             } else {

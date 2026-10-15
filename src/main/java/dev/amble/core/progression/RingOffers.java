@@ -11,6 +11,7 @@ import dev.amble.core.loyalty.RingLoyalty;
 import dev.amble.core.networking.payloads.s2c.TintFlashS2CPayload;
 import dev.amble.core.ringpowers.LanternCorps;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
@@ -42,6 +43,10 @@ public final class RingOffers {
 
     public static void init() {
         ServerTickEvents.END_SERVER_TICK.register(RingOffers::tick);
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+            RED_REFUSED.clear();
+            CHALLENGES.clear();
+        });
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
             if (entity instanceof ServerPlayer victim && source.getEntity() instanceof ServerPlayer killer) settleDuel(victim, killer);
         });
@@ -202,6 +207,7 @@ public final class RingOffers {
         });
 
         if (server.getTickCount() % 1200 != 0) return;
+        RED_REFUSED.values().removeIf(refused -> now - refused >= RED_COOLDOWN);
         BrightestDayConfig config = BrightestDayConfig.get();
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             if (!ringless(player)) continue;

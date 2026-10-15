@@ -10,6 +10,7 @@ import dev.amble.client.poses.PoseLibrary;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.drill.DrillMode;
 import dev.amble.core.drill.DrillModes;
+import dev.amble.client.render.SuitStyles;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.networking.payloads.c2s.DrillModeC2SPayload;
 import dev.amble.core.networking.payloads.c2s.SelectAbilityC2SPayload;
@@ -510,6 +511,18 @@ public final class PowerWheel {
                 BrightestDayKeybinds::toggleSuit, List.of(), () -> BrightestDayAttachments.getColorTweak(player).suit()));
         built.add(new Entry(Component.translatable("gui.brightestday.mask"), Items.LEATHER_HELMET, Set.of(),
                 BrightestDayKeybinds::toggleMask, List.of(), () -> BrightestDayAttachments.getColorTweak(player).mask()));
+        PowerRingItem.getWornCorps(player).ifPresent(corps -> {
+            List<String> styles = SuitStyles.styles(corps);
+            if (styles.size() < 2) return;
+            List<Sub> subs = new ArrayList<>();
+            for (String style : styles) {
+                subs.add(new Sub(SuitStyles.name(style), Items.LEATHER_CHESTPLATE, () -> BrightestDayKeybinds.setSuitStyle(style),
+                        () -> SuitStyles.resolve(corps, BrightestDayAttachments.getColorTweak(player).style()).equals(style)));
+            }
+            built.add(new Entry(Component.translatable("gui.brightestday.suit_style"), Items.PAINTING, Set.of(),
+                    () -> BrightestDayKeybinds.cycleSuitStyle(styles), List.copyOf(subs),
+                    () -> SuitStyles.comic(SuitStyles.resolve(corps, BrightestDayAttachments.getColorTweak(player).style()))));
+        });
         if (Insignia.available(player)) {
             built.add(new Entry(Component.translatable("gui.brightestday.style.insignia"), Items.GLOW_ITEM_FRAME, Set.of(),
                     () -> ClientPlayNetworking.send(ToggleInsigniaC2SPayload.INSTANCE), List.of(), () -> InsigniaEffects.shown(player)));

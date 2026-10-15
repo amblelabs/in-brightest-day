@@ -5,7 +5,9 @@ import de.maxhenkel.voicechat.api.VoicechatPlugin;
 import de.maxhenkel.voicechat.api.VoicechatServerApi;
 import de.maxhenkel.voicechat.api.events.EventRegistration;
 import de.maxhenkel.voicechat.api.events.MicrophonePacketEvent;
+import de.maxhenkel.voicechat.api.events.PlayerDisconnectedEvent;
 import de.maxhenkel.voicechat.api.events.VoicechatServerStartedEvent;
+import de.maxhenkel.voicechat.api.events.VoicechatServerStoppedEvent;
 import de.maxhenkel.voicechat.api.opus.OpusDecoder;
 import de.maxhenkel.voicechat.api.opus.OpusEncoder;
 import de.maxhenkel.voicechat.api.packets.MicrophonePacket;
@@ -99,6 +101,13 @@ public class CommsVoicePlugin implements VoicechatPlugin {
     public void registerEvents(EventRegistration registration) {
         registration.registerEvent(VoicechatServerStartedEvent.class, this::onServerStarted);
         registration.registerEvent(MicrophonePacketEvent.class, this::onMicrophone);
+        registration.registerEvent(PlayerDisconnectedEvent.class, event -> forget(event.getPlayerUuid()));
+        registration.registerEvent(VoicechatServerStoppedEvent.class, event -> List.copyOf(VOICES.keySet()).forEach(CommsVoicePlugin::forget));
+    }
+
+    private static void forget(UUID id) {
+        Voice voice = VOICES.remove(id);
+        if (voice != null) voice.close();
     }
 
     private void onServerStarted(VoicechatServerStartedEvent event) {
@@ -131,8 +140,7 @@ public class CommsVoicePlugin implements VoicechatPlugin {
         boolean megaphone = Megaphone.isActive(id);
         List<VoicechatConnection> radio = radioReceivers(api, sender, id);
         if (!oath && !answering && !megaphone && radio.isEmpty()) {
-            Voice idle = VOICES.remove(id);
-            if (idle != null) idle.close();
+            forget(id);
             return;
         }
 

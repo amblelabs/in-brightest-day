@@ -78,6 +78,10 @@ public class BrightestDayItems {
     public static final Item LORE_BOOK = register("lore_book", id -> new LoreBookItem(new Item.Properties()
             .setId(ResourceKey.create(Registries.ITEM, id)).stacksTo(1).rarity(Rarity.UNCOMMON)));
 
+    public static boolean isConstructTool(Item item) {
+        return CONSTRUCT_TOOLS.containsValue(item);
+    }
+
     public static Item constructTool(ConstructTool tool) {
         return CONSTRUCT_TOOLS.get(tool);
     }

@@ -330,6 +330,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.indigo.gather_cooldown", "The tribe can be called again in %ss.");
         builder.add("message.brightestday.indigo.gathered", "%s calls the tribe together.");
         builder.add("message.brightestday.indigo.gather_done", "%s of the tribe answered the call.");
+        builder.add("message.brightestday.indigo.gather_unsafe", "There is no safe ground to gather %s.");
         builder.add("message.brightestday.indigo.gather_empty", "No one of the tribe is here to answer.");
         builder.add("message.brightestday.team.tribe_bound", "The Indigo Tribe is one. You cannot leave it while you wear the ring.");
         builder.add("message.brightestday.berserk.not_ready", "Your rage has not yet peaked.");
@@ -444,6 +445,8 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.battery.offline", "The Central Power Battery falls silent.");
         builder.add("message.brightestday.battery.warded", "This battery is warded against outsiders.");
         builder.add("message.brightestday.battery.unproven", "Only its founders or rank %s members can move this battery.");
+        builder.add("message.brightestday.battery.foreign", "Only a member of the %s can build this battery.");
+        builder.add("message.brightestday.battery.unproven", "Only its founders or rank %s members can move this battery.");
         builder.add("message.brightestday.battery.destroyed", "%s has shattered the central power battery!");
         builder.add("message.brightestday.battery.offer_empty", "You have nothing left to give it.");
         builder.add("message.brightestday.battery.ceremony", "%s swears the oath at the battery (%s of %s).");
@@ -543,6 +546,10 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("gui.brightestday.style.pose", "Pose");
         builder.add("gui.brightestday.style.insignia", "Insignia");
         builder.add("gui.brightestday.mask", "Mask");
+        builder.add("gui.brightestday.suit_style", "Suit Style");
+        builder.add("gui.brightestday.suit_style.movie", "Movie");
+        builder.add("gui.brightestday.suit_style.comic", "Comic");
+        builder.add("gui.brightestday.suit_style.variant", "Comic: %s");
         builder.add("gui.brightestday.mask_height", "Mask Height: %s");
 
         builder.add(LanternCorps.GREEN.getTranslationKey(), "Green Lantern Corps");
