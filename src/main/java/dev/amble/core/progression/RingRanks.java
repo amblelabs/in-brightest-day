@@ -46,6 +46,7 @@ public final class RingRanks {
             Map.entry(RingPowerRegistry.CONSTRUCT_HORSE, 1),
             Map.entry(RingPowerRegistry.CONSTRUCT_BOAT, 1),
             Map.entry(RingPowerRegistry.CONTAINMENT_SPHERE, 3),
+            Map.entry(RingPowerRegistry.MAGNET, 2),
             Map.entry(RingPowerRegistry.RING_COMPASS, 1),
             Map.entry(RingPowerRegistry.LIGHT_ORB, 1),
             Map.entry(RingPowerRegistry.INSIGNIA, 2),

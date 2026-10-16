@@ -3,6 +3,7 @@ package dev.amble.core.ringpowers;
 import dev.amble.core.ringpowers.constructs.AreaShieldConstruct;
 import dev.amble.core.ringpowers.constructs.BulwarkConstruct;
 import dev.amble.core.ringpowers.constructs.ConstructRingConstruct;
+import dev.amble.core.ringpowers.constructs.MagnetConstruct;
 import dev.amble.core.ringpowers.constructs.GravityBallConstruct;
 import dev.amble.core.ringpowers.constructs.GravityRepulsorConstruct;
 import dev.amble.core.ringpowers.constructs.BeamConstruct;
@@ -102,6 +103,7 @@ public final class RingPowerRegistry {
     public static final ConstructHorseConstruct CONSTRUCT_HORSE = register(new ConstructHorseConstruct());
     public static final ConstructBoatConstruct CONSTRUCT_BOAT = register(new ConstructBoatConstruct());
     public static final ContainmentSphereConstruct CONTAINMENT_SPHERE = register(new ContainmentSphereConstruct());
+    public static final MagnetConstruct MAGNET = register(new MagnetConstruct());
     public static final RingCompassConstruct RING_COMPASS = register(new RingCompassConstruct());
     public static final InsigniaConstruct INSIGNIA = register(new InsigniaConstruct());
     public static final TractorBeamRingPower TRACTOR_BEAM = register(new TractorBeamRingPower());

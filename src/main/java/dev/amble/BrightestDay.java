@@ -30,6 +30,7 @@ import dev.amble.core.flight.FlightBoost;
 import dev.amble.core.space.SpaceHandoff;
 import dev.amble.core.space.CosmosState;
 import dev.amble.core.tractor.TractorManager;
+import dev.amble.core.magnet.MagnetManager;
 import dev.amble.core.sphere.ContainmentSphere;
 import dev.amble.core.mounts.ConstructMounts;
 import dev.amble.core.sync.RingSync;
@@ -124,6 +125,7 @@ public class BrightestDay implements ModInitializer {
 		CosmosState.init();
 		TractorManager.init();
 		ContainmentSphere.init();
+		MagnetManager.init();
 		ConstructMounts.init();
 		RingSync.init();
 		RingCompass.init();
