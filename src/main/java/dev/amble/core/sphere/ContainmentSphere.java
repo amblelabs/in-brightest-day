@@ -1,9 +1,11 @@
 package dev.amble.core.sphere;
 
+import dev.amble.core.carry.Carry;
 import dev.amble.core.mannequin.Mannequins;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.mounts.ConstructMounts;
+import dev.amble.core.networking.payloads.s2c.CarriedS2CPayload;
 import dev.amble.core.networking.payloads.s2c.SphereS2CPayload;
 import dev.amble.core.ringpowers.ActiveConstructs;
 import dev.amble.core.ringpowers.CorpsCombat;
@@ -22,25 +24,21 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.Relative;
 import net.minecraft.world.entity.item.FallingBlockEntity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public final class ContainmentSphere {
     public static final double GAP = 1.5;
-    private static final Set<Relative> RELATIVE = EnumSet.of(Relative.X, Relative.Y, Relative.Z, Relative.Y_ROT, Relative.X_ROT);
     private static final double SNUG = 0.75;
     private static final int REFRESH_TICKS = 40;
+    private static final double SLIP = 1.0;
 
     private record Held(Entity entity, Vec3 offset) {}
 
@@ -51,6 +49,7 @@ public final class ContainmentSphere {
         final long createdAt;
         final List<Held> held = new ArrayList<>();
         Vec3 lastCenter;
+        List<Integer> sent = List.of();
 
         Sphere(ServerLevel level, float radius, int color, Vec3 center) {
             this.level = level;
@@ -108,6 +107,7 @@ public final class ContainmentSphere {
         if (sphere == null) return;
         ActiveConstructs.untrack(player.getUUID(), sphere);
         broadcast(player, 0.0F, sphere.color);
+        Carry.broadcast(player, CarriedS2CPayload.SPHERE, 0.0F, List.of());
         player.level().playSound(null, sphere.lastCenter.x, sphere.lastCenter.y, sphere.lastCenter.z, SoundEvents.AMETHYST_CLUSTER_BREAK, SoundSource.PLAYERS, 1.0F, 1.2F);
     }
 
@@ -143,7 +143,6 @@ public final class ContainmentSphere {
             }
 
             Vec3 center = center(player, sphere.radius);
-            Vec3 carried = center.subtract(sphere.lastCenter);
             sphere.lastCenter = center;
             capture(player, sphere, center);
             if (refresh) broadcast(player, sphere.radius, sphere.color);
@@ -151,25 +150,16 @@ public final class ContainmentSphere {
             sphere.held.removeIf(held -> {
                 Entity entity = held.entity();
                 if (entity.isRemoved() || !entity.isAlive() || entity.level() != sphere.level || entity.isPassenger()) return true;
-                Vec3 goal = center.add(held.offset());
-                place(entity, goal.subtract(0.0, entity.getBbHeight() * 0.5, 0.0), carried);
+                Carry.toward(entity, center.add(held.offset()));
                 if (entity instanceof FallingBlockEntity block) block.time = 1;
-                return false;
+                return entity.getBoundingBox().getCenter().distanceTo(center) > sphere.radius + SLIP;
             });
+            List<Integer> ids = sphere.held.stream().map(held -> held.entity().getId()).toList();
+            if (refresh || !ids.equals(sphere.sent)) {
+                sphere.sent = ids;
+                sendCarried(player, sphere);
+            }
         }
-    }
-
-    private static void place(Entity entity, Vec3 feet, Vec3 carried) {
-        if (entity instanceof ServerPlayer player) {
-            Vec3 delta = feet.subtract(player.position());
-            player.teleportTo(player.level(), delta.x, delta.y, delta.z, RELATIVE, 0.0F, 0.0F, false);
-        } else {
-            entity.setPos(feet.x, feet.y, feet.z);
-            entity.setDeltaMovement(carried);
-            entity.needsSync = true;
-            if (entity instanceof Mob mob) mob.getNavigation().stop();
-        }
-        entity.resetFallDistance();
     }
 
     public static boolean breakOut(ServerPlayer prisoner) {
@@ -184,6 +174,12 @@ public final class ContainmentSphere {
             return true;
         }
         return false;
+    }
+
+    private static void sendCarried(ServerPlayer player, Sphere sphere) {
+        List<CarriedS2CPayload.Entry> carried = new ArrayList<>();
+        for (Held held : sphere.held) carried.add(new CarriedS2CPayload.Entry(held.entity().getId(), held.offset().toVector3f()));
+        Carry.broadcast(player, CarriedS2CPayload.SPHERE, (float) (sphere.radius + GAP), carried);
     }
 
     private static void broadcast(ServerPlayer player, float radius, int color) {

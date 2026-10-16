@@ -1206,6 +1206,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add(RingPowerRegistry.CONSTRUCT_HORSE.getTranslationKey(), "Construct Horse");
         builder.add(RingPowerRegistry.CONSTRUCT_BOAT.getTranslationKey(), "Construct Boat");
         builder.add(RingPowerRegistry.CONTAINMENT_SPHERE.getTranslationKey(), "Containment Sphere");
+        builder.add(RingPowerRegistry.MAGNET.getTranslationKey(), "Magnet");
         builder.add(RingPowerRegistry.RING_COMPASS.getTranslationKey(), "Ring Compass");
         builder.add(RingPowerRegistry.INSIGNIA.getTranslationKey(), "Insignia");
         builder.add(RingPowerRegistry.SCAN.getTranslationKey(), "Scan");

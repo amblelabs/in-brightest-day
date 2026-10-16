@@ -99,6 +99,7 @@ public final class PowerWheel {
             Map.entry(RingPowerRegistry.CONSTRUCT_HORSE, Items.SADDLE),
             Map.entry(RingPowerRegistry.CONSTRUCT_BOAT, Items.BIRCH_BOAT),
             Map.entry(RingPowerRegistry.CONTAINMENT_SPHERE, Items.ENDER_PEARL),
+            Map.entry(RingPowerRegistry.MAGNET, Items.IRON_INGOT),
             Map.entry(RingPowerRegistry.RING_COMPASS, Items.COMPASS),
             Map.entry(RingPowerRegistry.INSIGNIA, Items.GLOW_ITEM_FRAME),
             Map.entry(RingPowerRegistry.ORE_PROBE, Items.SPYGLASS),

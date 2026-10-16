@@ -16,6 +16,7 @@ import dev.amble.core.glide.GlideManager;
 import dev.amble.core.beams.HealBeamManager;
 import dev.amble.core.light.LightOrbManager;
 import dev.amble.core.mounts.ConstructMounts;
+import dev.amble.core.magnet.MagnetManager;
 import dev.amble.core.sphere.ContainmentSphere;
 import dev.amble.core.visuals.Insignia;
 import dev.amble.core.sculpt.SculptManager;
@@ -52,10 +53,11 @@ public final class ConstructDismissal {
         long toolCreated = ConstructTools.latestCreatedAt(player);
         long mountCreated = ConstructMounts.latestCreatedAt(player.getUUID());
         long sphereCreated = ContainmentSphere.latestCreatedAt(player);
+        long magnetCreated = MagnetManager.latestCreatedAt(player);
         long insigniaCreated = Insignia.latestCreatedAt(player.getUUID());
         long ringCreated = ConstructRings.latestCreatedAt(player);
         long gravityCreated = GravityBallManager.latestCreatedAt(player.getUUID());
-        long newest = LongStream.of(shieldCreated, wallCreated, sculptCreated, orbCreated, turretCreated, glideCreated, drillCreated, lumberjackCreated, probeCreated, toolCreated, mountCreated, sphereCreated, insigniaCreated, ringCreated, gravityCreated).max().getAsLong();
+        long newest = LongStream.of(shieldCreated, wallCreated, sculptCreated, orbCreated, turretCreated, glideCreated, drillCreated, lumberjackCreated, probeCreated, toolCreated, mountCreated, sphereCreated, magnetCreated, insigniaCreated, ringCreated, gravityCreated).max().getAsLong();
         if (newest == Long.MIN_VALUE) {
             player.sendOverlayMessage(Component.translatable("message.brightestday.no_constructs_to_dismiss"));
             return;
@@ -67,6 +69,8 @@ public final class ConstructDismissal {
             ConstructRings.dismissLatest(player);
         } else if (newest == insigniaCreated) {
             Insignia.hide(player);
+        } else if (newest == magnetCreated) {
+            MagnetManager.stop(player);
         } else if (newest == sphereCreated) {
             ContainmentSphere.stop(player);
         } else if (newest == mountCreated) {
@@ -117,6 +121,7 @@ public final class ConstructDismissal {
         OreProbeManager.dismissAll(player.getUUID());
         ConstructTools.dissolveAll(player);
         ConstructMounts.dismissAll(player.getUUID());
+        MagnetManager.stop(player);
         ContainmentSphere.stop(player);
         Insignia.hide(player);
     }
