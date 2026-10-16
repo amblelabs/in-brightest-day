@@ -89,7 +89,7 @@ public final class LanternChargeAnimations {
             PlayerAnimationController controller = new PlayerAnimationController(avatar, (c, state, setter) -> PlayState.STOP);
             controller.setFirstPersonMode(FirstPersonMode.THIRD_PERSON_MODEL);
             controller.setFirstPersonConfiguration(new FirstPersonConfiguration(true, true, true, true));
-            controller.addModifierLast(new AdjustmentModifier(bone -> head(avatar, bone)));
+            controller.addModifierLast(new SafeAdjustmentModifier(bone -> head(avatar, bone)));
             controller.addModifierLast(new MirrorModifier());
             return controller;
         });
