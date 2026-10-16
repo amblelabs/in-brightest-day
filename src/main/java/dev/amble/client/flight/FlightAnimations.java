@@ -8,7 +8,7 @@ import com.zigythebird.playeranimcore.animation.Animation;
 import com.zigythebird.playeranimcore.animation.RawAnimation;
 import com.zigythebird.playeranimcore.animation.layered.modifier.AbstractFadeModifier;
 import com.zigythebird.playeranimcore.animation.layered.modifier.AbstractModifier;
-import com.zigythebird.playeranimcore.animation.layered.modifier.AdjustmentModifier;
+import dev.amble.client.effects.SafeAdjustmentModifier;
 import com.zigythebird.playeranimcore.animation.layered.modifier.SpeedModifier;
 import com.zigythebird.playeranimcore.easing.EasingType;
 import com.zigythebird.playeranimcore.enums.PlayState;
@@ -29,7 +29,7 @@ public final class FlightAnimations {
     public static void init() {
         PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(LAYER, PRIORITY, avatar -> {
             PlayerAnimationController controller = new PlayerAnimationController(avatar, (c, state, setter) -> PlayState.STOP);
-            controller.addModifierLast(new AdjustmentModifier(bone -> FlightAnimator.adjustment(avatar, bone)));
+            controller.addModifierLast(new SafeAdjustmentModifier(bone -> FlightAnimator.adjustment(avatar, bone)));
             controller.addModifierLast(new SpeedModifier(1.0F));
             controller.addModifierLast(new ArmedAimModifier(avatar));
             return controller;
