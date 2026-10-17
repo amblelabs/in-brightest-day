@@ -4,6 +4,7 @@ import dev.amble.core.heart.RedHeart;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.BrightestDayComponents;
 import dev.amble.core.loyalty.RingBonds;
+import dev.amble.core.progression.OrangeDuels;
 import dev.amble.core.progression.CorpsCaps;
 import dev.amble.core.rings.ConstructRings;
 import dev.amble.core.ringpowers.CorpsSynergy;
@@ -116,6 +117,7 @@ public class PowerRingItem extends Item {
     }
 
     public static boolean hasCharge(Player player) {
+        if (OrangeDuels.dueling(player)) return false;
         return player.hasInfiniteMaterials() || player.isCreative() || getRingPower(source(player).ring()) > 0;
     }
 

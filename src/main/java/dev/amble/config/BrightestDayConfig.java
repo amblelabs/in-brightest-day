@@ -479,6 +479,11 @@ public class BrightestDayConfig extends Config {
     public float redOfferDailyChance = 0.25F;
     public int greenRingWill = 600;
     public int greenPlayersPerRing = 4;
+    public int orangeHoardValue = 256;
+    @ValidatedInt.Restrict(min = 30, max = 1800)
+    public int orangeDuelSeconds = 180;
+    @ValidatedInt.Restrict(min = 6, max = 48)
+    public int orangeArenaRadius = 12;
     public int indigoMinPlayers = 3;
     @ValidatedInt.Restrict(min = 0, max = 30)
     public int indigoSlowSeconds = 3;

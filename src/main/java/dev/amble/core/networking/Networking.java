@@ -89,6 +89,7 @@ import dev.amble.core.networking.payloads.s2c.TribeRosterS2CPayload;
 import dev.amble.core.networking.payloads.s2c.ShieldSpawnS2CPayload;
 import dev.amble.core.networking.payloads.s2c.TractorS2CPayload;
 import dev.amble.core.networking.payloads.s2c.CarriedS2CPayload;
+import dev.amble.core.networking.payloads.s2c.DuelArenaS2CPayload;
 import dev.amble.core.networking.payloads.s2c.MagnetS2CPayload;
 import dev.amble.core.networking.payloads.s2c.SphereS2CPayload;
 import dev.amble.core.networking.payloads.s2c.PoseS2CPayload;
@@ -133,6 +134,7 @@ public class Networking {
         PayloadTypeRegistry.clientboundPlay().register(SphereS2CPayload.TYPE, SphereS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(MagnetS2CPayload.TYPE, MagnetS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(CarriedS2CPayload.TYPE, CarriedS2CPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(DuelArenaS2CPayload.TYPE, DuelArenaS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(PoseS2CPayload.TYPE, PoseS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(InsigniaS2CPayload.TYPE, InsigniaS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(CompassS2CPayload.TYPE, CompassS2CPayload.CODEC);

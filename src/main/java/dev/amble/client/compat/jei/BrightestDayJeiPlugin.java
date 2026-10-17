@@ -9,6 +9,7 @@ import dev.amble.core.progression.Emotion;
 import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.ringpowers.constructs.ConstructTool;
 import mezz.jei.api.IModPlugin;
+import mezz.jei.api.constants.RecipeTypes;
 import mezz.jei.api.constants.VanillaTypes;
 import mezz.jei.api.recipe.types.IRecipeType;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
@@ -16,15 +17,23 @@ import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
 import mezz.jei.api.registration.ISubtypeRegistration;
 import mezz.jei.api.runtime.IJeiRuntime;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.crafting.CraftingRecipe;
+import net.minecraft.world.item.crafting.Recipe;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.block.Block;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class BrightestDayJeiPlugin implements IModPlugin {
     public static final IRecipeType<ForgeDisplay> SPECTRUM_FORGE = IRecipeType.create(BrightestDay.id("spectrum_forge"), ForgeDisplay.class);
@@ -86,6 +95,17 @@ public class BrightestDayJeiPlugin implements IModPlugin {
         hidden.add(new ItemStack(BrightestDayBlocks.BLUE_LANTERN_SHRINE));
         for (ConstructTool tool : ConstructTool.values()) hidden.add(new ItemStack(BrightestDayItems.constructTool(tool)));
         runtime.getIngredientManager().removeIngredientsAtRuntime(VanillaTypes.ITEM_STACK, hidden);
+        addMissingCrafting(runtime);
+    }
+
+    private static void addMissingCrafting(IJeiRuntime runtime) {
+        ClientPacketListener connection = Minecraft.getInstance().getConnection();
+        if (connection == null) return;
+        Set<ResourceKey<Recipe<?>>> known = runtime.getRecipeManager().createRecipeLookup(RecipeTypes.CRAFTING).includeHidden().get()
+                .map(RecipeHolder::id).collect(Collectors.toSet());
+        List<RecipeHolder<CraftingRecipe>> missing = BundledRecipes.crafting(connection.registryAccess()).stream()
+                .filter(recipe -> !known.contains(recipe.id())).toList();
+        if (!missing.isEmpty()) runtime.getRecipeManager().addRecipes(RecipeTypes.CRAFTING, missing);
     }
 
     private static void info(IRecipeRegistration registration, Block block) {
