@@ -51,7 +51,6 @@ import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -285,16 +284,15 @@ public final class RingLoyalty {
             long now = server.overworld().getGameTime();
             GIFT_ASKED.values().removeIf(last -> now - last >= GIFT_ASK_COOLDOWN);
         }
-        Iterator<Flight> iterator = FLIGHTS.iterator();
         List<Flight> lost = new ArrayList<>();
         List<Flight> added = new ArrayList<>();
-        while (iterator.hasNext()) {
-            Flight flight = iterator.next();
+        for (Flight flight : List.copyOf(FLIGHTS)) {
+            if (!FLIGHTS.contains(flight)) continue;
             ServerPlayer target = server.getPlayerList().getPlayer(flight.target);
             boolean valid = target != null && target.level() == flight.level
                     && (flight.personal() || isWorthy(target, flight.refused));
             if (!valid || flight.hover < 0 && ++flight.age > MAX_FLIGHT_TICKS) {
-                iterator.remove();
+                FLIGHTS.remove(flight);
                 finish(flight, target);
                 if (flight.personal() && target != null && target.level() != flight.level && flight.age <= MAX_FLIGHT_TICKS) {
                     added.add(redirect(flight, target));
@@ -307,7 +305,7 @@ public final class RingLoyalty {
             if (flight.hover >= 0) {
                 VoiceAnswers.Answer answer = hover(target, flight);
                 if (answer == null) continue;
-                iterator.remove();
+                FLIGHTS.remove(flight);
                 finish(flight, target);
                 if (answer == acceptance(corps(flight.ring))) accepted(server, target, flight);
                 else refused(server, target, flight, added);
@@ -320,12 +318,12 @@ public final class RingLoyalty {
             double speed = Math.min(START_SPEED + flight.age * ACCELERATION, MAX_SPEED);
             if (distance <= Math.max(speed, ARRIVAL_DISTANCE)) {
                 if (flight.kind == Kind.RETURN || flight.kind == Kind.HOME) {
-                    iterator.remove();
+                    FLIGHTS.remove(flight);
                     giveBack(target, flight);
                 } else if (flight.asks) {
                     if (!ASKED.contains(target.getUUID()) && askable(target, flight)) ask(target, flight);
                 } else {
-                    iterator.remove();
+                    FLIGHTS.remove(flight);
                     arrive(target, flight.ring);
                 }
                 continue;
