@@ -9,6 +9,7 @@ import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.loyalty.RingLoyalty;
 import dev.amble.core.networking.payloads.s2c.TintFlashS2CPayload;
 import dev.amble.core.ringpowers.LanternCorps;
+import dev.amble.core.ringpowers.OrangeHoard;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -19,9 +20,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
@@ -32,17 +31,6 @@ public final class RingOffers {
     private static final long RED_COOLDOWN = 24000;
     private static final int MINUTES_PER_DAY = 20;
     private static final int FLASH_TICKS = 60;
-    private static final Map<Item, Integer> HOARD = Map.ofEntries(
-            Map.entry(Items.GOLD_INGOT, 1),
-            Map.entry(Items.GOLD_BLOCK, 9),
-            Map.entry(Items.EMERALD, 2),
-            Map.entry(Items.EMERALD_BLOCK, 18),
-            Map.entry(Items.DIAMOND, 4),
-            Map.entry(Items.DIAMOND_BLOCK, 36),
-            Map.entry(Items.ANCIENT_DEBRIS, 8),
-            Map.entry(Items.NETHERITE_SCRAP, 8),
-            Map.entry(Items.NETHERITE_INGOT, 36),
-            Map.entry(Items.NETHERITE_BLOCK, 324));
 
     private static final Map<UUID, Long> RED_REFUSED = new HashMap<>();
 
@@ -113,20 +101,10 @@ public final class RingOffers {
 
     public static void considerOrange(ServerPlayer player) {
         if (!ringless(player) || RingLoyalty.awaiting(player) || OrangeDuels.involved(player.level().getServer(), player.getUUID())) return;
-        if (hoard(player) < BrightestDayConfig.get().orangeHoardValue) return;
+        if (OrangeHoard.value(player) < BrightestDayConfig.get().orangeHoardValue) return;
         float chance = Math.min(0.5F, SpectrumMeters.get(player, Emotion.AVARICE) / 2000.0F);
         if (player.getRandom().nextFloat() >= chance) return;
         offer(player, LanternCorps.ORANGE, "orange");
-    }
-
-    public static int hoard(Player player) {
-        int value = 0;
-        for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
-            ItemStack stack = player.getInventory().getItem(slot);
-            Integer worth = HOARD.get(stack.getItem());
-            if (worth != null) value += worth * stack.getCount();
-        }
-        return value;
     }
 
     public static void considerGreen(ServerPlayer player) {

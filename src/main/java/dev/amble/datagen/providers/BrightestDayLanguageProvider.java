@@ -538,6 +538,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.ring.forsaken", "You have forsaken the %s. Your oath now belongs to the %s.");
         builder.add("message.brightestday.ring.rejects_claim", "This ring is sworn to %s. It refuses your oath and flies home.");
         builder.add("message.brightestday.ring.came_home", "Your %s ring rejected another oath and returned to you.");
+        builder.add("message.brightestday.ring.no_armor", "Your ring is your armor. It will not share you with plate.");
         builder.add("message.brightestday.ring.claimed_away", "While you were away, your %s ring was claimed by %s.");
         builder.add("message.brightestday.ring.awakened", "Your ring awakens.");
         builder.add("block.brightestday.yellow_battery_core", "Yellow Battery Core");
@@ -558,7 +559,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("gui.brightestday.style.insignia", "Insignia");
         builder.add("gui.brightestday.mask", "Mask");
         builder.add("gui.brightestday.suit_style", "Suit Style");
-        builder.add("gui.brightestday.suit_style.movie", "Movie");
+        builder.add("gui.brightestday.suit_style.movie", "LANTERNS");
         builder.add("gui.brightestday.suit_style.comic", "Comic");
         builder.add("gui.brightestday.suit_style.variant", "Comic: %s");
         builder.add("gui.brightestday.mask_height", "Mask Height: %s");
@@ -839,6 +840,10 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("brightestday.server.orangeHoardValue.desc", "Treasure a player must carry before the orange ring will seek them. Gold ingot 1, emerald 2, diamond 4, debris or scrap 8, netherite ingot 36 and blocks 9x.");
         builder.add("brightestday.server.orangeHungerPerSecond", "Orange Hoard Hunger");
         builder.add("brightestday.server.orangeHungerPerSecond.desc", "Charge an orange ring loses each second while its bearer carries less than the orange hoard. 0 turns it off.");
+        builder.add("brightestday.server.orangeBurdenHoard", "Orange Burden Hoard");
+        builder.add("brightestday.server.orangeBurdenHoard.desc", "Hoard value at which an orange bearer reaches the full slowdown. Smaller hoards slow them proportionally. 0 turns it off.");
+        builder.add("brightestday.server.orangeMaxSlowdown", "Orange Max Slowdown");
+        builder.add("brightestday.server.orangeMaxSlowdown.desc", "How much walking and flight speed an orange bearer loses at the burden hoard. 0.6 means 60 percent slower.");
         builder.add("brightestday.server.orangeDuelSeconds", "Orange Duel Length");
         builder.add("brightestday.server.orangeDuelSeconds.desc", "Seconds a challenger has to beat the orange bearer. The bearer keeps the ring on a draw.");
         builder.add("brightestday.server.orangeArenaRadius", "Orange Arena Radius");
@@ -1070,7 +1075,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.sentry_turret_blocked", "No room to deploy a turret there.");
         builder.add("message.brightestday.drill_place_blocked", "Nothing to drill there.");
         builder.add("brightestday.server.blastCost", "Charge Cost");
-        builder.add("brightestday.server.blastCost.desc", "Ring charge spent on each blast.");
+        builder.add("brightestday.server.blastCost.desc", "Ring charge for a size 1 blast. Sizes 2 to 6 cost 2, 5, 6, 8 and 10 times this.");
         builder.add("brightestday.ring_power.self_heal", "Self-Healing");
         builder.add("brightestday.server.selfHeal", "Self-Healing");
         builder.add("brightestday.server.selfHealAmount", "Heal Amount");

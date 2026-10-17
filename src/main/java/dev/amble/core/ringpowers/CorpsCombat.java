@@ -7,7 +7,6 @@ import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.progression.EmotionSources;
 import dev.amble.core.progression.RingRanks;
-import dev.amble.core.progression.RingOffers;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.team.LanternTeams;
 import dev.amble.core.team.RingDamage;
@@ -156,7 +155,7 @@ public final class CorpsCombat {
             if (player.isCreative() || player.isSpectator()) continue;
             ItemStack ring = PowerRingItem.getWornRing(player);
             if (PowerRingItem.getCorps(ring).orElse(null) != LanternCorps.ORANGE || PowerRingItem.getRingPower(ring) <= 0) continue;
-            int hoard = RingOffers.hoard(player);
+            int hoard = OrangeHoard.value(player);
             if (hoard >= config.orangeHoardValue) continue;
             PowerRingItem.drainRing(ring, config.orangeHungerPerSecond);
             if (ring == BrightestDayAttachments.getRing(player)) BrightestDayAttachments.setRing(player, ring);

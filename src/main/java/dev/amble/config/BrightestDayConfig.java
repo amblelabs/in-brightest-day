@@ -19,7 +19,7 @@ public class BrightestDayConfig extends Config {
 
     public ConfigGroup blast = new ConfigGroup("blast");
     @ValidatedInt.Restrict(min = 0, max = 1000)
-    public int blastCost = 50;
+    public int blastCost = 25;
     @ValidatedDouble.Restrict(min = 8.0, max = 128.0)
     public double blastRange = 48.0;
     @ValidatedDouble.Restrict(min = 1.0, max = 16.0)
@@ -482,6 +482,9 @@ public class BrightestDayConfig extends Config {
     public int orangeHoardValue = 256;
     @ValidatedInt.Restrict(min = 0, max = 100)
     public int orangeHungerPerSecond = 5;
+    public int orangeBurdenHoard = 2048;
+    @ValidatedFloat.Restrict(min = 0.0F, max = 0.95F)
+    public float orangeMaxSlowdown = 0.6F;
     @ValidatedInt.Restrict(min = 30, max = 1800)
     public int orangeDuelSeconds = 180;
     @ValidatedInt.Restrict(min = 6, max = 48)
