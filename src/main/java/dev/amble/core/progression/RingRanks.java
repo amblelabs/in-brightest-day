@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
 
 public final class RingRanks {
@@ -57,6 +58,7 @@ public final class RingRanks {
     private static final Map<LanternCorps, Map<RingPower<?>, Integer>> CORPS_GATED = Map.of(
             LanternCorps.YELLOW, Map.of(RingPowerRegistry.GIANT_FIST, 2),
             LanternCorps.BLUE, Map.of(RingPowerRegistry.TOOL_FORGE, 3, RingPowerRegistry.GIANT_FIST, 2));
+    private static final Map<LanternCorps, Map<Integer, Set<RingPower<?>>>> LOCKED = new ConcurrentHashMap<>();
     private static final List<String> PRIORITY = List.of(
             "blast", "entity_shield", "boomerang_disc", "energy_whip", "chain_bolt", "wall", "piercing_lance", "swarm_missiles",
             "rapid_barrage", "area_shield", "beam", "giant_fist", "nova_burst", "ground_slam", "sentry_turret", "glider",
@@ -267,7 +269,10 @@ public final class RingRanks {
 
     public static Set<RingPower<?>> locked(Player player, LanternCorps corps, int rank) {
         if (!ranked(corps)) return Set.of();
+        return LOCKED.computeIfAbsent(corps, key -> new ConcurrentHashMap<>()).computeIfAbsent(Mth.clamp(rank, 0, MAX_RANK), key -> lockedAt(corps, key));
+    }
 
+    private static Set<RingPower<?>> lockedAt(LanternCorps corps, int rank) {
         List<ConstructRingPower> arsenal = RingPowerRegistry.forCorps(corps).stream()
                 .filter(ConstructRingPower.class::isInstance)
                 .map(ConstructRingPower.class::cast)
@@ -290,7 +295,7 @@ public final class RingRanks {
         CORPS_GATED.getOrDefault(corps, Map.of()).forEach((power, required) -> {
             if (rank < required) locked.add(power);
         });
-        return locked;
+        return Set.copyOf(locked);
     }
 
     private RingRanks() {}

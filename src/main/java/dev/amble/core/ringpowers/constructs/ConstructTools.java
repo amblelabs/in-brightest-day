@@ -9,7 +9,6 @@ import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -18,7 +17,6 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.animal.allay.Allay;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.decoration.ItemFrame;
-import net.minecraft.world.level.entity.EntityTypeTest;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
@@ -29,7 +27,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.DecoratedPotBlockEntity;
 import net.minecraft.world.level.block.entity.ShelfBlockEntity;
 
-import java.util.UUID;
 
 public final class ConstructTools {
     public static final int LIFETIME_TICKS = 1200;
@@ -79,23 +76,12 @@ public final class ConstructTools {
         clear(player.getInventory());
         clear(player.getEnderChestInventory());
         if (isConstruct(player.containerMenu.getCarried())) player.containerMenu.setCarried(ItemStack.EMPTY);
-
-        for (ServerLevel level : player.level().getServer().getAllLevels()) {
-            for (ItemEntity item : level.getEntities(EntityTypeTest.forClass(ItemEntity.class), item -> isOwnedBy(item.getItem(), player.getUUID()))) {
-                item.discard();
-            }
-        }
     }
 
     private static void clear(Container container) {
         for (int slot = 0; slot < container.getContainerSize(); slot++) {
             if (isConstruct(container.getItem(slot))) container.setItem(slot, ItemStack.EMPTY);
         }
-    }
-
-    private static boolean isOwnedBy(ItemStack stack, UUID owner) {
-        ConstructToolData data = stack.get(BrightestDayComponents.CONSTRUCT_TOOL);
-        return data != null && data.owner().equals(owner);
     }
 
     private static void purgeOpenContainer(ServerPlayer player) {
