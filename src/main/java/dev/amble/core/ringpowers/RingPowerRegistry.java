@@ -61,9 +61,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class RingPowerRegistry {
     private static final Map<Identifier, RingPower<?>> REGISTRY = new LinkedHashMap<>();
+    private static final Map<LanternCorps, List<RingPower<?>>> BY_CORPS = new ConcurrentHashMap<>();
 
     public static final FlightRingPower FLIGHT = register(new FlightRingPower());
     public static final ArmedRingPower ARMED = register(new ArmedRingPower());
@@ -136,6 +138,7 @@ public final class RingPowerRegistry {
     }
 
     public static List<RingPower<?>> forCorps(LanternCorps corps, @Nullable LanternCorps borrowed, Set<LanternCorps> mimicked) {
+        if (borrowed == null && mimicked.isEmpty()) return forCorps(corps);
         return REGISTRY.values().stream()
                 .filter(power -> power.isAvailableTo(corps)
                         || borrowed != null && power.isAvailableTo(borrowed)
@@ -144,7 +147,7 @@ public final class RingPowerRegistry {
     }
 
     public static List<RingPower<?>> forCorps(LanternCorps corps) {
-        return REGISTRY.values().stream().filter(power -> power.isAvailableTo(corps)).toList();
+        return BY_CORPS.computeIfAbsent(corps, key -> REGISTRY.values().stream().filter(power -> power.isAvailableTo(key)).toList());
     }
 
     public static void init() {}
