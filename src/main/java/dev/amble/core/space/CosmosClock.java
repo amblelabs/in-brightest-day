@@ -7,11 +7,15 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.Level;
+
+import java.util.function.DoubleSupplier;
 
 public final class CosmosClock {
     private static final int REFRESH_TICKS = 40;
     private static long last = Long.MIN_VALUE;
     private static int rate = 1;
+    public static DoubleSupplier client = () -> 0.0;
 
     public static void init() {
         ServerTickEvents.END_SERVER_TICK.register(CosmosClock::tick);
@@ -24,6 +28,12 @@ public final class CosmosClock {
 
     public static long now(MinecraftServer server) {
         return server.overworld().getOverworldClockTime();
+    }
+
+    public static double now(Level level) {
+        if (level.isClientSide()) return client.getAsDouble();
+        MinecraftServer server = level.getServer();
+        return server == null ? 0.0 : now(server);
     }
 
     private static ClockS2CPayload payload(MinecraftServer server) {

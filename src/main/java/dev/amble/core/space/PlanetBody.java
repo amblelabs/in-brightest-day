@@ -17,6 +17,9 @@ public final class PlanetBody {
     private static final double NOON = 6000.0;
     private static final double FIXED_MIDNIGHT = 18000.0;
     public static final double DEPARTURE_MARGIN = 6.0;
+    private static final double ORBIT_PERIOD = 240000.0;
+    private static final double ORBIT_REFERENCE = 2400.0;
+    private static final double MOON_PERIOD = 48000.0;
 
     public static final Vector3fc[][] FACES = {
             {new Vector3f(1, 0, 0), new Vector3f(0, 0, -1), new Vector3f(0, 1, 0)},
@@ -33,8 +36,8 @@ public final class PlanetBody {
     public record Entry(int face, double u, double v) {}
 
     public static Quaternionf orientation(Cosmos.Planet planet, @Nullable ResourceKey<Level> sector, double clock) {
-        Vec3 center = center(planet);
-        Vector3f sun = Cosmos.sunFrom(sector, center.x, center.y, center.z);
+        Vec3 center = center(planet, clock);
+        Vector3f sun = Cosmos.sunFrom(sector, center.x, center.y, center.z, clock);
         Random random = new Random(planet.seed() ^ 0x5EEDL);
         Vector3f helper = Math.abs(sun.y) < 0.9F ? new Vector3f(0, 1, 0) : new Vector3f(1, 0, 0);
         Vector3f first = new Vector3f(sun).cross(helper).normalize();
@@ -63,8 +66,19 @@ public final class PlanetBody {
         return new Quaternionf(SURFACE_FRAME).mul(new Quaternionf(orientation).conjugate());
     }
 
-    public static Vec3 center(Cosmos.Planet planet) {
-        return new Vec3(planet.x(), Cosmos.PLANET_CENTER_Y, planet.z());
+    public static Vec3 center(Cosmos.Planet planet, double clock) {
+        if (planet == Cosmos.MOON_PLANET) {
+            Vec3 earth = center(Cosmos.EARTH, clock);
+            double dx = planet.x() - Cosmos.EARTH.x();
+            double dz = planet.z() - Cosmos.EARTH.z();
+            double angle = (clock % MOON_PERIOD) / MOON_PERIOD * Math.PI * 2.0;
+            return earth.add(dx * Math.cos(angle) - dz * Math.sin(angle), 0.0, dx * Math.sin(angle) + dz * Math.cos(angle));
+        }
+        double radius = Math.sqrt(planet.x() * planet.x() + planet.z() * planet.z());
+        if (radius < 1.0) return new Vec3(planet.x(), Cosmos.PLANET_CENTER_Y, planet.z());
+        double period = ORBIT_PERIOD * Math.pow(radius / ORBIT_REFERENCE, 1.5);
+        double angle = Math.atan2(planet.z(), planet.x()) + (clock % period) / period * Math.PI * 2.0;
+        return new Vec3(Math.cos(angle) * radius, Cosmos.PLANET_CENTER_Y, Math.sin(angle) * radius);
     }
 
     public static Vector3f toLocal(Quaternionf orientation, Vec3 world) {
@@ -79,7 +93,7 @@ public final class PlanetBody {
     public static @Nullable Entry entry(Cosmos.Planet planet, @Nullable ResourceKey<Level> sector, double clock, Vec3 from, Vec3 to) {
         Quaternionf orientation = orientation(planet, sector, clock);
         double half = planet.footprint();
-        Vec3 center = center(planet);
+        Vec3 center = center(planet, clock);
         Vector3f a = toLocal(orientation, from.subtract(center)).div((float) half);
         Vector3f b = toLocal(orientation, to.subtract(center)).div((float) half);
         if (inside(a)) return nearestFace(a);

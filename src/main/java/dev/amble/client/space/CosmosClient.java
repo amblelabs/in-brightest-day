@@ -3,6 +3,7 @@ package dev.amble.client.space;
 import dev.amble.core.networking.payloads.s2c.CosmosS2CPayload;
 import dev.amble.core.networking.payloads.s2c.ClockS2CPayload;
 import dev.amble.core.space.Cosmos;
+import dev.amble.core.space.CosmosClock;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import dev.amble.core.space.SpaceTravel;
@@ -40,6 +41,7 @@ public final class CosmosClient {
             clockReceivedAt = context.client().level == null ? 0L : context.client().level.getGameTime();
         });
         ClientTickEvents.END_CLIENT_TICK.register(CosmosClient::tick);
+        CosmosClock.client = () -> clock(0.0F);
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             mogoSector = Cosmos.SECTOR_0;
             antimatterOpen = false;

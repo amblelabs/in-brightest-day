@@ -136,14 +136,15 @@ public final class SpaceHandoff {
 
     private static boolean depart(MinecraftServer server, ServerPlayer player, Cosmos.Planet planet, ResourceKey<Level> sector) {
         long ticks = player.level().getGameTime();
-        Quaternionf orientation = PlanetBody.orientation(planet, sector, CosmosClock.now(server));
+        long clock = CosmosClock.now(server);
+        Quaternionf orientation = PlanetBody.orientation(planet, sector, clock);
         int face = PlanetBody.SURFACE;
         double half = planet.surfaceHalf();
         float u = (float) Mth.clamp((player.getX() - planet.regionX()) / half, -EDGE, EDGE);
         float w = (float) Mth.clamp(player.getZ() / half, -EDGE, EDGE);
         float lift = (float) (1.0 + PlanetBody.DEPARTURE_MARGIN / planet.footprint());
         Vector3f local = PlanetBody.fromSurface(face, new Vector3f(u, lift, w)).mul((float) planet.footprint());
-        Vec3 position = PlanetBody.center(planet).add(PlanetBody.toWorld(orientation, local));
+        Vec3 position = PlanetBody.center(planet, clock).add(PlanetBody.toWorld(orientation, local));
         Vec3 outward = PlanetBody.toWorld(orientation, new Vector3f(PlanetBody.FACES[face][0]));
         Vec3 velocity = PlanetBody.toWorld(orientation, PlanetBody.fromSurface(face, vector(player.getDeltaMovement())));
         velocity = velocity.add(outward.scale(Math.max(0.0, EXIT_SPEED - velocity.dot(outward))));
@@ -208,12 +209,14 @@ public final class SpaceHandoff {
         ServerPlayer player = source.getPlayer();
         MinecraftServer server = source.getServer();
         ResourceKey<Level> mogo = CosmosState.mogoSector(server);
+        long clock = CosmosClock.now(server);
         for (Cosmos.Sector sector : Cosmos.SECTORS) {
             if (player != null && player.level().dimension() != sector.key()) continue;
             source.sendSystemMessage(sectorName(sector.key()).copy().withColor(sector.starColor()));
             for (Cosmos.Planet planet : Cosmos.planetsIn(sector.key(), mogo)) {
                 Component name = planet.name().isEmpty() ? Component.translatable("dimension.brightestday." + planet.id()) : Component.literal(planet.name());
-                source.sendSystemMessage(Component.translatable("message.brightestday.space.planet_entry", name, Math.round(planet.x()) + ", " + Math.round(planet.z()), Math.round(planet.footprint())));
+                Vec3 at = PlanetBody.center(planet, clock);
+                source.sendSystemMessage(Component.translatable("message.brightestday.space.planet_entry", name, Math.round(at.x) + ", " + Math.round(at.z), Math.round(planet.footprint())));
             }
         }
         if (player != null && !Cosmos.isSector(player.level().dimension())) source.sendSystemMessage(Component.translatable("message.brightestday.space.not_in_space"));

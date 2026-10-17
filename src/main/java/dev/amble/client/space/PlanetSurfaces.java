@@ -71,8 +71,8 @@ public final class PlanetSurfaces {
     }
 
     private static int color(Key key, Vector3f p) {
-        float n = fbm(p, 1.6F, key.seed());
-        float m = fbm(p, 4.0F, key.seed() + 31L);
+        float n = fbm(p, 2.4F, key.seed());
+        float m = fbm(p, 6.0F, key.seed() + 31L);
         float lat = Math.abs(p.y());
         return 0xFF000000 | switch (key.style()) {
             case EARTH -> earth(n, m, lat, -0.02F);
@@ -91,7 +91,7 @@ public final class PlanetSurfaces {
             case ICE -> band(p.y() * 6.0F + n * 1.5F, 0x3A6AE0, 0x5A8AF0, 0x4A7AE8);
             case DESERT -> m > 0.45F ? 0xB08A50 : mix(0xC89A5A, 0xE8C890, n * 0.5F + 0.5F);
             case LAVA -> Math.abs(m) < 0.06F ? 0xFF7A1A : mix(0x1A0A08, 0x3A1A12, n * 0.5F + 0.5F);
-            case STAR -> ARGB.scaleRGB(key.color(), 0.85F + 0.15F * (m * 0.5F + 0.5F)) & 0xFFFFFF;
+            case STAR -> ARGB.scaleRGB(key.color(), 0.97F + 0.03F * n) & 0xFFFFFF;
         };
     }
 

@@ -49,7 +49,8 @@
 		"client.AbstractBoatRendererMixin",
 		"client.SpaceClientPacketListenerMixin",
 		"client.SpaceEnvironmentAttributeProbeMixin",
-		"client.SpaceSkyRendererMixin"
+		"client.SpaceSkyRendererMixin",
+		"client.SpaceWeatherMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

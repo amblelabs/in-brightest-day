@@ -7,7 +7,6 @@ import dev.amble.client.flight.FlightRenderTypes;
 import dev.amble.core.space.Cosmos;
 import dev.amble.core.space.GalaxyCatalog;
 import dev.amble.core.space.PlanetBody;
-import dev.amble.core.space.SolarHeat;
 import dev.amble.core.space.SpaceTravel;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
 import net.minecraft.client.Minecraft;
@@ -28,7 +27,7 @@ import java.util.Map;
 
 public final class SpaceSkyRenderer {
     private static final int BODY_GRID = 10;
-    private static final int PLANET_GRID = 16;
+    private static final int PLANET_GRID = 32;
     private static final float CLOUD_SCALE = 1.015F;
     private static final float ATMOSPHERE_SCALE = 1.07F;
     private static final float HALO_SCALE = 1.16F;
@@ -75,22 +74,11 @@ public final class SpaceSkyRenderer {
             Cosmos.SECTOR_2814, List.of(
                     body(Cosmos.Style.GAS, 13L, -120, 35, 1.2F, 2.0F, 5, 0),
                     body(Cosmos.Style.RINGED_GAS, 14L, -160, 52, 0.8F, 1.8F, 22, 0xD8C8A0),
-                    body(Cosmos.Style.ICE, 15L, 100, 66, 0.4F, 1.2F, 30, 0)),
-            Cosmos.SECTOR_0, List.of(star(Cosmos.SECTOR_0, 4.5F)),
-            Cosmos.SECTOR_666, List.of(star(Cosmos.SECTOR_666, 6.0F)),
-            Cosmos.SECTOR_1416, List.of(star(Cosmos.SECTOR_1416, 4.0F)),
-            Cosmos.ODYM_GALAXY, List.of(star(Cosmos.ODYM_GALAXY, 4.0F)),
-            Cosmos.ANTIMATTER, List.of(star(Cosmos.ANTIMATTER, 7.0F)));
+                    body(Cosmos.Style.ICE, 15L, 100, 66, 0.4F, 1.2F, 30, 0)));
 
     private static Vector3fc sun = direction(60, 28);
     private static int sunColor = 0xFFF2C0;
     private static RenderType solid = FlightRenderTypes.glass();
-
-    private static Body star(ResourceKey<Level> key, float size) {
-        Cosmos.Sector sector = Cosmos.sector(key);
-        int color = sector.starColor();
-        return new Body(Cosmos.Style.STAR, color, color, sector.sunYaw(), sector.sunPitch(), size, 1.0F, 0, 0, true);
-    }
 
     private static Body body(Cosmos.Style style, long seed, float yaw, float pitch, float size, float spin, float tilt, int ring) {
         return new Body(style, seed, 0, yaw, pitch, size, spin, tilt, ring, false);
@@ -117,17 +105,15 @@ public final class SpaceSkyRenderer {
         if (SpaceTravel.isSpace(level)) {
             ResourceKey<Level> sector = level.dimension();
             Quaternionf view = new Quaternionf();
-            lightFrom(sector, view, camera);
+            lightFrom(sector, view, camera, clock);
             solid = FlightRenderTypes.SKY_SOLID;
-            if (Cosmos.solar(sector)) {
-                Vec3 toSun = SolarHeat.center().subtract(camera).scale(Cosmos.VIRTUAL_PER_BLOCK);
-                renderSun(poses, out, new Vector3f((float) toSun.x, (float) toSun.y, (float) toSun.z), reach, Cosmos.sector(sector).starColor(), seconds, 1.0F, false);
-            }
+            renderStarsOf(poses, out, sector, view, camera, reach, clock, seconds, false);
             renderStars(poses, out, sector, view, blocks * STAR_FACTOR, 1.0F, seconds);
             for (Body body : BACKDROPS.getOrDefault(sector, List.of())) renderBody(poses, out, body, view, reach, seconds, 1.0F);
             for (Cosmos.Planet planet : Cosmos.planetsIn(sector, mogo)) {
-                sun = sunOf(sector, PlanetBody.center(planet));
-                Vec3 offset = PlanetBody.center(planet).subtract(camera).scale(Cosmos.VIRTUAL_PER_BLOCK);
+                Vec3 at = PlanetBody.center(planet, clock);
+                sun = sunOf(sector, at, clock);
+                Vec3 offset = at.subtract(camera).scale(Cosmos.VIRTUAL_PER_BLOCK);
                 renderPlanet(poses, out, planet, new Vector3f((float) offset.x, (float) offset.y, (float) offset.z), reach, PlanetBody.orientation(planet, sector, clock), Haze.NONE, 1.0F);
             }
             for (Cosmos.Wormhole wormhole : Cosmos.WORMHOLES) {
@@ -143,7 +129,7 @@ public final class SpaceSkyRenderer {
         if (sector == null) return;
         Quaternionf orientation = PlanetBody.orientation(home, sector, clock);
         Quaternionf view = PlanetBody.worldToSurface(orientation);
-        lightFrom(sector, view, PlanetBody.center(home));
+        lightFrom(sector, view, PlanetBody.center(home, clock), clock);
         Vector3fc homeSun = sun;
         solid = FlightRenderTypes.glass();
         float fade = SpaceTravel.atmosphereFade(level, camera.y);
@@ -156,35 +142,33 @@ public final class SpaceSkyRenderer {
         for (Body body : BACKDROPS.getOrDefault(sector, List.of())) {
             renderBody(poses, out, body, view, reach, seconds, body.glows ? 1.0F : starAlpha);
         }
-        Vec3 eye = eye(home, orientation, camera);
-        if (Cosmos.solar(sector)) {
-            Vec3 toSun = SolarHeat.center().subtract(eye).scale(Cosmos.VIRTUAL_PER_BLOCK);
-            renderSun(poses, out, view.transform(new Vector3f((float) toSun.x, (float) toSun.y, (float) toSun.z)), reach, Cosmos.sector(sector).starColor(), seconds, 1.0F, true);
-        }
+        Vec3 eye = eye(home, orientation, camera, clock);
+        renderStarsOf(poses, out, sector, view, eye, reach, clock, seconds, true);
         float neighbourAlpha = overworld ? fade : 1.0F;
         Haze neighbourHaze = new Haze(fog, HAZE * (1.0F - fade), (HAZE_ALPHA + (1.0F - HAZE_ALPHA) * fade) * neighbourAlpha);
         for (Cosmos.Planet planet : Cosmos.planetsIn(sector, mogo)) {
             boolean own = planet == home;
             if (!own && neighbourAlpha <= 0.0F) continue;
             if (own && fade <= 0.0F && planet.ringColor() == 0) continue;
-            Vec3 offset = PlanetBody.center(planet).subtract(eye).scale(Cosmos.VIRTUAL_PER_BLOCK);
+            Vec3 at = PlanetBody.center(planet, clock);
+            Vec3 offset = at.subtract(eye).scale(Cosmos.VIRTUAL_PER_BLOCK);
             Vector3f relative = view.transform(new Vector3f((float) offset.x, (float) offset.y, (float) offset.z));
             Quaternionf rotation = new Quaternionf(view).mul(PlanetBody.orientation(planet, sector, clock));
-            sun = view.transform(sunOf(sector, PlanetBody.center(planet)));
+            sun = view.transform(sunOf(sector, at, clock));
             if (own) renderPlanet(poses, out, planet, relative, reach, rotation, new Haze(fog, 0.0F, fade), OWN_RING_ALPHA);
             else renderPlanet(poses, out, planet, relative, reach, rotation, neighbourHaze, neighbourHaze.alpha);
         }
         sun = homeSun;
     }
 
-    private static Vec3 eye(Cosmos.Planet home, Quaternionf orientation, Vec3 camera) {
+    private static Vec3 eye(Cosmos.Planet home, Quaternionf orientation, Vec3 camera, double clock) {
         double half = home.surfaceHalf();
         float u = (float) Mth.clamp((camera.x - home.regionX()) / half, -1.0, 1.0);
         float w = (float) Mth.clamp(camera.z / half, -1.0, 1.0);
         double climb = Mth.clamp((camera.y - SpaceTravel.ATMOSPHERE_START_Y) / (SpaceTravel.EXIT_ATMOSPHERE_Y - SpaceTravel.ATMOSPHERE_START_Y), 0.0, 1.0);
         float lift = (float) (1.0 + climb * PlanetBody.DEPARTURE_MARGIN / home.footprint());
         Vector3f local = PlanetBody.fromSurface(PlanetBody.SURFACE, new Vector3f(u, lift, w)).mul((float) home.footprint());
-        return PlanetBody.center(home).add(PlanetBody.toWorld(orientation, local));
+        return PlanetBody.center(home, clock).add(PlanetBody.toWorld(orientation, local));
     }
 
     public static float daylight(Vector3fc sunDirection) {
@@ -196,15 +180,24 @@ public final class SpaceSkyRenderer {
         Cosmos.Planet home = Cosmos.planetAt(level.dimension(), position.x);
         ResourceKey<Level> sector = home == null ? null : Cosmos.homeSector(home, CosmosClient.mogoSector());
         if (sector == null) return 1.0F;
-        return daylight(PlanetBody.worldToSurface(PlanetBody.orientation(home, sector, CosmosClient.clock(partialTicks))).transform(sunOf(sector, PlanetBody.center(home))));
+        double clock = CosmosClient.clock(partialTicks);
+        return daylight(PlanetBody.worldToSurface(PlanetBody.orientation(home, sector, clock)).transform(sunOf(sector, PlanetBody.center(home, clock), clock)));
     }
 
-    private static Vector3f sunOf(ResourceKey<Level> sector, Vec3 from) {
-        return Cosmos.sunFrom(sector, from.x, from.y, from.z);
+    private static Vector3f sunOf(ResourceKey<Level> sector, Vec3 from, double clock) {
+        return Cosmos.sunFrom(sector, from.x, from.y, from.z, clock);
     }
 
-    private static void lightFrom(ResourceKey<Level> sector, Quaternionf view, Vec3 from) {
-        sun = view.transform(sunOf(sector, from));
+    private static void renderStarsOf(PoseStack poses, SubmitNodeCollector out, ResourceKey<Level> sector, Quaternionf view, Vec3 from, float reach, double clock, float seconds, boolean surface) {
+        for (Cosmos.Star star : Cosmos.stars(sector, clock)) {
+            Vec3 offset = star.center().subtract(from).scale(Cosmos.VIRTUAL_PER_BLOCK);
+            Vector3f relative = view.transform(new Vector3f((float) offset.x, (float) offset.y, (float) offset.z));
+            renderSun(poses, out, relative, (float) (star.half() * Cosmos.VIRTUAL_PER_BLOCK), reach, star.color(), seconds, 1.0F, surface);
+        }
+    }
+
+    private static void lightFrom(ResourceKey<Level> sector, Quaternionf view, Vec3 from, double clock) {
+        sun = view.transform(sunOf(sector, from, clock));
         Cosmos.Sector info = Cosmos.sector(sector);
         sunColor = ARGB.srgbLerp(0.5F, ARGB.opaque(info == null ? 0xFFF2C0 : info.starColor()), 0xFFFFFFFF);
     }
@@ -281,25 +274,28 @@ public final class SpaceSkyRenderer {
         }
     }
 
-    private static void renderSun(PoseStack poses, SubmitNodeCollector out, Vector3f relative, float reach, int color, float seconds, float alpha, boolean surface) {
-        float size = (float) (Cosmos.SUN_HALF * Cosmos.VIRTUAL_PER_BLOCK);
+    private static void renderSun(PoseStack poses, SubmitNodeCollector out, Vector3f relative, float size, float reach, int color, float seconds, float alpha, boolean surface) {
         float scale = reach / (relative.length() + size * 1.75F);
         Vector3f placed = new Vector3f(relative).mul(scale);
         if (surface) alpha *= horizon(placed);
         if (alpha <= 0.01F) return;
         float half = size * scale;
-        Quaternionf rotation = new Quaternionf().rotateY(seconds * 0.05F).rotateX(0.4F);
-        Frame frame = new Frame(rotation, placed, half, new Vector3f(sun));
         int core = ARGB.srgbLerp(SUN_CORE_WHITE, ARGB.srgbLerp(SUN_WARM_SHARE, ARGB.opaque(color), SUN_WARMTH), 0xFFFFFFFF);
         poses.pushPose();
         poses.translate(placed.x, placed.y, placed.z);
         corona(out, poses, placed, half, color, alpha, seconds);
-        poses.pushPose();
-        poses.rotate(rotation);
-        poses.scale(half, half, half);
-        cube(out, poses, solid, PlanetSurfaces.surface(Cosmos.Style.STAR, color, core, BODY_GRID), BODY_GRID, frame, true, 0, 1.0F, new Haze(0, 0.0F, alpha));
+        disc(out, poses, placed, half, ARGB.color(Math.round(255 * alpha), core));
         poses.popPose();
-        poses.popPose();
+    }
+
+    private static void disc(SubmitNodeCollector out, PoseStack poses, Vector3f toward, float radius, int color) {
+        Vector3f facing = new Vector3f(toward).normalize();
+        Vector3f right = new Vector3f(facing).cross(0.0F, 1.0F, 0.0F);
+        if (right.lengthSquared() < 1.0E-4F) right.set(1.0F, 0.0F, 0.0F);
+        right.normalize().mul(radius);
+        Vector3f up = new Vector3f(right).cross(facing).normalize().mul(radius);
+        Vector3f back = new Vector3f(facing).mul(radius * 0.05F);
+        out.submitCustomGeometry(poses, solid, (pose, buffer) -> point(buffer, pose, back, right, up, color));
     }
 
     private static void renderPlanet(PoseStack poses, SubmitNodeCollector out, Cosmos.Planet planet, Vector3f center, float reach, Quaternionf rotation, Haze haze, float ringAlpha) {

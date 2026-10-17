@@ -15,10 +15,11 @@ public final class SpaceWarp {
         ResourceKey<Level> sector = level.dimension();
         if (!Cosmos.isSector(sector)) return 0.0;
         double nearest = Double.MAX_VALUE;
+        double clock = CosmosClock.now(level);
         for (Cosmos.Planet planet : Cosmos.planetsIn(sector, mogo)) {
-            nearest = Math.min(nearest, position.distanceTo(PlanetBody.center(planet)) - planet.footprint() * Math.sqrt(3.0));
+            nearest = Math.min(nearest, position.distanceTo(PlanetBody.center(planet, clock)) - planet.footprint() * Math.sqrt(3.0));
         }
-        if (Cosmos.solar(sector)) nearest = Math.min(nearest, position.distanceTo(SolarHeat.center()) - Cosmos.SUN_HALF * SolarHeat.WARM);
+        for (Cosmos.Star star : Cosmos.stars(sector, clock)) nearest = Math.min(nearest, position.distanceTo(star.center()) - star.half() * SolarHeat.WARM);
         for (Cosmos.Wormhole wormhole : Cosmos.WORMHOLES) {
             if (wormhole.sector() != sector) continue;
             nearest = Math.min(nearest, position.distanceTo(new Vec3(wormhole.x(), wormhole.y(), wormhole.z())) - Cosmos.WORMHOLE_SIZE);

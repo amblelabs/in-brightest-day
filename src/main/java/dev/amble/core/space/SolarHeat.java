@@ -17,17 +17,20 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 public final class SolarHeat {
-    public static final double WARM = 8.0;
-    private static final double SCORCH = 4.0;
-    private static final double CORONA = 2.0;
-    private static final double SURFACE = 1.1;
+    public static final double WARM = 3.0;
+    private static final double SCORCH = 2.0;
+    private static final double CORONA = 1.45;
+    private static final double SURFACE = 1.05;
     private static final int INTERVAL = 10;
     private static final int WARM_DRAIN = 6;
     private static final int SCORCH_DRAIN = 15;
@@ -47,28 +50,42 @@ public final class SolarHeat {
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> REWARDED.clear());
     }
 
-    public static Vec3 center() {
-        return new Vec3(Cosmos.SUN_X, Cosmos.PLANET_CENTER_Y, Cosmos.SUN_Z);
-    }
-
-    public static double distance(Vec3 position) {
-        return position.distanceTo(center()) / Cosmos.SUN_HALF;
+    public static Cosmos.@Nullable Star nearest(ResourceKey<Level> sector, Vec3 position, double clock) {
+        Cosmos.Star best = null;
+        double closest = Double.MAX_VALUE;
+        for (Cosmos.Star star : Cosmos.stars(sector, clock)) {
+            double reach = position.distanceTo(star.center()) / star.half();
+            if (reach < closest) {
+                closest = reach;
+                best = star;
+            }
+        }
+        return best;
     }
 
     private static void tick(MinecraftServer server) {
         if (server.getTickCount() % INTERVAL != 0) return;
-        ServerLevel sector = server.getLevel(Cosmos.SECTOR_2814);
-        if (sector == null || sector.players().isEmpty()) return;
+        double clock = CosmosClock.now(server);
+        for (Cosmos.Sector info : Cosmos.SECTORS) {
+            ServerLevel sector = server.getLevel(info.key());
+            if (sector != null && !sector.players().isEmpty()) heat(sector, clock);
+        }
+    }
+
+    private static void heat(ServerLevel sector, double clock) {
         long now = sector.getGameTime();
         for (ServerPlayer player : sector.players()) {
             if (player.isSpectator() || player.isCreative() || !player.isAlive()) continue;
-            double reach = distance(player.getBoundingBox().getCenter());
+            Vec3 body = player.getBoundingBox().getCenter();
+            Cosmos.Star star = nearest(sector.dimension(), body, clock);
+            if (star == null) continue;
+            double reach = body.distanceTo(star.center()) / star.half();
             if (reach > WARM) continue;
             boolean red = RedRage.wearsRed(player);
             float resist = red ? RED_RESIST : 1.0F;
 
             if (reach <= SURFACE) {
-                Vec3 out = player.getBoundingBox().getCenter().subtract(center());
+                Vec3 out = body.subtract(star.center());
                 out = out.lengthSqr() < 1.0E-4 ? new Vec3(0.0, 1.0, 0.0) : out.normalize();
                 player.setDeltaMovement(out.scale(SURFACE_BOUNCE));
                 player.connection.send(new ClientboundSetEntityMotionPacket(player));
