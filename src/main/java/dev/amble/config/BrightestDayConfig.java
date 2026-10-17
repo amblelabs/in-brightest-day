@@ -480,6 +480,8 @@ public class BrightestDayConfig extends Config {
     public int greenRingWill = 600;
     public int greenPlayersPerRing = 4;
     public int orangeHoardValue = 256;
+    @ValidatedInt.Restrict(min = 0, max = 100)
+    public int orangeHungerPerSecond = 5;
     @ValidatedInt.Restrict(min = 30, max = 1800)
     public int orangeDuelSeconds = 180;
     @ValidatedInt.Restrict(min = 6, max = 48)

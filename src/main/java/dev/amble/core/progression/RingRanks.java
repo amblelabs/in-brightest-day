@@ -152,11 +152,15 @@ public final class RingRanks {
         int tier = ranks.rank(corps) + 1;
         if (tier > MAX_RANK) return;
         Milestone milestone = ranks.milestone(corps, tier).orElse(null);
-        if (milestone == null || milestone.trigger() != trigger || !milestone.condition().test(player, context)) return;
+        if (milestone == null || milestone.trigger() != trigger) return;
+        if (!milestone.condition().test(player, context)) {
+            if (milestone.mode() == Milestone.Mode.STREAK && ranks.counter(milestone.key()) > 0) player.setAttached(RANKS, ranks.withCounter(milestone.key(), 0));
+            return;
+        }
 
         int current = ranks.counter(milestone.key());
         int value = switch (milestone.mode()) {
-            case ACCUMULATE -> current + amount;
+            case ACCUMULATE, STREAK -> current + amount;
             case REACH -> Math.max(current, amount);
             case DISTINCT -> {
                 String maskKey = milestone.key() + "_mask";

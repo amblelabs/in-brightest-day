@@ -7,10 +7,14 @@ import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.progression.EmotionSources;
 import dev.amble.core.progression.RingRanks;
+import dev.amble.core.progression.RingOffers;
+import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.team.LanternTeams;
 import dev.amble.core.team.RingDamage;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -32,6 +36,12 @@ public final class CorpsCombat {
     private static final float RED_DESPERATION = 0.5F;
     private static final float RED_COST = 1.4F;
     private static final int ORANGE_CHARGE_PER_DAMAGE = 4;
+    private static final int ORANGE_MOB_CHARGE_PER_DAMAGE = 1;
+    private static final int ORANGE_MOB_CHARGE_PER_MINUTE = 200;
+    private static final long MINUTE_TICKS = 1200;
+    private static final float ORANGE_DAMAGE = 0.85F;
+    private static final float ORANGE_COST = 1.15F;
+    private static final int HUNGER_WARNING_SECONDS = 10;
     private static final float BLUE_DAMAGE = 0.5F;
     private static final float BLUE_COST = 0.6F;
     private static final float INDIGO_UTILITY_COST = 0.7F;
@@ -40,14 +50,20 @@ public final class CorpsCombat {
     private static final long COMBAT_TICKS = 100;
 
     private static final Map<UUID, Long> LAST_RING_HIT = new HashMap<>();
+    private static final Map<UUID, long[]> MOB_THEFT = new HashMap<>();
 
     public static void init() {
         ServerTickEvents.END_SERVER_TICK.register(server -> {
-            if (server.getTickCount() % 200 != 0 || LAST_RING_HIT.isEmpty()) return;
+            if (server.getTickCount() % 20 == 0) hunger(server);
+            if (server.getTickCount() % 200 != 0) return;
             long now = server.overworld().getGameTime();
             LAST_RING_HIT.values().removeIf(last -> now - last > COMBAT_TICKS);
+            MOB_THEFT.values().removeIf(window -> now - window[0] >= MINUTE_TICKS);
         });
-        ServerLifecycleEvents.SERVER_STOPPED.register(server -> LAST_RING_HIT.clear());
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+            LAST_RING_HIT.clear();
+            MOB_THEFT.clear();
+        });
     }
 
     public static float scaleDamage(DamageSource source, float amount) {
@@ -60,6 +76,7 @@ public final class CorpsCombat {
             case YELLOW -> amount * YELLOW_DAMAGE;
             case RED -> amount * RED_DAMAGE * (1.0F + RED_DESPERATION * (1.0F - player.getHealth() / player.getMaxHealth()));
             case BLUE -> amount * BLUE_DAMAGE;
+            case ORANGE -> amount * ORANGE_DAMAGE;
             case STAR_SAPPHIRE -> bonded(player) ? amount * SAPPHIRE_DAMAGE : amount;
             default -> amount;
         };
@@ -75,7 +92,7 @@ public final class CorpsCombat {
                 victim.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, FEAR_TICKS, 0), player);
                 EmotionSources.feared(victim, player);
             }
-            case ORANGE -> steal(player, victim, Math.round(amount * ORANGE_CHARGE_PER_DAMAGE));
+            case ORANGE -> steal(player, victim, amount);
             default -> {}
         }
     }
@@ -86,6 +103,7 @@ public final class CorpsCombat {
             case GREEN -> GREEN_COST;
             case RED -> RED_COST;
             case BLUE -> BLUE_COST;
+            case ORANGE -> ORANGE_COST;
             default -> 1.0F;
         };
         return Math.max(1, Math.round(amount * multiplier));
@@ -96,23 +114,54 @@ public final class CorpsCombat {
         return Math.max(1, Math.round(amount * INDIGO_UTILITY_COST));
     }
 
-    private static void steal(ServerPlayer thief, LivingEntity victim, int amount) {
-        if (amount <= 0) return;
-        boolean lantern = false;
-        if (victim instanceof Player target) {
-            ItemStack ring = PowerRingItem.getWornRing(target);
-            if (!ring.isEmpty()) {
-                lantern = true;
-                amount = Math.min(amount, PowerRingItem.getRingPower(ring));
-                PowerRingItem.drainRing(ring, amount);
-                if (ring == BrightestDayAttachments.getRing(target)) BrightestDayAttachments.setRing(target, ring);
-            }
+    private static void steal(ServerPlayer thief, LivingEntity victim, float damage) {
+        ItemStack victimRing = victim instanceof Player target ? PowerRingItem.getWornRing(target) : ItemStack.EMPTY;
+        boolean lantern = !victimRing.isEmpty();
+        int amount;
+        if (lantern) {
+            amount = Math.min(Math.round(damage * ORANGE_CHARGE_PER_DAMAGE), PowerRingItem.getRingPower(victimRing));
+            if (amount <= 0) return;
+            PowerRingItem.drainRing(victimRing, amount);
+            if (victim instanceof Player target && victimRing == BrightestDayAttachments.getRing(target)) BrightestDayAttachments.setRing(target, victimRing);
+        } else {
+            amount = mobTheft(thief, Math.round(damage * ORANGE_MOB_CHARGE_PER_DAMAGE));
+            if (amount <= 0) return;
         }
 
         ItemStack ring = PowerRingItem.getWornRing(thief);
         PowerRingItem.chargeRing(ring, amount);
         RingRanks.fire(thief, Trigger.STEAL, new Milestone.Context(victim, lantern ? "lantern" : "", true, false), amount);
         if (ring == BrightestDayAttachments.getRing(thief)) BrightestDayAttachments.setRing(thief, ring);
+    }
+
+    private static int mobTheft(ServerPlayer thief, int wanted) {
+        if (wanted <= 0) return 0;
+        long now = thief.level().getGameTime();
+        long[] window = MOB_THEFT.computeIfAbsent(thief.getUUID(), id -> new long[]{now, 0L});
+        if (now - window[0] >= MINUTE_TICKS) {
+            window[0] = now;
+            window[1] = 0L;
+        }
+        int allowed = (int) Math.min(wanted, ORANGE_MOB_CHARGE_PER_MINUTE - window[1]);
+        if (allowed <= 0) return 0;
+        window[1] += allowed;
+        return allowed;
+    }
+
+    private static void hunger(MinecraftServer server) {
+        BrightestDayConfig config = BrightestDayConfig.get();
+        if (config.orangeHungerPerSecond <= 0) return;
+        boolean warn = server.getTickCount() % (20 * HUNGER_WARNING_SECONDS) == 0;
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            if (player.isCreative() || player.isSpectator()) continue;
+            ItemStack ring = PowerRingItem.getWornRing(player);
+            if (PowerRingItem.getCorps(ring).orElse(null) != LanternCorps.ORANGE || PowerRingItem.getRingPower(ring) <= 0) continue;
+            int hoard = RingOffers.hoard(player);
+            if (hoard >= config.orangeHoardValue) continue;
+            PowerRingItem.drainRing(ring, config.orangeHungerPerSecond);
+            if (ring == BrightestDayAttachments.getRing(player)) BrightestDayAttachments.setRing(player, ring);
+            if (warn) player.sendOverlayMessage(Component.translatable("message.brightestday.orange.hunger", hoard, config.orangeHoardValue).withColor(LanternCorps.ORANGE.color()));
+        }
     }
 
     public static boolean recentlyFought(Player player) {

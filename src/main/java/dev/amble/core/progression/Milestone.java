@@ -10,7 +10,8 @@ public record Milestone(String key, LanternCorps corps, int tier, int goal, Trig
     public enum Mode {
         ACCUMULATE,
         REACH,
-        DISTINCT
+        DISTINCT,
+        STREAK
     }
 
     @FunctionalInterface
