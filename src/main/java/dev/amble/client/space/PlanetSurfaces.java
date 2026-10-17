@@ -84,6 +84,8 @@ public final class PlanetSurfaces {
             case QWARD -> mix(0x3A0608, m > 0.2F ? 0x8A1A1A : 0x5A0A10, n * 0.5F + 0.5F);
             case MARS -> lat > 0.86F ? 0xF4EEE8 : mix(0xA04020, 0xC8603A, n * 0.5F + 0.5F);
             case ROCK -> m > 0.35F ? 0x5A5A5E : mix(0x7A7A7E, 0xA8A8AC, n * 0.5F + 0.5F);
+            case MOON -> Math.abs(m) < 0.05F ? 0x6E6E70 : m > 0.4F ? 0x7E7E80 : mix(0x9C9C9E, 0xC8C8CA, n * 0.5F + 0.5F);
+            case MERCURY -> Math.abs(m) < 0.03F ? 0xC85A1E : mix(0x4A4440, 0x7A706A, n * 0.5F + 0.5F);
             case GAS -> band(p.y() * 9.0F + n * 1.8F, 0xD8B48A, 0xB07A50, 0xEAD8B8);
             case RINGED_GAS -> band(p.y() * 8.0F + n * 1.2F, 0xE8D8A8, 0xC8B080, 0xF4ECD0);
             case ICE -> band(p.y() * 6.0F + n * 1.5F, 0x3A6AE0, 0x5A8AF0, 0x4A7AE8);

@@ -14,6 +14,8 @@ public final class SpaceTravel {
     public static final double REENTRY_Y = EXIT_ATMOSPHERE_Y - 24;
     public static final double SPACE_FLOOR_Y = 16;
     public static final double SPACE_GRAVITY_SCALE = 0.08;
+    public static final double MOON_GRAVITY_SCALE = 0.17;
+    public static final double MARS_GRAVITY_SCALE = 0.38;
     public static final int COOLDOWN_TICKS = 10;
 
     public static boolean isSpace(Level level) {
@@ -31,7 +33,10 @@ public final class SpaceTravel {
     }
 
     public static double gravityScale(Level level) {
-        Cosmos.Sector sector = Cosmos.sector(level.dimension());
+        ResourceKey<Level> dimension = level.dimension();
+        if (dimension == Cosmos.MOON) return MOON_GRAVITY_SCALE;
+        if (dimension == Cosmos.MARS || dimension == Cosmos.MERCURY) return MARS_GRAVITY_SCALE;
+        Cosmos.Sector sector = Cosmos.sector(dimension);
         if (sector == null || sector.antimatter()) return 1.0;
         return SPACE_GRAVITY_SCALE;
     }

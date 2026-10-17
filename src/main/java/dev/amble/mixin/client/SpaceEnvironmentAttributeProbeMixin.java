@@ -1,5 +1,6 @@
 package dev.amble.mixin.client;
 
+import dev.amble.client.space.PlanetSurfaces;
 import dev.amble.client.space.SpaceSkyRenderer;
 import dev.amble.core.space.Cosmos;
 import dev.amble.core.space.SpaceTravel;
@@ -59,7 +60,7 @@ public class SpaceEnvironmentAttributeProbeMixin {
             float shade = NIGHT_SHADE + (1.0F - NIGHT_SHADE) * daylight;
             if (attribute == EnvironmentAttributes.SKY_COLOR) value = brightestday$rgb(planet.sky() != 0 ? planet.sky() : EARTH_SKY).mul(shade);
             else if (attribute == EnvironmentAttributes.FOG_COLOR) value = brightestday$rgb(planet.fog() != 0 ? planet.fog() : EARTH_FOG).mul(shade);
-            else if (attribute == EnvironmentAttributes.CLOUD_COLOR) value = new Vector4f(brightestday$rgb(planet.clouds() != 0 ? planet.clouds() : EARTH_CLOUDS).mul(shade), 0.9F);
+            else if (attribute == EnvironmentAttributes.CLOUD_COLOR) value = new Vector4f(brightestday$rgb(planet.clouds() != 0 ? planet.clouds() : EARTH_CLOUDS).mul(shade), PlanetSurfaces.atmosphere(planet.style()) == 0 ? 0.0F : 0.9F);
             else if (attribute == EnvironmentAttributes.STAR_BRIGHTNESS) value = 0.0F;
             else if (attribute == EnvironmentAttributes.SUNRISE_SUNSET_COLOR) value = new Vector4f(((Vector4fc) value).x(), ((Vector4fc) value).y(), ((Vector4fc) value).z(), 0.0F);
             cir.setReturnValue(value);

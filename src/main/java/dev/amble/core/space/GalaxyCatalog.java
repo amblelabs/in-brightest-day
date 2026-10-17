@@ -12,7 +12,7 @@ public final class GalaxyCatalog {
     private static final long CATALOG_SEED = 0x2814_0000_0666_0001L;
     private static final int MIN_PLANETS = 3;
     private static final int EXTRA_PLANETS = 3;
-    private static final int STARS = 150;
+    private static final int STARS = 400;
     private static final double MIN_DISTANCE = 20000.0 / Cosmos.COMPRESSION;
     private static final double MAX_DISTANCE = 60000.0 / Cosmos.COMPRESSION;
     private static final double MIN_SCALE = 0.35;

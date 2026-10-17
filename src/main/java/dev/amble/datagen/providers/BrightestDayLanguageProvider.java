@@ -1237,6 +1237,10 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.wormhole.antimatter", "The Antimatter Wormhole churns toward %s");
         builder.add("message.brightestday.wormhole.arrived", "You emerge in %s.");
         builder.add("message.brightestday.space.nothing_below", "Only empty space below. Find a planet to land on.");
+        builder.add("message.brightestday.sun.heat", "The sun's heat bleeds your ring.");
+        builder.add("message.brightestday.sun.scorch", "You are burning. Turn back or push for the corona.");
+        builder.add("message.brightestday.sun.surface", "The sun hurls you back.");
+        builder.add("message.brightestday.sun.touched", "You touched the sun. Your ring blazes at full power.");
         builder.add("dimension.brightestday.rocky_world", "Rocky Worlds");
         builder.add("dimension.brightestday.ice_world", "Ice Worlds");
         builder.add("dimension.brightestday.desert_world", "Desert Worlds");

@@ -1,5 +1,8 @@
 package dev.amble.core.space;
 
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix3f;
 import org.joml.Quaternionf;
@@ -10,7 +13,9 @@ import org.jspecify.annotations.Nullable;
 import java.util.Random;
 
 public final class PlanetBody {
-    public static final double SPIN_DEGREES_PER_TICK = 360.0 / 24000.0;
+    public static final double DAY = 24000.0;
+    private static final double NOON = 6000.0;
+    private static final double FIXED_MIDNIGHT = 18000.0;
     public static final double DEPARTURE_MARGIN = 6.0;
 
     public static final Vector3fc[][] FACES = {
@@ -27,13 +32,21 @@ public final class PlanetBody {
 
     public record Entry(int face, double u, double v) {}
 
-    public static Quaternionf orientation(Cosmos.Planet planet, double ticks) {
+    public static Quaternionf orientation(Cosmos.Planet planet, @Nullable ResourceKey<Level> sector, double clock) {
+        Vec3 center = center(planet);
+        Vector3f sun = Cosmos.sunFrom(sector, center.x, center.y, center.z);
         Random random = new Random(planet.seed() ^ 0x5EEDL);
-        double spin = Math.toRadians((ticks * SPIN_DEGREES_PER_TICK) % 360.0);
-        return new Quaternionf().rotateY(random.nextFloat() * (float) (Math.PI * 2.0))
-                .rotateX((random.nextFloat() - 0.5F) * 1.2F)
-                .rotateZ((random.nextFloat() - 0.5F) * 1.2F)
-                .rotateY((float) spin);
+        Vector3f helper = Math.abs(sun.y) < 0.9F ? new Vector3f(0, 1, 0) : new Vector3f(1, 0, 0);
+        Vector3f first = new Vector3f(sun).cross(helper).normalize();
+        Vector3f second = new Vector3f(sun).cross(first).normalize();
+        float around = random.nextFloat() * (float) (Math.PI * 2.0);
+        Vector3f axis = first.mul(Mth.cos(around)).add(second.mul(Mth.sin(around))).normalize();
+        Quaternionf base = new Quaternionf().rotationTo(new Vector3f(0, 1, 0), axis);
+        Vector3f local = new Quaternionf(base).conjugate().transform(new Vector3f(sun));
+        double noon = Math.atan2(local.x, local.z);
+        double time = planet == Cosmos.OA_PLANET ? FIXED_MIDNIGHT : clock;
+        double turn = ((time - NOON) % DAY) / DAY * Math.PI * 2.0;
+        return base.rotateY((float) (noon + turn));
     }
 
     private static Quaternionf frame(int face) {
@@ -63,8 +76,8 @@ public final class PlanetBody {
         return new Vec3(world.x, world.y, world.z);
     }
 
-    public static @Nullable Entry entry(Cosmos.Planet planet, double ticks, Vec3 from, Vec3 to) {
-        Quaternionf orientation = orientation(planet, ticks);
+    public static @Nullable Entry entry(Cosmos.Planet planet, @Nullable ResourceKey<Level> sector, double clock, Vec3 from, Vec3 to) {
+        Quaternionf orientation = orientation(planet, sector, clock);
         double half = planet.footprint();
         Vec3 center = center(planet);
         Vector3f a = toLocal(orientation, from.subtract(center)).div((float) half);

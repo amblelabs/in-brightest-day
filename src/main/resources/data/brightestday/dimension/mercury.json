@@ -1,0 +1,8 @@
+{
+  "type": "brightestday:planet",
+  "generator": {
+    "type": "minecraft:noise",
+    "biome_source": {"type": "minecraft:fixed", "biome": "brightestday:mercury_scorch"},
+    "settings": "brightestday:mercury"
+  }
+}

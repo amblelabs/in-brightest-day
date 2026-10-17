@@ -49,6 +49,7 @@ import dev.amble.core.networking.payloads.s2c.BulwarkS2CPayload;
 import dev.amble.core.networking.payloads.s2c.GravityBallS2CPayload;
 import dev.amble.core.networking.payloads.s2c.FlightBoostS2CPayload;
 import dev.amble.core.networking.payloads.s2c.CosmosS2CPayload;
+import dev.amble.core.networking.payloads.s2c.ClockS2CPayload;
 import dev.amble.core.networking.payloads.s2c.ChargeS2CPayload;
 import dev.amble.core.networking.payloads.s2c.ChainBoltS2CPayload;
 import dev.amble.core.networking.payloads.s2c.ConcussiveS2CPayload;
@@ -167,6 +168,7 @@ public class Networking {
         PayloadTypeRegistry.clientboundPlay().register(GravityBallS2CPayload.TYPE, GravityBallS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(FlightBoostS2CPayload.TYPE, FlightBoostS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(CosmosS2CPayload.TYPE, CosmosS2CPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(ClockS2CPayload.TYPE, ClockS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(LightOrbS2CPayload.TYPE, LightOrbS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(PlayerStateS2CPayload.TYPE, PlayerStateS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(NovaS2CPayload.TYPE, NovaS2CPayload.CODEC);

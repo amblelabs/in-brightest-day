@@ -4,6 +4,7 @@ import dev.amble.BrightestDay;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
+import org.joml.Vector3f;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -21,15 +22,26 @@ public final class Cosmos {
     public static final double REGION_SPACING = 100000.0;
     public static final double PLANET_CENTER_Y = 400.0;
     public static final double WORMHOLE_SIZE = 30.0;
+    public static final double SUN_X = 0.0;
+    public static final double SUN_Z = 0.0;
+    public static final double SUN_HALF = 60.0;
+    private static final double EARTH_ORBIT = 1000.0;
+    private static final double MOON_ORBIT = 320.0;
     public static volatile ResourceKey<Level> knownMogo = key("sector_0");
     private static final double HUB = 15000.0 / COMPRESSION;
     private static final double RIFT = 7000.0 / COMPRESSION;
     private static final double WORMHOLE_Y = 520.0;
     private static final double ARRIVAL_OFFSET = 90.0;
 
-    public enum Style { EARTH, OA, MOGO, ODYM, RYUT, ZAMARON, QWARD, ROCK, GAS, RINGED_GAS, ICE, MARS, STAR, DESERT, LAVA }
+    public enum Style { EARTH, OA, MOGO, ODYM, RYUT, ZAMARON, QWARD, ROCK, GAS, RINGED_GAS, ICE, MARS, STAR, DESERT, LAVA, MOON, MERCURY }
 
-    public record Sector(ResourceKey<Level> key, String id, int starColor, boolean antimatter) {}
+    public record Sector(ResourceKey<Level> key, String id, int starColor, boolean antimatter, float sunYaw, float sunPitch) {
+        public Vector3f sun() {
+            double yaw = Math.toRadians(this.sunYaw);
+            double pitch = Math.toRadians(this.sunPitch);
+            return new Vector3f((float) (Math.cos(pitch) * Math.sin(yaw)), (float) Math.sin(pitch), (float) (-Math.cos(pitch) * Math.cos(yaw)));
+        }
+    }
 
     public record Planet(String id, @Nullable ResourceKey<Level> sector, @Nullable ResourceKey<Level> surface, Style style, long seed, double x, double z, double scale,
                          int ringColor, int sky, int fog, int clouds, String name, int region) {
@@ -61,6 +73,9 @@ public final class Cosmos {
     public static final ResourceKey<Level> RYUT = key("ryut");
     public static final ResourceKey<Level> ZAMARON = key("zamaron");
     public static final ResourceKey<Level> QWARD = key("qward");
+    public static final ResourceKey<Level> MOON = key("moon");
+    public static final ResourceKey<Level> MARS = key("mars");
+    public static final ResourceKey<Level> MERCURY = key("mercury");
     public static final ResourceKey<Level> GENERIC_ROCKY = key("rocky_world");
     public static final ResourceKey<Level> GENERIC_ICE = key("ice_world");
     public static final ResourceKey<Level> GENERIC_DESERT = key("desert_world");
@@ -68,14 +83,17 @@ public final class Cosmos {
     private static final List<ResourceKey<Level>> GENERIC = List.of(GENERIC_ROCKY, GENERIC_ICE, GENERIC_DESERT, GENERIC_LAVA);
 
     public static final List<Sector> SECTORS = List.of(
-            new Sector(SECTOR_2814, "sector_2814", 0xFFF2C0, false),
-            new Sector(SECTOR_0, "sector_0", 0xD8F4FF, false),
-            new Sector(SECTOR_666, "sector_666", 0xFF3A1E, false),
-            new Sector(SECTOR_1416, "sector_1416", 0xFF8AE0, false),
-            new Sector(ODYM_GALAXY, "odym_galaxy", 0x7AB8FF, false),
-            new Sector(ANTIMATTER, "antimatter", 0x6A0010, true));
+            new Sector(SECTOR_2814, "sector_2814", 0xFFF2C0, false, 60.0F, 28.0F),
+            new Sector(SECTOR_0, "sector_0", 0xD8F4FF, false, 40.0F, 30.0F),
+            new Sector(SECTOR_666, "sector_666", 0xFF3A1E, false, 80.0F, 22.0F),
+            new Sector(SECTOR_1416, "sector_1416", 0xFF8AE0, false, -60.0F, 35.0F),
+            new Sector(ODYM_GALAXY, "odym_galaxy", 0x7AB8FF, false, 120.0F, 40.0F),
+            new Sector(ANTIMATTER, "antimatter", 0x6A0010, true, 30.0F, 20.0F));
 
-    public static final Planet EARTH = new Planet("earth", SECTOR_2814, Level.OVERWORLD, Style.EARTH, 2814L, 0.0, 0.0, 1.0, 0, 0, 0, 0, "", -1);
+    public static final Planet EARTH = new Planet("earth", SECTOR_2814, Level.OVERWORLD, Style.EARTH, 2814L, EARTH_ORBIT, 0.0, 1.0, 0, 0, 0, 0, "", -1);
+    public static final Planet MOON_PLANET = new Planet("moon", SECTOR_2814, MOON, Style.MOON, 3844L, EARTH_ORBIT, MOON_ORBIT, 0.35, 0, 0x05060A, 0x0B0C12, 0, "The Moon", -1);
+    public static final Planet MERCURY_PLANET = new Planet("mercury", SECTOR_2814, MERCURY, Style.MERCURY, 579L, -366.0, -133.0, 0.38, 0, 0x0A0806, 0x1C1610, 0, "Mercury", -1);
+    public static final Planet MARS_PLANET = new Planet("mars", SECTOR_2814, MARS, Style.MARS, 2279L, -1100.0, 1050.0, 0.53, 0, 0xC08868, 0xD09A78, 0xE8C0A0, "Mars", -1);
     public static final Planet OA_PLANET = new Planet("oa", SECTOR_0, OA, Style.OA, 1L, 0.0, 0.0, 1.0, 0, 0x141A22, 0x1B222B, 0x303A44, "", -1);
     public static final Planet MOGO_PLANET = new Planet("mogo", null, MOGO, Style.MOGO, 2L, MOGO_X, MOGO_Z, 0.8, 0x00E03C, 0, 0, 0, "", -1);
     public static final Planet ODYM_PLANET = new Planet("odym", ODYM_GALAXY, ODYM, Style.ODYM, 3L, 0.0, 0.0, 1.0, 0, 0x6FB8C8, 0x9ED8C0, 0xE8FFF4, "", -1);
@@ -83,7 +101,7 @@ public final class Cosmos {
     public static final Planet ZAMARON_PLANET = new Planet("zamaron", SECTOR_1416, ZAMARON, Style.ZAMARON, 1416L, 0.0, 0.0, 1.0, 0, 0xC88A9A, 0xD8A0A8, 0xF0D0D8, "", -1);
     public static final Planet QWARD_PLANET = new Planet("qward", ANTIMATTER, QWARD, Style.QWARD, 9L, 0.0, 0.0, 1.0, 0, 0x2A0408, 0x3A0A0C, 0x501418, "", -1);
 
-    private static final List<Planet> HOMES = List.of(OA_PLANET, ODYM_PLANET, RYUT_PLANET, ZAMARON_PLANET, QWARD_PLANET);
+    private static final List<Planet> HOMES = List.of(MOON_PLANET, MERCURY_PLANET, MARS_PLANET, OA_PLANET, ODYM_PLANET, RYUT_PLANET, ZAMARON_PLANET, QWARD_PLANET);
 
     public static final List<Wormhole> WORMHOLES = List.of(
             hub("to_2814", HUB, 0.0, SECTOR_2814),
@@ -99,7 +117,7 @@ public final class Cosmos {
 
 
     public static final GalaxyCatalog.Catalog CATALOG = GalaxyCatalog.generate(SECTORS,
-            List.of(EARTH, OA_PLANET, MOGO_PLANET, ODYM_PLANET, RYUT_PLANET, ZAMARON_PLANET, QWARD_PLANET), WORMHOLES);
+            List.of(EARTH, MOON_PLANET, MERCURY_PLANET, MARS_PLANET, OA_PLANET, MOGO_PLANET, ODYM_PLANET, RYUT_PLANET, ZAMARON_PLANET, QWARD_PLANET), WORMHOLES);
 
     private static Wormhole hub(String id, double x, double z, ResourceKey<Level> destination) {
         double[] arrival = arrival(x, z);
@@ -126,13 +144,33 @@ public final class Cosmos {
         return null;
     }
 
+    public static boolean solar(@Nullable ResourceKey<Level> sector) {
+        return sector == SECTOR_2814;
+    }
+
+    public static Vector3f sunFrom(@Nullable ResourceKey<Level> sector, double x, double y, double z) {
+        if (!solar(sector)) return sunDirection(sector);
+        Vector3f toward = new Vector3f((float) (SUN_X - x), (float) (PLANET_CENTER_Y - y), (float) (SUN_Z - z));
+        return toward.lengthSquared() < 1.0E-6F ? sunDirection(sector) : toward.normalize();
+    }
+
+    public static Vector3f sunDirection(@Nullable ResourceKey<Level> key) {
+        Sector sector = key == null ? null : sector(key);
+        return sector == null ? SECTORS.getFirst().sun() : sector.sun();
+    }
+
     public static boolean isSector(ResourceKey<Level> key) {
         return sector(key) != null;
     }
 
     public static List<Planet> planetsIn(ResourceKey<Level> sector, @Nullable ResourceKey<Level> mogoSector) {
         List<Planet> planets = new ArrayList<>();
-        if (sector == SECTOR_2814) planets.add(EARTH);
+        if (sector == SECTOR_2814) {
+            planets.add(EARTH);
+            planets.add(MOON_PLANET);
+            planets.add(MERCURY_PLANET);
+            planets.add(MARS_PLANET);
+        }
         if (sector == SECTOR_0) planets.add(OA_PLANET);
         if (sector == SECTOR_666) planets.add(RYUT_PLANET);
         if (sector == SECTOR_1416) planets.add(ZAMARON_PLANET);

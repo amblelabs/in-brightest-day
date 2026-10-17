@@ -108,8 +108,9 @@ public final class SpaceHandoff {
         }
         for (Cosmos.Planet planet : Cosmos.planetsIn(dimension, mogo)) {
             if (grace != null && grace.planet().equals(planet.id())) continue;
-            PlanetBody.Entry entry = PlanetBody.entry(planet, ticks, from, to);
-            if (entry != null) return land(server, player, planet, entry, ticks);
+            long clock = CosmosClock.now(server);
+            PlanetBody.Entry entry = PlanetBody.entry(planet, dimension, clock, from, to);
+            if (entry != null) return land(server, player, planet, entry, dimension, clock);
         }
 
         if (player.getY() > SpaceTravel.SPACE_FLOOR_Y) return false;
@@ -120,8 +121,8 @@ public final class SpaceHandoff {
         return false;
     }
 
-    private static boolean land(MinecraftServer server, ServerPlayer player, Cosmos.Planet planet, PlanetBody.Entry entry, long ticks) {
-        Quaternionf orientation = PlanetBody.orientation(planet, ticks);
+    private static boolean land(MinecraftServer server, ServerPlayer player, Cosmos.Planet planet, PlanetBody.Entry entry, ResourceKey<Level> sector, long clock) {
+        Quaternionf orientation = PlanetBody.orientation(planet, sector, clock);
         double half = planet.surfaceHalf();
         double x = planet.regionX() + Mth.clamp(entry.u(), -EDGE, EDGE) * half;
         double z = -Mth.clamp(entry.v(), -EDGE, EDGE) * half;
@@ -135,7 +136,7 @@ public final class SpaceHandoff {
 
     private static boolean depart(MinecraftServer server, ServerPlayer player, Cosmos.Planet planet, ResourceKey<Level> sector) {
         long ticks = player.level().getGameTime();
-        Quaternionf orientation = PlanetBody.orientation(planet, ticks);
+        Quaternionf orientation = PlanetBody.orientation(planet, sector, CosmosClock.now(server));
         int face = PlanetBody.SURFACE;
         double half = planet.surfaceHalf();
         float u = (float) Mth.clamp((player.getX() - planet.regionX()) / half, -EDGE, EDGE);

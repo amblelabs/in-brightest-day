@@ -18,6 +18,7 @@ public final class SpaceWarp {
         for (Cosmos.Planet planet : Cosmos.planetsIn(sector, mogo)) {
             nearest = Math.min(nearest, position.distanceTo(PlanetBody.center(planet)) - planet.footprint() * Math.sqrt(3.0));
         }
+        if (Cosmos.solar(sector)) nearest = Math.min(nearest, position.distanceTo(SolarHeat.center()) - Cosmos.SUN_HALF * SolarHeat.WARM);
         for (Cosmos.Wormhole wormhole : Cosmos.WORMHOLES) {
             if (wormhole.sector() != sector) continue;
             nearest = Math.min(nearest, position.distanceTo(new Vec3(wormhole.x(), wormhole.y(), wormhole.z())) - Cosmos.WORMHOLE_SIZE);
