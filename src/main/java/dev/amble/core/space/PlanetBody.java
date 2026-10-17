@@ -18,7 +18,7 @@ public final class PlanetBody {
     private static final double FIXED_MIDNIGHT = 18000.0;
     public static final double DEPARTURE_MARGIN = 6.0;
     private static final double ORBIT_PERIOD = 240000.0;
-    private static final double ORBIT_REFERENCE = 2400.0;
+    private static final double ORBIT_REFERENCE = 2400.0 * Cosmos.SPREAD;
     private static final double MOON_PERIOD = 48000.0;
 
     public static final Vector3fc[][] FACES = {

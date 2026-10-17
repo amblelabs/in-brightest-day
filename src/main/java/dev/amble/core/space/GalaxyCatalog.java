@@ -13,14 +13,14 @@ public final class GalaxyCatalog {
     private static final int MIN_PLANETS = 3;
     private static final int EXTRA_PLANETS = 3;
     private static final int STARS = 400;
-    private static final double MIN_DISTANCE = 20000.0 / Cosmos.COMPRESSION;
-    private static final double MAX_DISTANCE = 60000.0 / Cosmos.COMPRESSION;
+    private static final double MIN_DISTANCE = 20000.0 / Cosmos.COMPRESSION * Cosmos.SPREAD;
+    private static final double MAX_DISTANCE = 60000.0 / Cosmos.COMPRESSION * Cosmos.SPREAD;
     private static final double MIN_SCALE = 0.35;
     private static final double MAX_SCALE = 0.8;
-    private static final double SEPARATION = 2000.0 / Cosmos.COMPRESSION;
-    private static final double WORMHOLE_CLEARANCE = 1500.0 / Cosmos.COMPRESSION;
+    private static final double SEPARATION = 2000.0 / Cosmos.COMPRESSION * Cosmos.SPREAD;
+    private static final double WORMHOLE_CLEARANCE = 1500.0 / Cosmos.COMPRESSION * Cosmos.SPREAD;
     private static final int ATTEMPTS = 60;
-    private static final double LAYOUT_FOOTPRINT = 75.0;
+    private static final double LAYOUT_FOOTPRINT = 75.0 * Cosmos.SPREAD;
     private static final String[] SYLLABLES = {"ka", "tor", "xen", "bal", "ris", "ul", "mor", "dra", "vey", "sol", "quen", "ith", "zar", "lo", "pha", "gor", "nev", "ash", "tel", "ry"};
     private static final int[] STAR_COLORS = {0x9DB4FF, 0xCAD8FF, 0xF8F7FF, 0xFFF4EA, 0xFFE8A0, 0xFFB46B, 0xFF7A4A};
 

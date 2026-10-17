@@ -13,27 +13,29 @@ import java.util.List;
 
 public final class Cosmos {
     public static final double COMPRESSION = 10.0;
-    public static final double PLANET_HALF_SIZE = 6000.0;
+    public static final double SPREAD = 3.0;
+    public static final double STAR_SCALE = 1.5;
+    public static final double PLANET_HALF_SIZE = 12000.0;
     public static final double VIRTUAL_PER_BLOCK = 4.0 * COMPRESSION;
     public static final double FOOTPRINT = PLANET_HALF_SIZE / VIRTUAL_PER_BLOCK;
-    public static final double SURFACE_SCALE = 4.0 * COMPRESSION;
-    public static final double MOGO_X = 24000.0 / COMPRESSION;
-    public static final double MOGO_Z = -24000.0 / COMPRESSION;
+    public static final double SURFACE_SCALE = 2.0 * COMPRESSION;
+    public static final double MOGO_X = 24000.0 / COMPRESSION * SPREAD;
+    public static final double MOGO_Z = -24000.0 / COMPRESSION * SPREAD;
 
     public static final double REGION_SPACING = 100000.0;
     public static final double PLANET_CENTER_Y = 400.0;
     public static final double WORMHOLE_SIZE = 30.0;
     public static final double BINARY_PERIOD = 48000.0;
-    public static final double BINARY_NEAR = 360.0;
-    public static final double BINARY_FAR = 520.0;
-    public static final double BINARY_COMPANION_HALF = 125.0;
+    public static final double BINARY_NEAR = 360.0 * 2.0;
+    public static final double BINARY_FAR = 520.0 * 2.0;
+    public static final double BINARY_COMPANION_HALF = 125.0 * STAR_SCALE;
     public static final int BINARY_COMPANION_COLOR = 0xC0102A;
-    public static final double SUN_HALF = 250.0;
-    private static final double EARTH_ORBIT = 2400.0;
-    private static final double MOON_ORBIT = 450.0;
+    public static final double SUN_HALF = 250.0 * STAR_SCALE;
+    private static final double EARTH_ORBIT = 2400.0 * SPREAD;
+    private static final double MOON_ORBIT = 1500.0;
     public static volatile ResourceKey<Level> knownMogo = key("sector_0");
-    private static final double HUB = 15000.0 / COMPRESSION;
-    private static final double RIFT = 7000.0 / COMPRESSION;
+    private static final double HUB = 15000.0 / COMPRESSION * SPREAD;
+    private static final double RIFT = 7000.0 / COMPRESSION * SPREAD;
     private static final double WORMHOLE_Y = 520.0;
     private static final double ARRIVAL_OFFSET = 90.0;
 
@@ -90,22 +92,22 @@ public final class Cosmos {
 
     public static final List<Sector> SECTORS = List.of(
             new Sector(SECTOR_2814, "sector_2814", 0xFFF2C0, false, 60.0F, 28.0F, SUN_HALF),
-            new Sector(SECTOR_0, "sector_0", 0xD8F4FF, false, 40.0F, 30.0F, 220.0),
-            new Sector(SECTOR_666, "sector_666", 0xFF3A1E, false, 80.0F, 22.0F, 340.0),
-            new Sector(SECTOR_1416, "sector_1416", 0xFF8AE0, false, -60.0F, 35.0F, 260.0),
-            new Sector(ODYM_GALAXY, "odym_galaxy", 0x7AB8FF, false, 120.0F, 40.0F, 240.0),
-            new Sector(ANTIMATTER, "antimatter", 0x6A0010, true, 30.0F, 20.0F, 170.0));
+            new Sector(SECTOR_0, "sector_0", 0xD8F4FF, false, 40.0F, 30.0F, 220.0 * STAR_SCALE),
+            new Sector(SECTOR_666, "sector_666", 0xFF3A1E, false, 80.0F, 22.0F, 340.0 * STAR_SCALE),
+            new Sector(SECTOR_1416, "sector_1416", 0xFF8AE0, false, -60.0F, 35.0F, 260.0 * STAR_SCALE),
+            new Sector(ODYM_GALAXY, "odym_galaxy", 0x7AB8FF, false, 120.0F, 40.0F, 240.0 * STAR_SCALE),
+            new Sector(ANTIMATTER, "antimatter", 0x6A0010, true, 30.0F, 20.0F, 170.0 * STAR_SCALE));
 
     public static final Planet EARTH = new Planet("earth", SECTOR_2814, Level.OVERWORLD, Style.EARTH, 2814L, EARTH_ORBIT, 0.0, 1.0, 0, 0, 0, 0, "", -1);
     public static final Planet MOON_PLANET = new Planet("moon", SECTOR_2814, MOON, Style.MOON, 3844L, EARTH_ORBIT, MOON_ORBIT, 0.35, 0, 0x05060A, 0x0B0C12, 0, "The Moon", -1);
-    public static final Planet MERCURY_PLANET = new Planet("mercury", SECTOR_2814, MERCURY, Style.MERCURY, 579L, -1034.0, -376.0, 0.38, 0, 0x0A0806, 0x1C1610, 0, "Mercury", -1);
-    public static final Planet MARS_PLANET = new Planet("mars", SECTOR_2814, MARS, Style.MARS, 2279L, -2550.0, 2540.0, 0.53, 0, 0xC08868, 0xD09A78, 0xE8C0A0, "Mars", -1);
-    public static final Planet OA_PLANET = new Planet("oa", SECTOR_0, OA, Style.OA, 1L, 1905.0, 1100.0, 1.0, 0, 0x141A22, 0x1B222B, 0x303A44, "", -1);
+    public static final Planet MERCURY_PLANET = new Planet("mercury", SECTOR_2814, MERCURY, Style.MERCURY, 579L, -1034.0 * SPREAD, -376.0 * SPREAD, 0.38, 0, 0x0A0806, 0x1C1610, 0, "Mercury", -1);
+    public static final Planet MARS_PLANET = new Planet("mars", SECTOR_2814, MARS, Style.MARS, 2279L, -2550.0 * SPREAD, 2540.0 * SPREAD, 0.53, 0, 0xC08868, 0xD09A78, 0xE8C0A0, "Mars", -1);
+    public static final Planet OA_PLANET = new Planet("oa", SECTOR_0, OA, Style.OA, 1L, 1905.0 * SPREAD, 1100.0 * SPREAD, 1.0, 0, 0x141A22, 0x1B222B, 0x303A44, "", -1);
     public static final Planet MOGO_PLANET = new Planet("mogo", null, MOGO, Style.MOGO, 2L, MOGO_X, MOGO_Z, 0.8, 0x00E03C, 0, 0, 0, "", -1);
-    public static final Planet ODYM_PLANET = new Planet("odym", ODYM_GALAXY, ODYM, Style.ODYM, 3L, 2078.0, -1200.0, 1.0, 0, 0x6FB8C8, 0x9ED8C0, 0xE8FFF4, "", -1);
-    public static final Planet RYUT_PLANET = new Planet("ryut", SECTOR_666, RYUT, Style.RYUT, 666L, -1300.0, -2252.0, 1.0, 0, 0x3A1A12, 0x5A2A18, 0x4A3028, "", -1);
-    public static final Planet ZAMARON_PLANET = new Planet("zamaron", SECTOR_1416, ZAMARON, Style.ZAMARON, 1416L, -1150.0, 1992.0, 1.0, 0, 0xC88A9A, 0xD8A0A8, 0xF0D0D8, "", -1);
-    public static final Planet QWARD_PLANET = new Planet("qward", ANTIMATTER, QWARD, Style.QWARD, 9L, 2252.0, -1300.0, 1.0, 0, 0x2A0408, 0x3A0A0C, 0x501418, "", -1);
+    public static final Planet ODYM_PLANET = new Planet("odym", ODYM_GALAXY, ODYM, Style.ODYM, 3L, 2078.0 * SPREAD, -1200.0 * SPREAD, 1.0, 0, 0x6FB8C8, 0x9ED8C0, 0xE8FFF4, "", -1);
+    public static final Planet RYUT_PLANET = new Planet("ryut", SECTOR_666, RYUT, Style.RYUT, 666L, -1300.0 * SPREAD, -2252.0 * SPREAD, 1.0, 0, 0x3A1A12, 0x5A2A18, 0x4A3028, "", -1);
+    public static final Planet ZAMARON_PLANET = new Planet("zamaron", SECTOR_1416, ZAMARON, Style.ZAMARON, 1416L, -1150.0 * SPREAD, 1992.0 * SPREAD, 1.0, 0, 0xC88A9A, 0xD8A0A8, 0xF0D0D8, "", -1);
+    public static final Planet QWARD_PLANET = new Planet("qward", ANTIMATTER, QWARD, Style.QWARD, 9L, 2252.0 * SPREAD, -1300.0 * SPREAD, 1.0, 0, 0x2A0408, 0x3A0A0C, 0x501418, "", -1);
 
     private static final List<Planet> HOMES = List.of(MOON_PLANET, MERCURY_PLANET, MARS_PLANET, OA_PLANET, ODYM_PLANET, RYUT_PLANET, ZAMARON_PLANET, QWARD_PLANET);
 
