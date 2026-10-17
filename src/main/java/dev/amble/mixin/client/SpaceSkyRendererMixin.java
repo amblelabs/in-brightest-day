@@ -29,6 +29,8 @@ public class SpaceSkyRendererMixin {
     @Unique
     private static boolean brightestday$inSpace() {
         Minecraft mc = Minecraft.getInstance();
-        return mc.level != null && (SpaceTravel.isSpace(mc.level) || mc.level.dimension() == Cosmos.OA);
+        if (mc.level == null) return false;
+        if (SpaceTravel.isSpace(mc.level)) return true;
+        return mc.player != null && Cosmos.planetAt(mc.level.dimension(), mc.player.getX()) != null;
     }
 }

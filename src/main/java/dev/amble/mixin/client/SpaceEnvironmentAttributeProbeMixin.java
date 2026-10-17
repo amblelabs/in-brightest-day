@@ -1,7 +1,9 @@
 package dev.amble.mixin.client;
 
+import dev.amble.client.space.SpaceSkyRenderer;
 import dev.amble.core.space.Cosmos;
 import dev.amble.core.space.SpaceTravel;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.attribute.EnvironmentAttribute;
 import net.minecraft.world.attribute.EnvironmentAttributeProbe;
 import net.minecraft.world.attribute.EnvironmentAttributes;
@@ -27,6 +29,18 @@ public class SpaceEnvironmentAttributeProbeMixin {
     @Unique
     private static final Vector3fc ANTIMATTER_RED = new Vector3f(0.07F, 0.0F, 0.016F);
 
+    @Unique
+    private static final float NIGHT_SHADE = 0.06F;
+
+    @Unique
+    private static final int EARTH_SKY = 0x78A7FF;
+
+    @Unique
+    private static final int EARTH_FOG = 0xC0D8FF;
+
+    @Unique
+    private static final int EARTH_CLOUDS = 0xFFFFFF;
+
     @Shadow
     private Level level;
 
@@ -40,10 +54,14 @@ public class SpaceEnvironmentAttributeProbeMixin {
 
         Object value = cir.getReturnValue();
         Cosmos.Planet planet = Cosmos.planetAt(this.level.dimension(), this.position.x);
-        if (planet != null && planet.sky() != 0) {
-            if (attribute == EnvironmentAttributes.SKY_COLOR) value = brightestday$rgb(planet.sky());
-            else if (attribute == EnvironmentAttributes.FOG_COLOR) value = brightestday$rgb(planet.fog());
-            else if (attribute == EnvironmentAttributes.CLOUD_COLOR) value = new Vector4f(brightestday$rgb(planet.clouds()), 0.9F);
+        if (planet != null) {
+            float daylight = SpaceSkyRenderer.surfaceDaylight((ClientLevel) this.level, this.position, partialTick);
+            float shade = NIGHT_SHADE + (1.0F - NIGHT_SHADE) * daylight;
+            if (attribute == EnvironmentAttributes.SKY_COLOR) value = brightestday$rgb(planet.sky() != 0 ? planet.sky() : EARTH_SKY).mul(shade);
+            else if (attribute == EnvironmentAttributes.FOG_COLOR) value = brightestday$rgb(planet.fog() != 0 ? planet.fog() : EARTH_FOG).mul(shade);
+            else if (attribute == EnvironmentAttributes.CLOUD_COLOR) value = new Vector4f(brightestday$rgb(planet.clouds() != 0 ? planet.clouds() : EARTH_CLOUDS).mul(shade), 0.9F);
+            else if (attribute == EnvironmentAttributes.STAR_BRIGHTNESS) value = 0.0F;
+            else if (attribute == EnvironmentAttributes.SUNRISE_SUNSET_COLOR) value = new Vector4f(((Vector4fc) value).x(), ((Vector4fc) value).y(), ((Vector4fc) value).z(), 0.0F);
             cir.setReturnValue(value);
         }
 
@@ -58,7 +76,7 @@ public class SpaceEnvironmentAttributeProbeMixin {
             Vector4f glow = new Vector4f((Vector4fc) value);
             glow.w *= 1.0F - t;
             cir.setReturnValue(glow);
-        } else if (attribute == EnvironmentAttributes.STAR_BRIGHTNESS) {
+        } else if (attribute == EnvironmentAttributes.STAR_BRIGHTNESS && planet == null) {
             cir.setReturnValue(Math.max((Float) value, t));
         } else if (attribute == EnvironmentAttributes.CLOUD_COLOR && SpaceTravel.isSpace(this.level)) {
             Vector4f clouds = new Vector4f((Vector4fc) value);

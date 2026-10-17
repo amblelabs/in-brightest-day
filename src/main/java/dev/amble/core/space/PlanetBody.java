@@ -1,6 +1,7 @@
 package dev.amble.core.space;
 
 import net.minecraft.world.phys.Vec3;
+import org.joml.Matrix3f;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
@@ -9,7 +10,8 @@ import org.jspecify.annotations.Nullable;
 import java.util.Random;
 
 public final class PlanetBody {
-    public static final double SPIN_DEGREES_PER_TICK = 0.03;
+    public static final double SPIN_DEGREES_PER_TICK = 360.0 / 24000.0;
+    public static final double DEPARTURE_MARGIN = 6.0;
 
     public static final Vector3fc[][] FACES = {
             {new Vector3f(1, 0, 0), new Vector3f(0, 0, -1), new Vector3f(0, 1, 0)},
@@ -20,6 +22,8 @@ public final class PlanetBody {
             {new Vector3f(0, 0, -1), new Vector3f(-1, 0, 0), new Vector3f(0, 1, 0)},
     };
     public static final int TOP = 2;
+    public static final int SURFACE = 4;
+    private static final Quaternionf SURFACE_FRAME = frame(SURFACE);
 
     public record Entry(int face, double u, double v) {}
 
@@ -30,6 +34,20 @@ public final class PlanetBody {
                 .rotateX((random.nextFloat() - 0.5F) * 1.2F)
                 .rotateZ((random.nextFloat() - 0.5F) * 1.2F)
                 .rotateY((float) spin);
+    }
+
+    private static Quaternionf frame(int face) {
+        Vector3fc[] basis = FACES[face];
+        Matrix3f rows = new Matrix3f().setRow(0, new Vector3f(basis[1])).setRow(1, new Vector3f(basis[0])).setRow(2, new Vector3f(basis[2]).negate());
+        return rows.getNormalizedRotation(new Quaternionf());
+    }
+
+    public static Quaternionf surfaceFrame() {
+        return new Quaternionf(SURFACE_FRAME);
+    }
+
+    public static Quaternionf worldToSurface(Quaternionf orientation) {
+        return new Quaternionf(SURFACE_FRAME).mul(new Quaternionf(orientation).conjugate());
     }
 
     public static Vec3 center(Cosmos.Planet planet) {

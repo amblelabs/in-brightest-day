@@ -34,19 +34,25 @@ public final class SpaceHandoff {
     private static final double HINT_RADIUS = 800.0;
     private static final double FLOOR_BOUNCE = 0.6;
     private static final double EDGE = 0.95;
-    private static final double DEPARTURE_MARGIN = 6.0;
+    private static final double EXIT_SPEED = 0.6;
+    private static final long REENTRY_GRACE_TICKS = 60;
     private static final int HINT_INTERVAL = 40;
     private static final int MOGO_RANK = 4;
 
     private static final Map<UUID, Long> LAST_SWITCH = new HashMap<>();
     private static final Map<UUID, Trace> TRACES = new HashMap<>();
-    private static final Map<UUID, Integer> ENTRY_FACES = new HashMap<>();
+    private static final Map<UUID, Grace> GRACE = new HashMap<>();
+
+    private record Grace(String planet, long until) {}
 
     private record Trace(ResourceKey<Level> dimension, Vec3 position) {}
 
     public static void init() {
         ServerTickEvents.END_SERVER_TICK.register(SpaceHandoff::tick);
-        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> TRACES.remove(handler.player.getUUID()));
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+            TRACES.remove(handler.player.getUUID());
+            GRACE.remove(handler.player.getUUID());
+        });
         CommandRegistrationCallback.EVENT.register((dispatcher, registry, environment) -> dispatcher.register(Commands.literal("mogo")
                 .then(Commands.literal("summon").executes(context -> summonMogo(context.getSource())))));
         CommandRegistrationCallback.EVENT.register((dispatcher, registry, environment) -> dispatcher.register(Commands.literal("planets").executes(context -> listPlanets(context.getSource()))));
@@ -95,7 +101,13 @@ public final class SpaceHandoff {
         hint(player, dimension);
 
         long ticks = player.level().getGameTime();
+        Grace grace = GRACE.get(player.getUUID());
+        if (grace != null && ticks >= grace.until()) {
+            GRACE.remove(player.getUUID());
+            grace = null;
+        }
         for (Cosmos.Planet planet : Cosmos.planetsIn(dimension, mogo)) {
+            if (grace != null && grace.planet().equals(planet.id())) continue;
             PlanetBody.Entry entry = PlanetBody.entry(planet, ticks, from, to);
             if (entry != null) return land(server, player, planet, entry, ticks);
         }
@@ -117,23 +129,27 @@ public final class SpaceHandoff {
         Vec3 look = vec(PlanetBody.toSurface(entry.face(), PlanetBody.toLocal(orientation, player.getLookAngle())));
         boolean landed = hop(server, player, planet.surface(), new Vec3(x, SpaceTravel.REENTRY_Y, z), velocity, yaw(look), pitch(look));
         if (!landed) return false;
-        ENTRY_FACES.put(player.getUUID(), entry.face());
         if (!planet.name().isEmpty()) player.sendSystemMessage(Component.translatable("message.brightestday.space.landing", planet.name()).withColor(0xC8D8FF));
         return true;
     }
 
     private static boolean depart(MinecraftServer server, ServerPlayer player, Cosmos.Planet planet, ResourceKey<Level> sector) {
-        int face = ENTRY_FACES.getOrDefault(player.getUUID(), PlanetBody.TOP);
-        Quaternionf orientation = PlanetBody.orientation(planet, player.level().getGameTime());
+        long ticks = player.level().getGameTime();
+        Quaternionf orientation = PlanetBody.orientation(planet, ticks);
+        int face = PlanetBody.SURFACE;
         double half = planet.surfaceHalf();
         float u = (float) Mth.clamp((player.getX() - planet.regionX()) / half, -EDGE, EDGE);
         float w = (float) Mth.clamp(player.getZ() / half, -EDGE, EDGE);
-        float lift = (float) (1.0 + DEPARTURE_MARGIN / planet.footprint());
+        float lift = (float) (1.0 + PlanetBody.DEPARTURE_MARGIN / planet.footprint());
         Vector3f local = PlanetBody.fromSurface(face, new Vector3f(u, lift, w)).mul((float) planet.footprint());
         Vec3 position = PlanetBody.center(planet).add(PlanetBody.toWorld(orientation, local));
+        Vec3 outward = PlanetBody.toWorld(orientation, new Vector3f(PlanetBody.FACES[face][0]));
         Vec3 velocity = PlanetBody.toWorld(orientation, PlanetBody.fromSurface(face, vector(player.getDeltaMovement())));
+        velocity = velocity.add(outward.scale(Math.max(0.0, EXIT_SPEED - velocity.dot(outward))));
         Vec3 look = PlanetBody.toWorld(orientation, PlanetBody.fromSurface(face, vector(player.getLookAngle())));
-        return hop(server, player, sector, position, velocity, yaw(look), pitch(look));
+        boolean moved = hop(server, player, sector, position, velocity, yaw(look), pitch(look));
+        if (moved) GRACE.put(player.getUUID(), new Grace(planet.id(), ticks + REENTRY_GRACE_TICKS));
+        return moved;
     }
 
     private static double sweep(Vec3 from, Vec3 to, Vec3 point) {
