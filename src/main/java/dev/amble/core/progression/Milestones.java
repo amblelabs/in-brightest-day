@@ -39,6 +39,7 @@ public final class Milestones {
     private static final Set<EntityType<?>> OUTCLASSING = Set.of(EntityTypes.WARDEN, EntityTypes.WITHER, EntityTypes.ELDER_GUARDIAN,
             EntityTypes.RAVAGER, EntityTypes.EVOKER);
     private static final double PET_RANGE = 16.0;
+    private static final int KEEP_SECONDS = 600;
 
     private static Milestone.Condition always() {
         return (player, context) -> true;
@@ -130,6 +131,16 @@ public final class Milestones {
         add(new Milestone(key, corps, tier, goal, trigger, condition, mode, null));
     }
 
+    private static void keep(LanternCorps corps, int tier, String key, Milestone.Condition condition) {
+        pool(corps, tier, key, KEEP_SECONDS, Trigger.SECOND, condition, Milestone.Mode.STREAK);
+    }
+
+    private static void versus(LanternCorps corps, int tier, String key, int goal, Trigger trigger, Milestone.Condition condition,
+                               String soloKey, int soloGoal, Trigger soloTrigger, Milestone.Condition soloCondition, Milestone.Mode soloMode) {
+        register(new Milestone(soloKey, corps, tier, soloGoal, soloTrigger, soloCondition, soloMode, null));
+        add(new Milestone(key, corps, tier, goal, trigger, condition, Milestone.Mode.ACCUMULATE, soloKey));
+    }
+
     private static void versus(LanternCorps corps, int tier, String key, int goal, Trigger trigger, Milestone.Condition condition,
                                String soloKey, int soloGoal, Trigger soloTrigger, Milestone.Condition soloCondition) {
         versus(corps, tier, key, goal, trigger, condition, Milestone.Mode.ACCUMULATE, soloKey, soloGoal, soloTrigger, soloCondition);
@@ -208,23 +219,23 @@ public final class Milestones {
         pool(red, 4, "red_brink", 5, Trigger.KILL, and(hostile(), below(2.0F)));
 
         LanternCorps orange = LanternCorps.ORANGE;
-        pool(orange, 2, "orange_hoard", 1, Trigger.SECOND, holding(Items.DIAMOND, 32));
+        keep(orange, 2, "orange_hoard", holding(Items.DIAMOND, 32));
         pool(orange, 2, "orange_diamonds", 30, Trigger.MINE, detail("diamond"));
         pool(orange, 2, "orange_emeralds", 20, Trigger.MINE, detail("emerald"));
-        pool(orange, 2, "orange_gold", 1, Trigger.SECOND, holding(Items.GOLD_INGOT, 64));
+        keep(orange, 2, "orange_gold", holding(Items.GOLD_INGOT, 64));
         pool(orange, 2, "orange_probe", 15, Trigger.CONSTRUCT, construct("ore_probe"));
         versus(orange, 3, "orange_steal", 2000, Trigger.STEAL, detail("lantern"),
                 "orange_steal_solo", 3000, Trigger.STEAL, always());
         pool(orange, 3, "orange_debris", 16, Trigger.MINE, detail("debris"));
         pool(orange, 3, "orange_lumber", 25, Trigger.CONSTRUCT, construct("lumberjack"));
-        pool(orange, 3, "orange_netherite", 1, Trigger.SECOND, holding(Items.NETHERITE_INGOT, 4));
+        keep(orange, 3, "orange_netherite", holding(Items.NETHERITE_INGOT, 4));
         pool(orange, 3, "orange_trades", 25, Trigger.TRADE, always());
         versus(orange, 4, "orange_ring_kill", 1, Trigger.KILL, bearer(),
-                "orange_vault", 1, Trigger.SECOND, holding(Items.DIAMOND_BLOCK, 16));
+                "orange_vault", KEEP_SECONDS, Trigger.SECOND, holding(Items.DIAMOND_BLOCK, 16), Milestone.Mode.STREAK);
         pool(orange, 4, "orange_avarice", 1, Trigger.SECOND, meter(Emotion.AVARICE, Emotion.MAX));
-        pool(orange, 4, "orange_ingots", 1, Trigger.SECOND, holding(Items.NETHERITE_INGOT, 8));
-        pool(orange, 4, "orange_emerald_vault", 1, Trigger.SECOND, holding(Items.EMERALD_BLOCK, 32));
-        pool(orange, 4, "orange_elytra", 1, Trigger.SECOND, holding(Items.ELYTRA, 1));
+        keep(orange, 4, "orange_ingots", holding(Items.NETHERITE_INGOT, 8));
+        keep(orange, 4, "orange_emerald_vault", holding(Items.EMERALD_BLOCK, 32));
+        keep(orange, 4, "orange_elytra", holding(Items.ELYTRA, 1));
 
         LanternCorps blue = LanternCorps.BLUE;
         pool(blue, 2, "blue_heal", 200, Trigger.HEAL, always());

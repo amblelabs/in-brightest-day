@@ -20,7 +20,7 @@ public class GravityBallConstruct extends ConstructRingPower {
     private final boolean repels;
 
     public GravityBallConstruct() {
-        this(BrightestDay.id("gravity_ball"), CorpsArsenal.exclusive(LanternCorps.GREEN, LanternCorps.ORANGE, LanternCorps.STAR_SAPPHIRE), false);
+        this(BrightestDay.id("gravity_ball"), CorpsArsenal.exclusive(LanternCorps.GREEN, LanternCorps.STAR_SAPPHIRE), false);
     }
 
     protected GravityBallConstruct(Identifier id, Set<LanternCorps> corps, boolean repels) {

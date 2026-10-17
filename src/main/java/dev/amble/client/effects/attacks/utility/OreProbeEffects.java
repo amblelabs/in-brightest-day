@@ -16,6 +16,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockItemTags;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.TagKey;
@@ -54,10 +56,12 @@ public final class OreProbeEffects {
     private static final int TAIL = 4;
     private static final float TAIL_SPACING = 0.12F;
 
-    private static final int SCAN_RADIUS = 24;
-    private static final int PLANES_PER_TICK = 4;
+    private static final int SCAN_RADIUS = 12;
     private static final int MAX_HIGHLIGHTS = 300;
-    private static final int HIGHLIGHT_FADE_TICKS = 10;
+    private static final int PING_INTERVAL = 60;
+    private static final float SWEEP_SPEED = 1.5F;
+    private static final int GLOW_TICKS = 30;
+    private static final int PING_FADE_TICKS = 15;
     private static final float FILL_ALPHA = 0.22F;
     private static final float EDGE_ALPHA = 0.85F;
     private static final float EDGE_THICKNESS = VoxelRenderer.PIXEL;
@@ -85,11 +89,10 @@ public final class OreProbeEffects {
 
     private static final Map<Integer, ClientProbe> PROBES = new HashMap<>();
     private static final Map<Block, Integer> CLASSES = new IdentityHashMap<>();
-    private static final List<Highlight> PENDING = new ArrayList<>();
     private static List<Highlight> highlights = List.of();
-    private static @Nullable BlockPos scanCenter;
-    private static int scanX;
-    private static int highlightAge;
+    private static @Nullable BlockPos pingCenter;
+    private static int pingAge;
+    private static int sincePing = PING_INTERVAL;
 
     private record Highlight(BlockPos pos, int color) {}
 
@@ -150,12 +153,11 @@ public final class OreProbeEffects {
             if (probe.fade >= 0 && ++probe.fade > FADE_TICKS) iterator.remove();
         }
 
+        if (!highlights.isEmpty() && ++pingAge > lifetime()) resetScan();
         if (scanning(client)) {
-            highlightAge = Math.min(highlightAge + 1, HIGHLIGHT_FADE_TICKS);
-            scan(client);
-        } else if (highlightAge > 0) {
-            highlightAge--;
-            if (highlightAge == 0) resetScan();
+            if (++sincePing >= PING_INTERVAL) ping(client);
+        } else {
+            sincePing = PING_INTERVAL;
         }
     }
 
@@ -168,40 +170,40 @@ public final class OreProbeEffects {
         return false;
     }
 
-    private static void scan(Minecraft client) {
+    private static void ping(Minecraft client) {
         ClientLevel level = client.level;
         Player player = client.player;
         if (level == null || player == null) return;
-        if (scanCenter == null) {
-            scanCenter = player.blockPosition();
-            scanX = -SCAN_RADIUS;
-            PENDING.clear();
-        }
-
+        sincePing = 0;
+        pingAge = 0;
+        pingCenter = player.blockPosition();
+        List<Highlight> found = new ArrayList<>();
         BlockPos.MutableBlockPos cursor = new BlockPos.MutableBlockPos();
         int radiusSqr = SCAN_RADIUS * SCAN_RADIUS;
-        int minY = Math.max(scanCenter.getY() - SCAN_RADIUS, level.getMinY());
-        int maxY = Math.min(scanCenter.getY() + SCAN_RADIUS, level.getMaxY());
-        for (int plane = 0; plane < PLANES_PER_TICK && scanX <= SCAN_RADIUS; plane++, scanX++) {
+        int minY = Math.max(pingCenter.getY() - SCAN_RADIUS, level.getMinY());
+        int maxY = Math.min(pingCenter.getY() + SCAN_RADIUS, level.getMaxY());
+        for (int dx = -SCAN_RADIUS; dx <= SCAN_RADIUS; dx++) {
             for (int y = minY; y <= maxY; y++) {
-                int dy = y - scanCenter.getY();
+                int dy = y - pingCenter.getY();
                 for (int dz = -SCAN_RADIUS; dz <= SCAN_RADIUS; dz++) {
-                    if (scanX * scanX + dy * dy + dz * dz > radiusSqr) continue;
-                    cursor.set(scanCenter.getX() + scanX, y, scanCenter.getZ() + dz);
+                    if (dx * dx + dy * dy + dz * dz > radiusSqr) continue;
+                    cursor.set(pingCenter.getX() + dx, y, pingCenter.getZ() + dz);
                     BlockState state = level.getBlockState(cursor);
                     if (state.isAir()) continue;
                     int color = CLASSES.computeIfAbsent(state.getBlock(), block -> classify(state));
-                    if (color != NONE) PENDING.add(new Highlight(cursor.immutable(), color));
+                    if (color != NONE) found.add(new Highlight(cursor.immutable(), color));
                 }
             }
         }
+        BlockPos origin = pingCenter;
+        found.sort(Comparator.comparingDouble(highlight -> highlight.pos().distSqr(origin)));
+        highlights = List.copyOf(found.subList(0, Math.min(found.size(), MAX_HIGHLIGHTS)));
+        level.playLocalSound(player.getX(), player.getEyeY(), player.getZ(), SoundEvents.NOTE_BLOCK_BELL.value(), SoundSource.PLAYERS, 0.7F, 1.6F, false);
+        level.playLocalSound(player.getX(), player.getEyeY(), player.getZ(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.5F, 0.6F, false);
+    }
 
-        if (scanX <= SCAN_RADIUS) return;
-        BlockPos origin = player.blockPosition();
-        PENDING.sort(Comparator.comparingDouble(highlight -> highlight.pos().distSqr(origin)));
-        highlights = List.copyOf(PENDING.subList(0, Math.min(PENDING.size(), MAX_HIGHLIGHTS)));
-        PENDING.clear();
-        scanCenter = null;
+    private static int lifetime() {
+        return Mth.ceil(SCAN_RADIUS / SWEEP_SPEED) + GLOW_TICKS + PING_FADE_TICKS;
     }
 
     private static int classify(BlockState state) {
@@ -220,10 +222,9 @@ public final class OreProbeEffects {
     }
 
     private static void resetScan() {
-        scanCenter = null;
-        PENDING.clear();
+        pingCenter = null;
         highlights = List.of();
-        highlightAge = 0;
+        pingAge = 0;
     }
 
     private static void render(LevelRenderContext context) {
@@ -247,14 +248,14 @@ public final class OreProbeEffects {
             ShieldEffects.submit(context, camera, probe(owner, probeColor(client, probe), time, partialTicks, scale), alpha);
         }
 
-        if (highlights.isEmpty() || client.player == null) return;
-        float fade = Mth.clamp((highlightAge + (scanning(client) ? partialTicks : -partialTicks)) / HIGHLIGHT_FADE_TICKS, 0.0F, 1.0F);
-        if (fade <= 0.01F) return;
+        if (highlights.isEmpty() || client.player == null || pingCenter == null) return;
+        float since = pingAge + partialTicks;
+        Vec3 origin = Vec3.atCenterOf(pingCenter);
         int corps = PowerRingItem.getWornCorps(client.player).isPresent() ? ARGB.opaque(CorpsColors.of(client.player)) : 0xFFFFFFFF;
         float pulse = 0.85F + 0.15F * Mth.sin((client.player.tickCount + partialTicks) * 0.15F);
         List<Highlight> drawn = highlights;
         context.submitNodeCollector().submitCustomGeometry(context.poseStack(), OreProbeRenderTypes.XRAY,
-                (pose, buffer) -> drawHighlights(pose, buffer, camera, drawn, corps, fade * pulse));
+                (pose, buffer) -> drawHighlights(pose, buffer, camera, origin, since, drawn, corps, pulse));
     }
 
     private static List<ShieldEffects.Voxel> probe(Player owner, int color, float time, float partialTicks, float scale) {
@@ -293,13 +294,23 @@ public final class OreProbeEffects {
         return probe.color;
     }
 
-    private static void drawHighlights(PoseStack.Pose pose, VertexConsumer buffer, Vec3 camera, List<Highlight> list, int corps, float alpha) {
+    private static float sweep(float since, float distance) {
+        float lit = since - distance / SWEEP_SPEED;
+        if (lit <= 0.0F) return 0.0F;
+        if (lit < GLOW_TICKS) return 1.0F;
+        return 1.0F - Mth.clamp((lit - GLOW_TICKS) / PING_FADE_TICKS, 0.0F, 1.0F);
+    }
+
+    private static void drawHighlights(PoseStack.Pose pose, VertexConsumer buffer, Vec3 camera, Vec3 origin, float since, List<Highlight> list, int corps, float pulse) {
         float h = 0.5F - BOX_INSET;
         float t = EDGE_THICKNESS * 0.5F;
         for (Highlight highlight : list) {
-            Vec3 center = Vec3.atCenterOf(highlight.pos()).subtract(camera);
-            float distance = (float) center.length();
-            float falloff = 1.0F - FAR_FADE * Mth.clamp(distance / SCAN_RADIUS, 0.0F, 1.0F);
+            Vec3 world = Vec3.atCenterOf(highlight.pos());
+            float spread = (float) world.distanceTo(origin);
+            float alpha = sweep(since, spread) * pulse;
+            if (alpha <= 0.01F) continue;
+            Vec3 center = world.subtract(camera);
+            float falloff = 1.0F - FAR_FADE * Mth.clamp(spread / SCAN_RADIUS, 0.0F, 1.0F);
             int rgb = highlight.color() == CORPS ? corps : highlight.color();
             int fill = ARGB.color(Math.round(Mth.clamp(FILL_ALPHA * alpha * falloff, 0.0F, 1.0F) * 255), rgb);
             int edge = ARGB.color(Math.round(Mth.clamp(EDGE_ALPHA * alpha * falloff, 0.0F, 1.0F) * 255), rgb);

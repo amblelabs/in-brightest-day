@@ -13,6 +13,7 @@ import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.ringpowers.RingPower;
 import dev.amble.core.ringpowers.RingPowerCategory;
 import dev.amble.core.ringpowers.RingPowerRegistry;
+import dev.amble.core.ringpowers.OrangeHoard;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.DamageTypeTags;
@@ -184,7 +185,7 @@ public class FlightRingPower extends RingPower<FlightRingPower.Data> {
             response = BRAKE_RESPONSE;
         } else {
             double speed = boosting ? boostSpeed(cruise) : cruise;
-            target = wish.normalize().scale(SpaceWarp.limit(player.level(), player.position(), Cosmos.knownMogo, speed));
+            target = wish.normalize().scale(SpaceWarp.limit(player.level(), player.position(), Cosmos.knownMogo, speed) * (1.0F - OrangeHoard.slowdown(player)));
             response = boosting ? BOOST_RESPONSE : CRUISE_RESPONSE;
         }
 

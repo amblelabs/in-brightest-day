@@ -55,6 +55,7 @@ import dev.amble.core.loyalty.RingBonds;
 import dev.amble.core.progression.EmotionSources;
 import dev.amble.core.progression.Terror;
 import dev.amble.core.progression.RingOffers;
+import dev.amble.core.progression.OrangeDuels;
 import dev.amble.core.progression.IndigoOne;
 import dev.amble.core.progression.BlueSanctuary;
 import dev.amble.core.progression.Pilgrimage;
@@ -158,6 +159,7 @@ public class BrightestDay implements ModInitializer {
 		EmotionSources.init();
 		Terror.init();
 		RingOffers.init();
+		OrangeDuels.init();
 		CorpsCombat.init();
 		RingBonds.init();
 		IndigoOne.init();

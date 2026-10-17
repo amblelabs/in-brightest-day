@@ -34,6 +34,7 @@ public class BlastConstruct extends ConstructRingPower {
     private static final int EMPOWERED_MAX_SIZE = 6;
     private static final float SCALE_PER_SIZE = 0.4F;
     private static final float KNOCKBACK_PER_SIZE = 0.2F;
+    private static final int[] COST_MULTIPLIERS = {1, 2, 5, 6, 8, 10};
 
     private static final ExplosionDamageCalculator BLOCKS_ONLY = new ExplosionDamageCalculator() {
         @Override
@@ -73,8 +74,8 @@ public class BlastConstruct extends ConstructRingPower {
 
     @Override
     public int cost(int size) {
-        int clamped = this.costSize(size);
-        return this.useCost() * clamped * (clamped + 1) / 2;
+        int clamped = Math.clamp(this.costSize(size), 1, COST_MULTIPLIERS.length);
+        return this.useCost() * COST_MULTIPLIERS[clamped - 1];
     }
 
     @Override

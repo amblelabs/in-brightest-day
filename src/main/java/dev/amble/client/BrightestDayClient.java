@@ -51,6 +51,7 @@ import dev.amble.client.wheel.PowerWheel;
 import dev.amble.client.effects.ShieldEffects;
 import dev.amble.client.effects.TractorEffects;
 import dev.amble.client.effects.CarriedEntities;
+import dev.amble.client.effects.DuelArenaEffects;
 import dev.amble.client.effects.MagnetEffects;
 import dev.amble.client.effects.SphereEffects;
 import dev.amble.client.effects.PoseAnimations;
@@ -151,6 +152,7 @@ public class BrightestDayClient implements ClientModInitializer {
         SphereEffects.init();
         MagnetEffects.init();
         CarriedEntities.init();
+        DuelArenaEffects.init();
         CompassEffects.init();
         ScanEffects.init();
         GlowAura.init();
