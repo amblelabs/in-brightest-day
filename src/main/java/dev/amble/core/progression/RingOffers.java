@@ -28,8 +28,10 @@ import java.util.Map;
 import java.util.UUID;
 
 public final class RingOffers {
-    private static final long RED_COOLDOWN = 24000;
-    private static final int MINUTES_PER_DAY = 20;
+    static final long RED_COOLDOWN = 24000;
+    static final int MINUTES_PER_DAY = 20;
+    private static final float GREEN_MIN_CHANCE = 0.1F;
+    private static final float GREEN_MAX_CHANCE = 0.95F;
     private static final int FLASH_TICKS = 60;
 
     private static final Map<UUID, Long> RED_REFUSED = new HashMap<>();
@@ -72,6 +74,11 @@ public final class RingOffers {
         });
     }
 
+    static long redCooldown(ServerPlayer player) {
+        Long refused = RED_REFUSED.get(player.getUUID());
+        return refused == null ? 0L : Math.max(0L, RED_COOLDOWN - (player.level().getGameTime() - refused));
+    }
+
     public static void forceOffer(ServerPlayer player, LanternCorps corps) {
         switch (corps) {
             case RED -> offer(player, corps, "red");
@@ -102,9 +109,29 @@ public final class RingOffers {
     public static void considerOrange(ServerPlayer player) {
         if (!ringless(player) || RingLoyalty.awaiting(player) || OrangeDuels.involved(player.level().getServer(), player.getUUID())) return;
         if (OrangeHoard.value(player) < BrightestDayConfig.get().orangeHoardValue) return;
+        if (!EmotionGates.allows(player, LanternCorps.ORANGE)) return;
         float chance = Math.min(0.5F, SpectrumMeters.get(player, Emotion.AVARICE) / 2000.0F);
         if (player.getRandom().nextFloat() >= chance) return;
         offer(player, LanternCorps.ORANGE, "orange");
+    }
+
+    static int greenSlots(MinecraftServer server) {
+        return Math.max(1, server.getPlayerList().getPlayerCount() / Math.max(1, BrightestDayConfig.get().greenPlayersPerRing));
+    }
+
+    static int onlineGreen(MinecraftServer server) {
+        int count = 0;
+        for (UUID bearer : CorpsCaps.bearers(server, LanternCorps.GREEN)) {
+            if (server.getPlayerList().getPlayer(bearer) != null) count++;
+        }
+        return count;
+    }
+
+    static float greenChance(int will) {
+        int threshold = BrightestDayConfig.get().greenRingWill;
+        if (will < threshold) return 0.0F;
+        float progress = (will - threshold) / (float) Math.max(1, Emotion.MAX - threshold);
+        return Math.min(GREEN_MAX_CHANCE, GREEN_MIN_CHANCE + (GREEN_MAX_CHANCE - GREEN_MIN_CHANCE) * progress);
     }
 
     public static void considerGreen(ServerPlayer player) {
@@ -112,11 +139,10 @@ public final class RingOffers {
         MinecraftServer server = player.level().getServer();
         BrightestDayConfig config = BrightestDayConfig.get();
         if (SpectrumMeters.get(player, Emotion.WILL) < config.greenRingWill) return;
+        if (!EmotionGates.allows(player, LanternCorps.GREEN)) return;
 
-        int online = server.getPlayerList().getPlayerCount();
-        int slots = Math.max(1, online / Math.max(1, config.greenPlayersPerRing));
-        int bearers = CorpsCaps.bearers(server, LanternCorps.GREEN).size();
-        if (bearers >= slots) return;
+        if (onlineGreen(server) >= greenSlots(server)) return;
+        if (player.getRandom().nextFloat() >= greenChance(SpectrumMeters.get(player, Emotion.WILL))) return;
 
         player.sendSystemMessage(Component.translatable("message.brightestday.offer.green").withStyle(ChatFormatting.ITALIC).withColor(LanternCorps.GREEN.color()));
         bestow(player, LanternCorps.GREEN);
@@ -143,7 +169,7 @@ public final class RingOffers {
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             if (!ringless(player)) continue;
             considerGreen(player);
-            if (RingLoyalty.awaiting(player) || SpectrumMeters.get(player, Emotion.RAGE) < config.redOfferRage) continue;
+            if (RingLoyalty.awaiting(player) || SpectrumMeters.get(player, Emotion.RAGE) < config.redOfferRage || !EmotionGates.allows(player, LanternCorps.RED)) continue;
             Long refused = RED_REFUSED.get(player.getUUID());
             if (refused != null && now - refused < RED_COOLDOWN) continue;
             if (player.getRandom().nextFloat() >= config.redOfferDailyChance / MINUTES_PER_DAY) continue;

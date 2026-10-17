@@ -7,7 +7,8 @@ public final class EmotionTriggers {
     public static void onMeterChanged(ServerPlayer player, Emotion emotion, int before, int after) {
         switch (emotion) {
             case WILL -> {
-                if (after >= BrightestDayConfig.get().greenRingWill) RingOffers.considerGreen(player);
+                int threshold = BrightestDayConfig.get().greenRingWill;
+                if (before < threshold && after >= threshold) RingOffers.considerGreen(player);
             }
             case COMPASSION -> {
             }

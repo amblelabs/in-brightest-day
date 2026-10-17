@@ -5,6 +5,8 @@ import com.google.gson.JsonParser;
 import dev.amble.BrightestDay;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.comms.Comms;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import dev.amble.core.items.LanternBlockItem;
 import dev.amble.core.networking.payloads.s2c.OathS2CPayload;
 import dev.amble.core.ringpowers.LanternCorps;
@@ -29,6 +31,7 @@ import java.util.concurrent.Executors;
 
 public final class OathCharge {
     public static final int SILENCE_TIMEOUT_TICKS = 20 * 25;
+    public static final float MUTED_SLOWDOWN = 2.0F;
     private static final int SWEEP_INTERVAL = 20;
 
     private static final ExecutorService WORKER = Executors.newSingleThreadExecutor(runnable -> {
@@ -73,6 +76,10 @@ public final class OathCharge {
                 }
             }
         });
+    }
+
+    public static int timed(LivingEntity entity, int ticks) {
+        return entity instanceof Player player && Comms.muted(player) ? Math.round(ticks * MUTED_SLOWDOWN) : ticks;
     }
 
     public static boolean begin(ServerPlayer player, LanternCorps corps, boolean ritual) {

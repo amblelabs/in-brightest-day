@@ -39,10 +39,12 @@ public final class BatteryRitual {
         final LanternCorps corps;
         final boolean oath;
         final boolean ceremony;
+        final int duration;
         long lastHeld;
         int age;
 
-        Session(BlockPos core, LanternCorps corps, boolean oath, boolean ceremony, long lastHeld) {
+        Session(BlockPos core, LanternCorps corps, boolean oath, boolean ceremony, long lastHeld, int duration) {
+            this.duration = duration;
             this.core = core;
             this.corps = corps;
             this.oath = oath;
@@ -78,7 +80,7 @@ public final class BatteryRitual {
         if (session != null && session.oath) OathCharge.end(player);
         boolean oath = OathCharge.begin(player, corps, true);
         if (!oath) player.sendSystemMessage(Component.translatable(corps.oathKey()).withStyle(ChatFormatting.BOLD).withColor(corps.color()));
-        SESSIONS.put(player.getUUID(), new Session(core.immutable(), corps, oath, ceremony, now));
+        SESSIONS.put(player.getUUID(), new Session(core.immutable(), corps, oath, ceremony, now, OathCharge.timed(player, DURATION_TICKS)));
         player.setAttached(PERFORMING, Unit.INSTANCE);
     }
 
@@ -108,9 +110,9 @@ public final class BatteryRitual {
             }
 
             session.age++;
-            float progress = session.oath ? OathCharge.progress(player) : Math.min(1.0F, session.age / (float) DURATION_TICKS);
+            float progress = session.oath ? OathCharge.progress(player) : Math.min(1.0F, session.age / (float) session.duration);
             effects(player, session, progress);
-            boolean done = session.oath ? OathCharge.complete(player) : session.age >= DURATION_TICKS;
+            boolean done = session.oath ? OathCharge.complete(player) : session.age >= session.duration;
             if (!done) continue;
             iterator.remove();
             player.removeAttached(PERFORMING);

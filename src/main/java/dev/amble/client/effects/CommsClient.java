@@ -1,7 +1,10 @@
 package dev.amble.client.effects;
 
 import dev.amble.client.hud.RingFeed;
+import dev.amble.core.comms.Comms;
+import dev.amble.core.comms.CommsVoicePlugin;
 import dev.amble.core.networking.payloads.c2s.CommsC2SPayload;
+import dev.amble.core.networking.payloads.c2s.VoiceMutedC2SPayload;
 import dev.amble.core.networking.payloads.s2c.CommsIncomingS2CPayload;
 import dev.amble.core.networking.payloads.s2c.CommsTalkingS2CPayload;
 import dev.amble.core.networking.payloads.s2c.CommsTargetS2CPayload;
@@ -19,6 +22,8 @@ import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.entity.player.Player;
+
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -43,7 +48,20 @@ public final class CommsClient {
     private static int lastPress = -DOUBLE_CLICK_TICKS - 1;
     private static int ticks;
 
+    private static final int MUTE_POLL_TICKS = 10;
+    private static @Nullable Boolean reportedMuted;
+
+    private static void reportMute(Minecraft client) {
+        if (client.player == null || client.getConnection() == null || client.player.tickCount % MUTE_POLL_TICKS != 0 || !Comms.available()) return;
+        boolean muted = CommsVoicePlugin.clientMuted();
+        Comms.localMuted = muted;
+        if (reportedMuted != null && reportedMuted == muted) return;
+        reportedMuted = muted;
+        ClientPlayNetworking.send(new VoiceMutedC2SPayload(muted));
+    }
+
     public static void init() {
+        ClientTickEvents.END_CLIENT_TICK.register(CommsClient::reportMute);
         ClientPlayNetworking.registerGlobalReceiver(CommsTargetS2CPayload.TYPE, (payload, context) -> {
             dialed = payload.name();
             team = payload.team();
@@ -55,6 +73,8 @@ public final class CommsClient {
         });
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
             TALKING.clear();
+            reportedMuted = null;
+            Comms.localMuted = false;
             dialed = "";
             incoming = "";
             transmitting = false;

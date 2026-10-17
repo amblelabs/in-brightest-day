@@ -166,7 +166,7 @@ public final class BlueSanctuary {
         Pilgrimage.reset(player);
         player.sendSystemMessage(Component.translatable("message.brightestday.sanctuary.blessed").withStyle(ChatFormatting.BOLD).withColor(BLUE));
         player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 1.5F, 1.2F);
-        if (BrightestDayAttachments.getRing(player).isEmpty() && !RingBonds.bonded(player) && CorpsCaps.check(player, LanternCorps.BLUE)) RingOffers.bestow(player, LanternCorps.BLUE);
+        if (BrightestDayAttachments.getRing(player).isEmpty() && !RingBonds.bonded(player) && CorpsCaps.check(player, LanternCorps.BLUE) && EmotionGates.allows(player, LanternCorps.BLUE)) RingOffers.bestow(player, LanternCorps.BLUE);
     }
 
     private static void place(ServerLevel level) {

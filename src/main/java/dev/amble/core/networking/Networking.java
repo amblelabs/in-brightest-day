@@ -32,6 +32,7 @@ import dev.amble.core.networking.payloads.c2s.FlightCompactC2SPayload;
 import dev.amble.core.networking.payloads.c2s.SetEyesC2SPayload;
 import dev.amble.core.networking.payloads.c2s.SetInsigniaAnchorC2SPayload;
 import dev.amble.core.networking.payloads.c2s.SetColorTweakC2SPayload;
+import dev.amble.core.networking.payloads.c2s.VoiceMutedC2SPayload;
 import dev.amble.core.networking.payloads.c2s.SetFlightC2SPayload;
 import dev.amble.core.networking.payloads.c2s.StopBeamC2SPayload;
 import dev.amble.core.networking.payloads.c2s.ToggleInsigniaC2SPayload;
@@ -129,6 +130,7 @@ public class Networking {
         PayloadTypeRegistry.serverboundPlay().register(ToggleInsigniaC2SPayload.TYPE, ToggleInsigniaC2SPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(CycleConstructC2SPayload.TYPE, CycleConstructC2SPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(SetColorTweakC2SPayload.TYPE, SetColorTweakC2SPayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(VoiceMutedC2SPayload.TYPE, VoiceMutedC2SPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(TractorC2SPayload.TYPE, TractorC2SPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(TractorS2CPayload.TYPE, TractorS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(SphereS2CPayload.TYPE, SphereS2CPayload.CODEC);
@@ -217,6 +219,7 @@ public class Networking {
         ServerPlayNetworking.registerGlobalReceiver(FireConstructC2SPayload.TYPE, FireConstructC2SPayload::handle);
         ServerPlayNetworking.registerGlobalReceiver(CycleConstructC2SPayload.TYPE, CycleConstructC2SPayload::handle);
         ServerPlayNetworking.registerGlobalReceiver(SetColorTweakC2SPayload.TYPE, SetColorTweakC2SPayload::handle);
+        ServerPlayNetworking.registerGlobalReceiver(VoiceMutedC2SPayload.TYPE, VoiceMutedC2SPayload::handle);
         ServerPlayNetworking.registerGlobalReceiver(TractorC2SPayload.TYPE, TractorC2SPayload::handle);
         ServerPlayNetworking.registerGlobalReceiver(ScanC2SPayload.TYPE, ScanC2SPayload::handle);
         ServerPlayNetworking.registerGlobalReceiver(ForgeC2SPayload.TYPE, ForgeC2SPayload::handle);

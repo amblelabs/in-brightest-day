@@ -3,6 +3,8 @@ package dev.amble.core.comms;
 import de.maxhenkel.voicechat.api.VoicechatConnection;
 import de.maxhenkel.voicechat.api.VoicechatPlugin;
 import de.maxhenkel.voicechat.api.VoicechatServerApi;
+import de.maxhenkel.voicechat.api.VoicechatClientApi;
+import de.maxhenkel.voicechat.api.events.ClientVoicechatConnectionEvent;
 import de.maxhenkel.voicechat.api.events.EventRegistration;
 import de.maxhenkel.voicechat.api.events.MicrophonePacketEvent;
 import de.maxhenkel.voicechat.api.events.PlayerDisconnectedEvent;
@@ -25,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class CommsVoicePlugin implements VoicechatPlugin {
     public static final String CATEGORY = "ring_comms";
+    private static volatile @Nullable VoicechatClientApi clientVoice;
     public static final String MEGAPHONE_CATEGORY = "megaphone";
     private static final float[] BAND_LIMITS = {0.25F, 0.55F};
     private static final float[] BAND_GAIN = {2.4F, 1.5F, 1.1F};
@@ -100,9 +103,15 @@ public class CommsVoicePlugin implements VoicechatPlugin {
     @Override
     public void registerEvents(EventRegistration registration) {
         registration.registerEvent(VoicechatServerStartedEvent.class, this::onServerStarted);
+        registration.registerEvent(ClientVoicechatConnectionEvent.class, event -> clientVoice = event.isConnected() ? event.getVoicechat() : null);
         registration.registerEvent(MicrophonePacketEvent.class, this::onMicrophone);
         registration.registerEvent(PlayerDisconnectedEvent.class, event -> forget(event.getPlayerUuid()));
         registration.registerEvent(VoicechatServerStoppedEvent.class, event -> List.copyOf(VOICES.keySet()).forEach(CommsVoicePlugin::forget));
+    }
+
+    public static boolean clientMuted() {
+        VoicechatClientApi api = clientVoice;
+        return api != null && (api.isMuted() || api.isDisabled());
     }
 
     private static void forget(UUID id) {

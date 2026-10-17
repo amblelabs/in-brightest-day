@@ -194,7 +194,7 @@ public final class IndigoOne {
         }
         List<ServerPlayer> online = server.getPlayerList().getPlayers();
         if (online.size() < BrightestDayConfig.get().indigoMinPlayers) return;
-        List<ServerPlayer> ringless = online.stream().filter(player -> BrightestDayAttachments.getRing(player).isEmpty() && !player.isSpectator() && !RingBonds.bonded(player)).toList();
+        List<ServerPlayer> ringless = online.stream().filter(player -> BrightestDayAttachments.getRing(player).isEmpty() && !player.isSpectator() && !RingBonds.bonded(player) && EmotionGates.allows(player, LanternCorps.INDIGO)).toList();
         if (ringless.isEmpty()) return;
 
         ServerPlayer chosen = ringless.get(server.overworld().getRandom().nextInt(ringless.size()));

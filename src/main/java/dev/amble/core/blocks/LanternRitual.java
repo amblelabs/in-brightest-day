@@ -42,10 +42,12 @@ public final class LanternRitual {
         final int mode;
         final float yaw;
         final boolean oath;
+        final int duration;
         int age;
 
-        Session(BlockPos pos, LanternCorps corps, Vec3 anchor, int mode, float yaw, boolean oath) {
+        Session(BlockPos pos, LanternCorps corps, Vec3 anchor, int mode, float yaw, boolean oath, int duration) {
             this.oath = oath;
+            this.duration = duration;
             this.pos = pos;
             this.corps = corps;
             this.anchor = anchor;
@@ -70,7 +72,7 @@ public final class LanternRitual {
         float yaw = LanternBlock.facingYaw(state);
         Vec3 anchor = snap(player, pos, mode, yaw);
         boolean oath = OathCharge.begin(player, corps, true);
-        SESSIONS.put(player.getUUID(), new Session(pos.immutable(), corps, anchor, mode, yaw, oath));
+        SESSIONS.put(player.getUUID(), new Session(pos.immutable(), corps, anchor, mode, yaw, oath, OathCharge.timed(player, DURATION_TICKS)));
         broadcast(player, mode, yaw);
         return true;
     }
@@ -105,15 +107,15 @@ public final class LanternRitual {
             int insert = insertTick(session.mode);
             if (session.age == insert) LanternCharging.inserted(player.level(), session.pos);
             if (session.age >= insert) {
-                float progress = session.oath ? OathCharge.progress(player) : (session.age - insert) / (float) (DURATION_TICKS - insert);
+                float progress = session.oath ? OathCharge.progress(player) : (session.age - insert) / (float) (session.duration - insert);
                 if (!session.oath) {
-                    PowerRingItem.chargeRing(ring, Mth.ceil((float) BrightestDayComponents.MAX_POWER / (DURATION_TICKS - insert)));
+                    PowerRingItem.chargeRing(ring, Mth.ceil((float) BrightestDayComponents.MAX_POWER / (session.duration - insert)));
                     if (slotted) BrightestDayAttachments.setRing(player, ring);
                 }
                 effects(player.level(), session, insert, progress);
             }
 
-            boolean done = session.oath ? session.age >= insert && OathCharge.complete(player) : session.age >= DURATION_TICKS;
+            boolean done = session.oath ? session.age >= insert && OathCharge.complete(player) : session.age >= session.duration;
             if (!done) continue;
             iterator.remove();
             if (session.oath) OathCharge.end(player);

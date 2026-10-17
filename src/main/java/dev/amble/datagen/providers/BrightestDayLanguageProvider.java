@@ -136,6 +136,10 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("gui.brightestday.spectrum.rank_short", "R%s:");
         builder.add("gui.brightestday.spectrum.meter", "%s: %s / %s");
         builder.add("gui.brightestday.spectrum.capacity", "Ring capacity %s%% · Arsenal %s%%");
+        builder.add("gui.brightestday.spectrum.blocked", "Your %s (%s / %s) blocks this ring");
+        builder.add("gui.brightestday.spectrum.opposed", "Opposed by %s: %s / %s");
+        builder.add("gui.brightestday.spectrum.will_lead", "Will over Fear: %s / %s");
+        builder.add("gui.brightestday.spectrum.balance", "White balance: lowest %s / %s, spread %s / %s");
         builder.add("gui.brightestday.spectrum.milestones", "Milestones");
         builder.add("gui.brightestday.spectrum.unrevealed", "R%s: a path not yet revealed");
         builder.add("milestone.brightestday.green_low_win", "Win a fight after dropping below 3 hearts");
@@ -480,6 +484,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.construct_ring.faded", "A construct ring fades away.");
         builder.add("message.brightestday.white_fusion.faded", "The White light fades from the ring.");
         builder.add("message.brightestday.white_fusion.lacking", "The rings need a whole heart. Still lacking: %s");
+        builder.add("message.brightestday.white_fusion.unbalanced", "The rings need balance. Your spectrum spreads %s / %s.");
         builder.add("message.brightestday.white_fusion.formed", "Every light of the spectrum becomes one. You bear the White for %s minutes.");
         builder.add("message.brightestday.white_fusion.returned", "Rings lent to the White light have returned to you.");
         builder.add("tooltip.brightestday.ring.construct", "Construct ring by %s · %s left");
