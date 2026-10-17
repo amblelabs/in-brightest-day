@@ -6,6 +6,7 @@ import dev.amble.core.BrightestDayItems;
 import dev.amble.core.progression.Emotion;
 import dev.amble.core.progression.IndigoOne;
 import dev.amble.core.progression.SpectrumMeters;
+import dev.amble.core.progression.EmotionGates;
 import dev.amble.core.ringpowers.LanternCorps;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
@@ -48,8 +49,8 @@ public final class ForgeRecipes {
 
     public static boolean worthy(ForgeRecipe recipe, Emotion emotion, Player player) {
         if (player.hasInfiniteMaterials()) return true;
-        if (recipe.key().equals(FUSE)) return SpectrumMeters.passes(player, Emotion.HOPE) && SpectrumMeters.passes(player, Emotion.LOVE);
-        return SpectrumMeters.passes(player, emotion);
+        if (recipe.key().equals(FUSE)) return SpectrumMeters.passes(player, Emotion.HOPE) && SpectrumMeters.passes(player, Emotion.LOVE) && EmotionGates.allows(player, LanternCorps.INDIGO);
+        return SpectrumMeters.passes(player, emotion) && EmotionGates.allows(player, emotion.corps());
     }
 
     private static ItemStack ring(LanternCorps corps) {

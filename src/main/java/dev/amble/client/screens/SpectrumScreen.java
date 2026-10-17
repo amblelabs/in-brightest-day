@@ -13,6 +13,7 @@ import dev.amble.core.progression.Milestones;
 import dev.amble.core.progression.Pilgrimage;
 import dev.amble.core.progression.RingRanks;
 import dev.amble.core.progression.SpectrumMeters;
+import dev.amble.core.progression.EmotionGates;
 import dev.amble.core.ringpowers.LanternCorps;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -47,6 +48,10 @@ public class SpectrumScreen extends Screen {
     private static final int TASK_BAR_HEIGHT = 3;
     private static final int DONE = 0xFF7DFF9A;
     private static final int LOCKED = 0xFF5E5A50;
+    private static final int BLOCKED = 0xFFFF6A5A;
+    private static final int OPPOSITION_IDLE = 0x40FFFFFF;
+    private static final Emotion[][] OPPOSED = {
+            {Emotion.FEAR, Emotion.WILL}, {Emotion.FEAR, Emotion.HOPE}, {Emotion.AVARICE, Emotion.COMPASSION}, {Emotion.RAGE, Emotion.LOVE}};
     private static final int BUTTON_HEIGHT = 14;
     private static final int BUTTON_PADDING = 6;
     private static final int BUTTON_Y = 5;
@@ -165,6 +170,48 @@ public class SpectrumScreen extends Screen {
             graphics.fill(x + 6, y + 14, x + 6 + barWidth, y + 16, LanternWidgets.BAR_EMPTY);
             graphics.fill(x + 6, y + 14, x + 6 + filled, y + 16, color);
         }
+        this.opposition(graphics, player);
+    }
+
+    private void opposition(GuiGraphicsExtractor graphics, Player player) {
+        int edge = this.left + MARGIN + LIST_WIDTH;
+        for (int lane = 0; lane < OPPOSED.length; lane++) {
+            Emotion first = OPPOSED[lane][0];
+            Emotion second = OPPOSED[lane][1];
+            int a = this.rowY(first.ordinal()) + ROW_HEIGHT / 2 - 1;
+            int b = this.rowY(second.ordinal()) + ROW_HEIGHT / 2 - 1;
+            boolean firstActive = SpectrumMeters.get(player, first) > EmotionGates.BLOCK && EmotionGates.blocker(second.corps()).orElse(null) == first;
+            boolean secondActive = SpectrumMeters.get(player, second) > EmotionGates.BLOCK && EmotionGates.blocker(first.corps()).orElse(null) == second;
+            int color = firstActive ? ARGB.opaque(first.corps().color()) : secondActive ? ARGB.opaque(second.corps().color()) : OPPOSITION_IDLE;
+            int x = edge + 2 + lane * 2;
+            graphics.fill(edge, a, x + 1, a + 1, color);
+            graphics.fill(edge, b, x + 1, b + 1, color);
+            graphics.fill(x, Math.min(a, b), x + 1, Math.max(a, b) + 1, color);
+        }
+    }
+
+    private void gates(GuiGraphicsExtractor graphics, Player player, LanternCorps corps, int x, int y) {
+        Emotion against = EmotionGates.blocker(corps).orElse(null);
+        if (against != null) {
+            int value = SpectrumMeters.get(player, against);
+            boolean blocked = value > EmotionGates.BLOCK;
+            Component name = Component.translatable("emotion.brightestday." + against.getSerializedName());
+            Component text = Component.translatable(blocked ? "gui.brightestday.spectrum.blocked" : "gui.brightestday.spectrum.opposed", name, value, EmotionGates.BLOCK);
+            graphics.text(this.font, text, x, y, blocked ? BLOCKED : LanternWidgets.TEXT_DIM, false);
+            y += 10;
+        }
+        if (corps == LanternCorps.GREEN) {
+            int lead = EmotionGates.willLead(player);
+            graphics.text(this.font, Component.translatable("gui.brightestday.spectrum.will_lead", lead, EmotionGates.GREEN_MARGIN), x, y, lead >= EmotionGates.GREEN_MARGIN ? DONE : BLOCKED, false);
+            y += 10;
+        }
+        boolean balanced = EmotionGates.balanced(player);
+        graphics.text(this.font, Component.translatable("gui.brightestday.spectrum.balance", EmotionGates.lowest(player), EmotionGates.BALANCE_FLOOR, EmotionGates.spread(player), EmotionGates.BALANCE_SPREAD),
+                x, y, balanced ? DONE : LanternWidgets.TEXT_DIM, false);
+    }
+
+    private int gateLines(LanternCorps corps) {
+        return 1 + (EmotionGates.blocker(corps).isPresent() ? 1 : 0) + (corps == LanternCorps.GREEN ? 1 : 0);
     }
 
     private void detail(GuiGraphicsExtractor graphics, Player player, LanternCorps corps, int accent) {
@@ -194,6 +241,8 @@ public class SpectrumScreen extends Screen {
         int gate = x + DETAIL_WIDTH * Emotion.GATE / Emotion.MAX;
         graphics.fill(gate, y - 2, gate + 1, y + METER_HEIGHT + 2, meter >= Emotion.GATE ? DONE : 0xFFFFFFFF);
         y += METER_HEIGHT + 4;
+        this.gates(graphics, player, corps, x, y);
+        y += this.gateLines(corps) * 10 + 2;
 
         int capacity = Math.round(RingRanks.capacityFraction(rank) * 100);
         int arsenal = Math.round(RingRanks.arsenalFraction(rank) * 100);

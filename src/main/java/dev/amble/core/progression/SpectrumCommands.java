@@ -66,6 +66,8 @@ public final class SpectrumCommands {
                                 .then(Commands.literal("fill").then(player().executes(context -> chargeSet(context, -1))))
                                 .then(Commands.literal("set").then(player().then(amount(0, BrightestDayComponents.MAX_POWER)
                                         .executes(context -> chargeSet(context, IntegerArgumentType.getInteger(context, "amount")))))))
+                        .then(admin("odds")
+                                .then(player().then(corps().executes(SpectrumCommands::odds))))
                         .then(admin("offer")
                                 .then(Commands.literal("force").then(player().then(corps().executes(context -> offer(context, true)))))
                                 .then(player().then(corps().executes(context -> offer(context, false)))))
@@ -132,6 +134,12 @@ public final class SpectrumCommands {
         String value = StringArgumentType.getString(context, "corps");
         for (LanternCorps corps : LanternCorps.values()) if (corps.getSerializedName().equals(value)) return corps;
         throw UNKNOWN.create(value);
+    }
+
+    private static int odds(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+        ServerPlayer player = target(context);
+        for (Component line : RingOdds.report(player, corps(context))) context.getSource().sendSuccess(() -> line, false);
+        return 1;
     }
 
     private static int reply(CommandContext<CommandSourceStack> context, Component message) {

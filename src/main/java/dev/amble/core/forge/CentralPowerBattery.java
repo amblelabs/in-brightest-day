@@ -17,6 +17,7 @@ import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.loyalty.RingLoyalty;
 import dev.amble.core.progression.Emotion;
 import dev.amble.core.progression.SpectrumMeters;
+import dev.amble.core.progression.EmotionGates;
 import dev.amble.core.progression.WorldProgress;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.ringpowers.LanternCorps;
@@ -644,7 +645,7 @@ public final class CentralPowerBattery {
         String name = ring.getHoverName().getString();
         ServerPlayer target = level.getServer().getPlayerList().getPlayerByName(name);
         Emotion emotion = Emotion.of(battery.corps()).orElseThrow();
-        boolean worthy = target != null && BrightestDayAttachments.getRing(target).isEmpty() && !RingBonds.bonded(target) && SpectrumMeters.passes(target, emotion) && CorpsCaps.admits(target, battery.corps());
+        boolean worthy = target != null && BrightestDayAttachments.getRing(target).isEmpty() && !RingBonds.bonded(target) && SpectrumMeters.passes(target, emotion) && CorpsCaps.admits(target, battery.corps()) && EmotionGates.allows(target, battery.corps());
         if (!worthy) {
             item.addTag("brightestday.refused");
             item.setDeltaMovement(0.0, 0.5, 0.0);

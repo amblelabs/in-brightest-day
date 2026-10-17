@@ -132,7 +132,8 @@ public class LanternBlockItem extends BlockItem {
             return;
         }
 
-        int elapsed = (oath ? OATH_USE_TICKS : CHARGE_TICKS) - ticksRemaining - INSERT_TICKS;
+        int charge = OathCharge.timed(server, CHARGE_TICKS);
+        int elapsed = (oath ? OATH_USE_TICKS : charge) - ticksRemaining - INSERT_TICKS;
         if (elapsed < 0) return;
         if (elapsed == 0) LanternCharging.inserted(serverLevel, player.blockPosition());
 
@@ -140,9 +141,9 @@ public class LanternBlockItem extends BlockItem {
         if (oath) {
             progress = OathCharge.progress(server);
         } else {
-            progress = (float) elapsed / (CHARGE_TICKS - INSERT_TICKS);
+            progress = (float) elapsed / (charge - INSERT_TICKS);
             ItemStack ring = PowerRingItem.getWornRing(player);
-            PowerRingItem.chargeRing(ring, Mth.ceil((float) BrightestDayComponents.MAX_POWER / (CHARGE_TICKS - INSERT_TICKS)));
+            PowerRingItem.chargeRing(ring, Mth.ceil((float) BrightestDayComponents.MAX_POWER / (charge - INSERT_TICKS)));
             if (ring == BrightestDayAttachments.getRing(player)) BrightestDayAttachments.setRing(player, ring);
         }
 
@@ -203,7 +204,7 @@ public class LanternBlockItem extends BlockItem {
 
     @Override
     public int getUseDuration(ItemStack stack, LivingEntity user) {
-        return reciting(user) ? OATH_USE_TICKS : CHARGE_TICKS;
+        return reciting(user) ? OATH_USE_TICKS : OathCharge.timed(user, CHARGE_TICKS);
     }
 
     @Override

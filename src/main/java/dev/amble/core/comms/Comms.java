@@ -18,6 +18,8 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import org.jspecify.annotations.Nullable;
 
+import net.minecraft.world.entity.player.Player;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -42,6 +44,7 @@ public final class Comms {
             stop(server, id);
             DIALED.remove(id);
             TEAM_CHANNEL.remove(id);
+            MUTED.remove(id);
         });
         EntityTrackingEvents.START_TRACKING.register((entity, watcher) -> {
             if (entity instanceof ServerPlayer player) ServerPlayNetworking.send(watcher, new CommsTalkingS2CPayload(player.getId(), TRANSMITTING.containsKey(player.getUUID())));
@@ -49,13 +52,24 @@ public final class Comms {
     }
 
     private static volatile Predicate<UUID> voiceReady = id -> false;
+    private static final Set<UUID> MUTED = ConcurrentHashMap.newKeySet();
+    public static volatile boolean localMuted;
 
     public static void setVoiceReady(Predicate<UUID> check) {
         voiceReady = check;
     }
 
     public static boolean voiceReady(UUID player) {
-        return available() && voiceReady.test(player);
+        return available() && !MUTED.contains(player) && voiceReady.test(player);
+    }
+
+    public static void setMuted(UUID player, boolean muted) {
+        if (muted) MUTED.add(player);
+        else MUTED.remove(player);
+    }
+
+    public static boolean muted(Player player) {
+        return player.level().isClientSide() ? localMuted : MUTED.contains(player.getUUID());
     }
 
     public static boolean available() {

@@ -11,6 +11,7 @@ import dev.amble.core.progression.Emotion;
 import dev.amble.core.progression.RingOffers;
 import dev.amble.core.progression.RingRanks;
 import dev.amble.core.progression.SpectrumMeters;
+import dev.amble.core.progression.EmotionGates;
 import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.ringpowers.RingPower;
 import dev.amble.core.ringpowers.RingPowerRegistry;
@@ -178,7 +179,7 @@ public final class WhiteFusion {
     private static List<Emotion> lacking(ServerPlayer player) {
         List<Emotion> lacking = new ArrayList<>();
         for (Emotion emotion : Emotion.values()) {
-            if (SPECTRUM.contains(emotion.corps()) && !SpectrumMeters.passes(player, emotion)) lacking.add(emotion);
+            if (SPECTRUM.contains(emotion.corps()) && SpectrumMeters.get(player, emotion) < EmotionGates.BALANCE_FLOOR) lacking.add(emotion);
         }
         return lacking;
     }
@@ -230,6 +231,14 @@ public final class WhiteFusion {
             if (found.size() < SPECTRUM.size()) continue;
 
             List<Emotion> lacking = lacking(fuser);
+            if (lacking.isEmpty() && !EmotionGates.balanced(fuser)) {
+                long now = server.overworld().getGameTime();
+                if (now - NOTICED.getOrDefault(fuser.getUUID(), Long.MIN_VALUE / 2) >= NOTICE_COOLDOWN) {
+                    NOTICED.put(fuser.getUUID(), now);
+                    fuser.sendOverlayMessage(Component.translatable("message.brightestday.white_fusion.unbalanced", EmotionGates.spread(fuser), EmotionGates.BALANCE_SPREAD).withColor(LanternCorps.WHITE.color()));
+                }
+                continue;
+            }
             if (!lacking.isEmpty()) {
                 long now = server.overworld().getGameTime();
                 if (now - NOTICED.getOrDefault(fuser.getUUID(), Long.MIN_VALUE / 2) >= NOTICE_COOLDOWN) {
