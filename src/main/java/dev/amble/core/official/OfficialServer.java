@@ -14,7 +14,7 @@ import java.util.UUID;
 
 public final class OfficialServer {
     public static final String NAME = "In Brightest Day - Official Server";
-    public static final String IP = "in-brightest-day.modrinth.gg";
+    public static final String IP = "168.100.161.33:25578";
     private static final String PREFIX = "brightestday:roster:";
     private static final int MAX_MEMBERS = 300;
 
