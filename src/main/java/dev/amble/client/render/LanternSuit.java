@@ -7,6 +7,7 @@ import dev.amble.core.ringpowers.ColorTweak;
 import dev.amble.core.ringpowers.CorpsColors;
 import dev.amble.core.ringpowers.EyePaint;
 import dev.amble.core.ringpowers.LanternCorps;
+import dev.amble.core.ringpowers.MaskLayer;
 import dev.amble.core.ringpowers.RingBenefits;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.FabricRenderState;
@@ -57,13 +58,13 @@ public final class LanternSuit {
                     && PowerRingItem.hasCharge(player);
             EyePaint eyes = BrightestDayAttachments.getEyes(player);
             boolean eyesWanted = !eyes.isEmpty() && RingBenefits.isActive(player);
-            track(player.getId(), corps.orElse(null), tweak.style(), CorpsColors.of(player), wanted, tweak.mask(), tweak.maskOffset(), eyes, eyesWanted);
+            track(player.getId(), corps.orElse(null), tweak.style(), CorpsColors.of(player), wanted, tweak.mask(), tweak.maskOffset(), tweak.maskLayer(), eyes, eyesWanted);
         }
 
         for (Mannequin mannequin : Holograms.all(level)) {
             HologramSettings settings = Holograms.of(mannequin).settings();
             boolean lit = Holograms.lit(mannequin);
-            track(mannequin.getId(), Holograms.corps(mannequin).orElse(null), ColorTweak.MOVIE, Holograms.color(mannequin), lit && settings.suit(), settings.mask(), settings.maskOffset(),
+            track(mannequin.getId(), Holograms.corps(mannequin).orElse(null), settings.style(), Holograms.color(mannequin), lit && settings.suit(), settings.mask(), settings.maskOffset(), settings.maskLayer(),
                     settings.eyes(), lit && !settings.eyes().isEmpty());
         }
 
@@ -74,13 +75,14 @@ public final class LanternSuit {
         });
     }
 
-    private static void track(int id, @Nullable LanternCorps corps, String style, int color, boolean wanted, boolean mask, int maskOffset, EyePaint eyes, boolean eyesWanted) {
+    private static void track(int id, @Nullable LanternCorps corps, String style, int color, boolean wanted, boolean mask, int maskOffset, MaskLayer maskLayer, EyePaint eyes, boolean eyesWanted) {
         Fade fade = FADES.get(id);
         if (fade == null) {
             if (!wanted && !eyesWanted) return;
             fade = new Fade(mask);
             FADES.put(id, fade);
         }
+        fade.maskLayer = maskLayer;
         if (wanted && corps != null) {
             if (fade.current > 0.0F && (!style.equals(fade.style) || corps != fade.corps)) fade.flashCurrent = 1.0F;
             fade.style = style;
@@ -110,7 +112,7 @@ public final class LanternSuit {
         float maskProgress = fade.maskProgress(partialTicks);
         boolean comic = SuitStyles.comic(SuitStyles.resolve(fade.corps, fade.style));
         float flash = Math.max(fade.flash(partialTicks), comic && progress < 1.0F ? 1.0F - progress : 0.0F);
-        SuitTextures.Entry entry = SuitTextures.update(entity.getId(), state.skin, fade.corps, fade.style, state.mainArm, fade.maskOffset, maskProgress, progress, fade.color,
+        SuitTextures.Entry entry = SuitTextures.update(entity.getId(), state.skin, fade.corps, fade.style, state.mainArm, fade.maskOffset, fade.maskLayer, maskProgress, progress, fade.color,
                 fade.eyes, eyeProgress, fade.eyeColor, flash);
         if (entry == null) return;
 
@@ -130,6 +132,7 @@ public final class LanternSuit {
         private float flashPrevious;
         private float flashCurrent;
         private int maskOffset;
+        private MaskLayer maskLayer = MaskLayer.AUTO;
         private float maskPrevious;
         private float maskCurrent;
         private float eyePrevious;

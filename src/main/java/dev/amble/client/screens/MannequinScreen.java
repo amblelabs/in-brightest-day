@@ -1,5 +1,6 @@
 package dev.amble.client.screens;
 
+import dev.amble.client.render.SuitStyles;
 import dev.amble.client.effects.PoseAnimations;
 import dev.amble.client.poses.PoseLibrary;
 import dev.amble.client.render.Holograms;
@@ -9,6 +10,7 @@ import dev.amble.core.mannequin.HologramSettings;
 import dev.amble.core.menus.MannequinMenu;
 import dev.amble.core.networking.payloads.c2s.MannequinEditC2SPayload;
 import dev.amble.core.ringpowers.ColorTweak;
+import dev.amble.core.ringpowers.MaskLayer;
 import dev.amble.core.ringpowers.LanternCorps;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.entity.ClientAvatarEntity;
@@ -115,7 +117,8 @@ public class MannequinScreen extends AbstractContainerScreen<MannequinMenu> {
                     lockLabel, this.font, this.settings.locked(), value -> this.edit(s -> s.withLocked(value))));
         }
 
-        this.toggle(TOGGLE_LEFT, 0, "gui.brightestday.suit", this.settings.suit(), value -> s -> s.withSuit(value));
+        this.addRenderableWidget(Button.builder(this.suitLabel(), button -> this.cycleSuit())
+                .bounds(this.leftPos + TOGGLE_LEFT, this.topPos + TOGGLE_Y, TOGGLE_MIDDLE - TOGGLE_LEFT - 4, ROW_HEIGHT).build());
         this.toggle(TOGGLE_MIDDLE, 0, "gui.brightestday.mannequin.aura", this.settings.aura(), value -> s -> s.withAura(value));
         this.toggle(TOGGLE_RIGHT, 0, "gui.brightestday.mask", this.settings.mask(), value -> s -> s.withMask(value));
         this.toggle(TOGGLE_LEFT, 1, "gui.brightestday.insignia", this.settings.insignia(), value -> s -> s.withInsignia(value));
@@ -136,8 +139,15 @@ public class MannequinScreen extends AbstractContainerScreen<MannequinMenu> {
                 value -> Component.translatable("gui.brightestday.mannequin.rotation", value * ROTATE_STEP),
                 value -> this.edit(s -> s.withYaw(Mth.wrapDegrees(value * ROTATE_STEP)))));
         int sliderWidth = (IMAGE_WIDTH - MARGIN * 2 - 4) / 2;
-        this.addRenderableWidget(new MaskHeightSlider(this.leftPos + MARGIN + sliderWidth + 4, this.topPos + ROTATE_Y, sliderWidth, ROW_HEIGHT,
+        int layerWidth = 64;
+        this.addRenderableWidget(new MaskHeightSlider(this.leftPos + MARGIN + sliderWidth + 4, this.topPos + ROTATE_Y, sliderWidth - layerWidth - 4, ROW_HEIGHT,
                 this.settings.maskOffset(), ColorTweak.MAX_MASK_OFFSET, value -> this.edit(s -> s.withMaskOffset(value))));
+        this.addRenderableWidget(Button.builder(this.settings.maskLayer().label(), button -> {
+                    MaskLayer next = this.settings.maskLayer().next();
+                    button.setMessage(next.label());
+                    this.edit(s -> s.withMaskLayer(next));
+                })
+                .bounds(this.leftPos + MARGIN + sliderWidth * 2 + 4 - layerWidth, this.topPos + ROTATE_Y, layerWidth, ROW_HEIGHT).build());
 
         int half = (IMAGE_WIDTH - MARGIN * 2 - 4) / 2;
         this.addRenderableWidget(Button.builder(Component.translatable("gui.brightestday.mannequin.copy_eyes"),
@@ -158,6 +168,27 @@ public class MannequinScreen extends AbstractContainerScreen<MannequinMenu> {
     private void toggle(int x, int row, String key, boolean selected, java.util.function.Function<Boolean, UnaryOperator<HologramSettings>> change) {
         this.addRenderableWidget(new LanternToggle(this.leftPos + x, this.topPos + TOGGLE_Y + row * TOGGLE_STEP, Component.translatable(key), this.font, selected,
                 value -> this.edit(change.apply(value))));
+    }
+
+    private List<String> suitStyles() {
+        LanternCorps corps = this.corps();
+        return SuitStyles.styles(corps == null ? LanternCorps.GREEN : corps);
+    }
+
+    private Component suitLabel() {
+        Component style = this.settings.suit()
+                ? SuitStyles.name(SuitStyles.resolve(this.corps() == null ? LanternCorps.GREEN : this.corps(), this.settings.style()))
+                : Component.translatable("gui.brightestday.mannequin.suit_off");
+        return Component.translatable("gui.brightestday.mannequin.suit_style", style);
+    }
+
+    private void cycleSuit() {
+        List<String> styles = this.suitStyles();
+        int current = this.settings.suit() ? styles.indexOf(SuitStyles.resolve(this.corps() == null ? LanternCorps.GREEN : this.corps(), this.settings.style())) + 1 : 0;
+        int next = (current + 1) % (styles.size() + 1);
+        if (next == 0) this.edit(s -> s.withSuit(false));
+        else this.edit(s -> s.withSuit(true).withStyle(styles.get(next - 1)));
+        this.rebuildWidgets();
     }
 
     private List<PoseLibrary.Pose> poses() {

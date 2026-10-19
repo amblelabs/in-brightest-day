@@ -27,9 +27,17 @@ import java.util.function.IntSupplier;
 import java.util.function.Supplier;
 
 public class InsigniaScreen extends Screen {
-    private static final int CELL = 16;
-    private static final int GRID_WIDTH = CELL * (int) InsigniaAnchor.WIDTH;
-    private static final int GRID_HEIGHT = CELL * (int) InsigniaAnchor.HEIGHT;
+    private static final int MAX_CELL = 8;
+    private static final int MIN_CELL = 4;
+    private static final int MARGIN_Y = 70;
+    private static final int[][] FACES = {
+            {8, 8, 40, 8},
+            {20, 20, 20, 36},
+            {4, 20, 4, 36},
+            {20, 52, 4, 52},
+            {44, 20, 44, 36},
+            {36, 52, 52, 52}
+    };
     private static final int BUTTON_WIDTH = 90;
     private static final int BUTTON_HEIGHT = 20;
     private static final int GAP = 4;
@@ -46,6 +54,7 @@ public class InsigniaScreen extends Screen {
     private boolean dragging;
     private int gridLeft;
     private int gridTop;
+    private int cell = MAX_CELL;
 
     public InsigniaScreen(@Nullable Screen parent) {
         this(parent, BrightestDayAttachments.getInsigniaAnchor(Minecraft.getInstance().player), () -> Minecraft.getInstance().player.getSkin().body().texturePath(),
@@ -67,10 +76,13 @@ public class InsigniaScreen extends Screen {
 
     @Override
     protected void init() {
-        this.gridLeft = (this.width - GRID_WIDTH) / 2 - (BUTTON_WIDTH + GAP * 2) / 2;
-        this.gridTop = (this.height - GRID_HEIGHT) / 2;
+        this.cell = Mth.clamp((this.height - MARGIN_Y) / (int) InsigniaAnchor.HEIGHT, MIN_CELL, MAX_CELL);
+        int gridWidth = this.gridWidth();
+        int gridHeight = this.gridHeight();
+        this.gridLeft = (this.width - gridWidth) / 2 - (BUTTON_WIDTH + GAP * 2) / 2;
+        this.gridTop = (this.height - gridHeight) / 2;
 
-        int buttonX = this.gridLeft + GRID_WIDTH + GAP * 3;
+        int buttonX = this.gridLeft + gridWidth + GAP * 3;
         this.addRenderableWidget(Button.builder(Component.translatable("gui.brightestday.insignia.reset"), button -> {
             this.update(InsigniaAnchor.DEFAULT);
             this.rebuildWidgets();
@@ -84,17 +96,31 @@ public class InsigniaScreen extends Screen {
                 this.anchor.echoes(), InsigniaAnchor.MAX_ECHOES,
                 step -> Component.translatable("gui.brightestday.insignia.echoes", step),
                 step -> this.update(this.anchor.withEchoes(step).sanitized())));
+        int scaleMin = Math.round(InsigniaAnchor.MIN_SCALE / InsigniaAnchor.SCALE_STEP);
+        int scaleSteps = Math.round(InsigniaAnchor.MAX_SCALE / InsigniaAnchor.SCALE_STEP) - scaleMin;
+        this.addRenderableWidget(new StepSlider(buttonX, this.gridTop + (BUTTON_HEIGHT + GAP) * 4, BUTTON_WIDTH, BUTTON_HEIGHT,
+                Math.round(this.anchor.scale() / InsigniaAnchor.SCALE_STEP) - scaleMin, scaleSteps,
+                step -> Component.translatable("gui.brightestday.insignia.scale", String.format("%.2f", (step + scaleMin) * InsigniaAnchor.SCALE_STEP)),
+                step -> this.update(this.anchor.withScale((step + scaleMin) * InsigniaAnchor.SCALE_STEP).sanitized())));
         this.addRenderableWidget(Button.builder(Component.translatable("gui.done"), button -> this.onClose())
-                .bounds(buttonX, this.gridTop + GRID_HEIGHT - BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT).build());
+                .bounds(buttonX, this.gridTop + gridHeight - BUTTON_HEIGHT, BUTTON_WIDTH, BUTTON_HEIGHT).build());
+    }
+
+    private int gridWidth() {
+        return this.cell * (int) InsigniaAnchor.WIDTH;
+    }
+
+    private int gridHeight() {
+        return this.cell * (int) InsigniaAnchor.HEIGHT;
     }
 
     private boolean inGrid(double x, double y) {
-        return x >= this.gridLeft && y >= this.gridTop && x <= this.gridLeft + GRID_WIDTH && y <= this.gridTop + GRID_HEIGHT;
+        return x >= this.gridLeft && y >= this.gridTop && x <= this.gridLeft + this.gridWidth() && y <= this.gridTop + this.gridHeight();
     }
 
     private void moveTo(double x, double y) {
-        float px = (float) Mth.clamp((x - this.gridLeft) / CELL, 0.0, InsigniaAnchor.WIDTH);
-        float py = (float) Mth.clamp((y - this.gridTop) / CELL, 0.0, InsigniaAnchor.HEIGHT);
+        float px = (float) Mth.clamp((x - this.gridLeft) / this.cell, 0.0, InsigniaAnchor.WIDTH);
+        float py = (float) Mth.clamp((y - this.gridTop) / this.cell, 0.0, InsigniaAnchor.HEIGHT);
         this.update(this.anchor.withPosition(px, py).sanitized());
     }
 
@@ -130,28 +156,37 @@ public class InsigniaScreen extends Screen {
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
         super.extractRenderState(graphics, mouseX, mouseY, a);
 
-        graphics.centeredText(this.font, this.title, this.gridLeft + GRID_WIDTH / 2, this.gridTop - 22, 0xFFFFFFFF);
-        graphics.centeredText(this.font, Component.translatable("gui.brightestday.insignia.hint"), this.gridLeft + GRID_WIDTH / 2, this.gridTop + GRID_HEIGHT + 8, 0xFFA0A0A0);
+        int gridWidth = this.gridWidth();
+        int gridHeight = this.gridHeight();
+        graphics.centeredText(this.font, this.title, this.gridLeft + gridWidth / 2, this.gridTop - 22, 0xFFFFFFFF);
+        graphics.centeredText(this.font, Component.translatable("gui.brightestday.insignia.hint"), this.gridLeft + gridWidth / 2, this.gridTop + gridHeight + 8, 0xFFA0A0A0);
 
         Identifier skin = this.skin.get();
-        graphics.fill(this.gridLeft - 1, this.gridTop - 1, this.gridLeft + GRID_WIDTH + 1, this.gridTop + GRID_HEIGHT + 1, 0xFF000000);
-        graphics.blit(RenderPipelines.GUI_TEXTURED, skin, this.gridLeft, this.gridTop, 20.0F, 20.0F, GRID_WIDTH, GRID_HEIGHT, 8, 12, 64, 64);
-        graphics.blit(RenderPipelines.GUI_TEXTURED, skin, this.gridLeft, this.gridTop, 20.0F, 36.0F, GRID_WIDTH, GRID_HEIGHT, 8, 12, 64, 64);
-        for (int column = 1; column < InsigniaAnchor.WIDTH; column++) {
-            graphics.fill(this.gridLeft + column * CELL, this.gridTop, this.gridLeft + column * CELL + 1, this.gridTop + GRID_HEIGHT, GRID_LINE);
-        }
-        for (int row = 1; row < InsigniaAnchor.HEIGHT; row++) {
-            graphics.fill(this.gridLeft, this.gridTop + row * CELL, this.gridLeft + GRID_WIDTH, this.gridTop + row * CELL + 1, GRID_LINE);
+        InsigniaAnchor.Region selected = this.anchor.region();
+        for (InsigniaAnchor.Region region : InsigniaAnchor.Region.values()) {
+            int[] face = FACES[region.ordinal()];
+            int left = this.gridLeft + region.left * this.cell;
+            int top = this.gridTop + region.top * this.cell;
+            int width = region.right - region.left;
+            int height = region.bottom - region.top;
+            int right = left + width * this.cell;
+            int bottom = top + height * this.cell;
+            graphics.fill(left - 1, top - 1, right + 1, bottom + 1, region == selected ? ARGB.opaque(this.color.getAsInt()) : 0xFF000000);
+            graphics.fill(left, top, right, bottom, 0xFF000000);
+            graphics.blit(RenderPipelines.GUI_TEXTURED, skin, left, top, face[0], face[1], width * this.cell, height * this.cell, width, height, 64, 64);
+            graphics.blit(RenderPipelines.GUI_TEXTURED, skin, left, top, face[2], face[3], width * this.cell, height * this.cell, width, height, 64, 64);
+            for (int column = 1; column < width; column++) graphics.fill(left + column * this.cell, top, left + column * this.cell + 1, bottom, GRID_LINE);
+            for (int row = 1; row < height; row++) graphics.fill(left, top + row * this.cell, right, top + row * this.cell + 1, GRID_LINE);
         }
 
         LanternCorps corps = this.corps.get();
         Identifier texture = Insignia.texture(corps);
         if (texture == null) texture = Insignia.texture(LanternCorps.GREEN);
-        int size = Math.round(InsigniaLayer.SIZE * 16.0F * CELL);
-        int centerX = this.gridLeft + Math.round(this.anchor.x() * CELL);
-        int centerY = this.gridTop + Math.round(this.anchor.y() * CELL);
+        int size = Math.round(InsigniaLayer.SIZE * this.anchor.scale() * 16.0F * this.cell);
+        int centerX = this.gridLeft + Math.round(this.anchor.x() * this.cell);
+        int centerY = this.gridTop + Math.round(this.anchor.y() * this.cell);
         int color = ARGB.color(PREVIEW_ALPHA, ARGB.opaque(this.color.getAsInt()));
-        graphics.enableScissor(this.gridLeft, this.gridTop, this.gridLeft + GRID_WIDTH, this.gridTop + GRID_HEIGHT);
+        graphics.enableScissor(this.gridLeft - this.cell * 2, this.gridTop - this.cell * 2, this.gridLeft + gridWidth + this.cell * 2, this.gridTop + gridHeight + this.cell * 2);
         graphics.blit(RenderPipelines.GUI_TEXTURED, texture, centerX - size / 2, centerY - size / 2, 0.0F, 0.0F, size, size, 16, 16, 16, 16, color);
         graphics.disableScissor();
         graphics.fill(centerX - 3, centerY, centerX + 4, centerY + 1, CENTER_MARK);

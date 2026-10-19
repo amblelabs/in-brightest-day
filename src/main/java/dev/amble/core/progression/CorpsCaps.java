@@ -3,6 +3,7 @@ package dev.amble.core.progression;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.loyalty.RingBonds;
+import dev.amble.core.rings.ConstructRings;
 import dev.amble.core.ringpowers.LanternCorps;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
@@ -39,6 +40,7 @@ public final class CorpsCaps {
     }
 
     public static boolean admits(Player player, ItemStack ring) {
+        if (ConstructRings.temporary(ring)) return true;
         return PowerRingItem.getCorps(ring).map(corps -> admits(player, corps)).orElse(true);
     }
 
@@ -49,6 +51,7 @@ public final class CorpsCaps {
     }
 
     public static boolean check(Player player, ItemStack ring) {
+        if (ConstructRings.temporary(ring)) return true;
         return PowerRingItem.getCorps(ring).map(corps -> check(player, corps)).orElse(true);
     }
 

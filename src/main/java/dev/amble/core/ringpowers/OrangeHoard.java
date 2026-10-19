@@ -21,7 +21,8 @@ public final class OrangeHoard {
             Map.entry(Items.ANCIENT_DEBRIS, 8),
             Map.entry(Items.NETHERITE_SCRAP, 8),
             Map.entry(Items.NETHERITE_INGOT, 36),
-            Map.entry(Items.NETHERITE_BLOCK, 324));
+            Map.entry(Items.NETHERITE_BLOCK, 324),
+            Map.entry(Items.DRAGON_EGG, 256));
 
     public static int value(Player player) {
         int value = 0;

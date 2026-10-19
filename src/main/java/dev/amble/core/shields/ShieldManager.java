@@ -24,6 +24,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
@@ -91,6 +92,24 @@ public final class ShieldManager {
         ServerTickEvents.END_SERVER_TICK.register(ShieldManager::tick);
         ServerLivingEntityEvents.ALLOW_DAMAGE.register(ShieldManager::allowDamage);
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> SHIELDS.clear());
+    }
+
+    public static boolean shielded(Level level) {
+        for (Shield shield : SHIELDS) {
+            if (shield.level == level) return true;
+        }
+        return false;
+    }
+
+    public static boolean separates(Level level, Vec3 first, Vec3 second) {
+        for (Shield shield : SHIELDS) {
+            if (shield.level != level) continue;
+            Vec3 center = shield.center();
+            double radius = shield.currentRadius();
+            double reach = radius * radius;
+            if (first.distanceToSqr(center) <= reach != second.distanceToSqr(center) <= reach) return true;
+        }
+        return false;
     }
 
     public static float entityShieldRadius(Entity entity) {

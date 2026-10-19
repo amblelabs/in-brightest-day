@@ -25,7 +25,9 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Prediction;
+import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
@@ -362,7 +364,22 @@ public final class RingBonds {
         return bonds.values().stream().noneMatch(entry -> entry.owner().equals(heir.getUUID()));
     }
 
+    private static void purge(MinecraftServer server) {
+        Map<UUID, Entry> bonds = bonds(server);
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            ItemStack worn = BrightestDayAttachments.getRing(player);
+            if (inspect(player, worn, bonds)) BrightestDayAttachments.setRing(player, worn.isEmpty() ? ItemStack.EMPTY : worn);
+            Inventory inventory = player.getInventory();
+            for (int slot = 0; slot < inventory.getContainerSize(); slot++) inspect(player, inventory.getItem(slot), bonds);
+            Container ender = player.getEnderChestInventory();
+            for (int slot = 0; slot < ender.getContainerSize(); slot++) inspect(player, ender.getItem(slot), bonds);
+            inspect(player, player.containerMenu.getCarried(), bonds);
+            for (Slot slot : player.containerMenu.slots) inspect(player, slot.getItem(), bonds);
+        }
+    }
+
     private static void tick(MinecraftServer server) {
+        purge(server);
         if (server.getTickCount() % TRACK_INTERVAL != 0) return;
         long now = System.currentTimeMillis();
         Map<UUID, Entry> original = bonds(server);

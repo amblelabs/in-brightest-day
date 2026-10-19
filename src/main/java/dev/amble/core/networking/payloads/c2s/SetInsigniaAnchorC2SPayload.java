@@ -22,6 +22,6 @@ public record SetInsigniaAnchorC2SPayload(InsigniaAnchor anchor) implements Cust
     }
 
     public void handle(ServerPlayNetworking.Context context) {
-        BrightestDayAttachments.setInsigniaAnchor(context.player(), this.anchor);
+        BrightestDayAttachments.setInsigniaAnchor(context.player(), this.anchor.sanitized());
     }
 }

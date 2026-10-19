@@ -52,7 +52,11 @@ public class BrightestDayConfig extends Config {
 
     public ConfigGroup healBeam = new ConfigGroup("healBeam");
     @ValidatedFloat.Restrict(min = 0.0F, max = 10.0F)
-    public float healBeamAmount = 1.0F;
+    public float healBeamAmount = 2.0F;
+    @ValidatedFloat.Restrict(min = 1.0F, max = 3.0F)
+    public float healBeamGrowth = 1.35F;
+    @ValidatedFloat.Restrict(min = 0.0F, max = 40.0F)
+    public float healBeamMaxPulse = 12.0F;
     @ValidatedInt.Restrict(min = 20, max = 1200)
     public int healBeamMaxTicks = 200;
     @ValidatedInt.Restrict(min = 0, max = 200)
@@ -211,6 +215,10 @@ public class BrightestDayConfig extends Config {
     public ConfigGroup selfHeal = new ConfigGroup("selfHeal");
     @ValidatedFloat.Restrict(min = 0.0F, max = 10.0F)
     public float selfHealAmount = 1.0F;
+    @ValidatedFloat.Restrict(min = 1.0F, max = 3.0F)
+    public float selfHealGrowth = 1.25F;
+    @ValidatedFloat.Restrict(min = 0.0F, max = 40.0F)
+    public float selfHealMaxPulse = 6.0F;
     @ValidatedInt.Restrict(min = 1, max = 200)
     public int selfHealIntervalTicks = 10;
     @ValidatedInt.Restrict(min = 0, max = 100)
@@ -489,6 +497,10 @@ public class BrightestDayConfig extends Config {
     public int orangeDuelSeconds = 180;
     @ValidatedInt.Restrict(min = 6, max = 48)
     public int orangeArenaRadius = 12;
+    @ValidatedInt.Restrict(min = 0, max = 168000)
+    public int orangeChallengeCooldownTicks = 24000;
+    @ValidatedInt.Restrict(min = 0, max = 72000)
+    public int orangeHolderGraceTicks = 36000;
     public int indigoMinPlayers = 3;
     @ValidatedInt.Restrict(min = 0, max = 30)
     public int indigoSlowSeconds = 3;

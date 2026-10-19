@@ -5,6 +5,7 @@ import dev.amble.core.team.LanternTeams;
 import dev.amble.core.loyalty.RingBonds;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.progression.CorpsCaps;
+import dev.amble.core.progression.CorpsLeaders;
 import dev.amble.core.progression.IndigoOne;
 import dev.amble.core.progression.Milestone;
 import dev.amble.core.progression.Trigger;
@@ -39,6 +40,8 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.protocol.game.ClientboundSoundPacket;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -72,6 +75,7 @@ public final class CentralPowerBattery {
     private static final double THREAT_RADIUS = 32.0;
     private static final int MELEE_DAMAGE = 2;
     private static final long MELEE_COOLDOWN = 10L;
+    private static final long ALERT_INTERVAL = 600L;
     private static final int REPAIR_INTERVAL = 60;
     private static final int OFFER_COST = 50;
     private static final int OFFER_HEALTH = 20;
@@ -85,6 +89,7 @@ public final class CentralPowerBattery {
     private static final Map<BlockPos, ServerBossEvent> BARS = new HashMap<>();
     private static final Map<BlockPos, Map<UUID, Long>> CEREMONIES = new HashMap<>();
     private static final Map<UUID, Long> LAST_STRIKE = new HashMap<>();
+    private static final Map<BlockPos, Long> ALERTED = new HashMap<>();
     private static final Set<BlockPos> AWAITING = new HashSet<>();
     private static final Set<BlockPos> FORMED = new HashSet<>();
 
@@ -97,6 +102,7 @@ public final class CentralPowerBattery {
             BARS.clear();
             CEREMONIES.clear();
             LAST_STRIKE.clear();
+            ALERTED.clear();
             AWAITING.clear();
             FORMED.clear();
         });
@@ -178,9 +184,31 @@ public final class CentralPowerBattery {
         }
         WorldProgress.Battery updated = hurt;
         WorldProgress.update(level.getServer(), state -> state.withBattery(updated));
+        alert(level, updated, attacker);
         level.sendParticles(new DustParticleOptions(battery.corps().color(), 1.8F), battery.pos().getX() + 0.5, battery.pos().getY() + 0.5, battery.pos().getZ() + 0.5, 12, 0.8, 0.8, 0.8, 0.0);
         level.playSound(null, battery.pos(), SoundEvents.AMETHYST_BLOCK_HIT, SoundSource.BLOCKS, 1.0F, 0.6F);
         bar(level, updated);
+    }
+
+    private static void alert(ServerLevel level, WorldProgress.Battery battery, ServerPlayer attacker) {
+        long now = level.getGameTime();
+        boolean shattered = battery.health() <= 0;
+        Long last = ALERTED.get(battery.pos());
+        if (!shattered && last != null && now - last < ALERT_INTERVAL) return;
+        if (shattered) ALERTED.remove(battery.pos());
+        else ALERTED.put(battery.pos(), now);
+        BlockPos pos = battery.pos();
+        int integrity = Math.round(battery.health() * 100.0F / WorldProgress.Battery.MAX_HEALTH);
+        Component message = shattered
+                ? Component.translatable("message.brightestday.battery.alert_shattered", attacker.getDisplayName(), pos.getX(), pos.getY(), pos.getZ())
+                : Component.translatable("message.brightestday.battery.alert", attacker.getDisplayName(), pos.getX(), pos.getY(), pos.getZ(), integrity);
+        Component colored = message.copy().withStyle(ChatFormatting.BOLD).withColor(battery.corps().color());
+        for (ServerPlayer member : level.getServer().getPlayerList().getPlayers()) {
+            if (PowerRingItem.getWornCorps(member).orElse(null) != battery.corps()) continue;
+            member.sendSystemMessage(colored);
+            member.connection.send(new ClientboundSoundPacket(shattered ? BuiltInRegistries.SOUND_EVENT.wrapAsHolder(SoundEvents.BEACON_DEACTIVATE) : SoundEvents.NOTE_BLOCK_BELL, SoundSource.PLAYERS,
+                    member.getX(), member.getEyeY(), member.getZ(), 1.0F, shattered ? 0.6F : 1.4F, member.getRandom().nextLong()));
+        }
     }
 
     private static InteractionResult offer(ServerLevel level, WorldProgress.Battery battery, Player player) {
@@ -546,6 +574,7 @@ public final class CentralPowerBattery {
         WorldProgress.Battery fresh = WorldProgress.Battery.fresh(pos, corps);
         WorldProgress.Battery founded = builder == null ? fresh : fresh.withFounders(List.of(builder.getUUID()));
         WorldProgress.update(level.getServer(), state -> state.withBattery(founded));
+        if (builder instanceof ServerPlayer founder) CorpsLeaders.claim(founder, corps);
     }
 
     public static boolean complete(ServerLevel level, BlockPos core) {

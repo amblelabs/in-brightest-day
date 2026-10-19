@@ -22,5 +22,13 @@ public class BrightestDayLootTableProvider extends FabricBlockLootSubProvider {
         this.dropSelf(BrightestDayBlocks.BLUE_LANTERN_BLOCK);
         this.dropSelf(BrightestDayBlocks.INDIGO_LANTERN_BLOCK);
         this.dropSelf(BrightestDayBlocks.STAR_SAPPHIRE_LANTERN_BLOCK);
+        this.dropSelf(BrightestDayBlocks.GREEN_BATTERY_CORE);
+        this.dropSelf(BrightestDayBlocks.YELLOW_BATTERY_CORE);
+        this.dropSelf(BrightestDayBlocks.RED_BATTERY_CORE);
+        this.dropSelf(BrightestDayBlocks.BLUE_BATTERY_CORE);
+        this.dropSelf(BrightestDayBlocks.INDIGO_BATTERY_CORE);
+        this.dropSelf(BrightestDayBlocks.SAPPHIRE_BATTERY_CORE);
+        this.dropSelf(BrightestDayBlocks.SPECTRUM_FORGE);
+        this.dropSelf(BrightestDayBlocks.ZAMARONIAN_CRYSTAL);
     }
 }

@@ -99,7 +99,9 @@ public final class RingOffers {
         }
         if (corps == LanternCorps.ORANGE && !CorpsCaps.admits(player, LanternCorps.ORANGE)) {
             UUID holder = orangeHolder(server);
-            if (holder != null && !holder.equals(player.getUUID())) OrangeDuels.challenge(player, holder);
+            if (holder != null && !holder.equals(player.getUUID())) {
+                if (!OrangeDuels.refuse(player)) OrangeDuels.challenge(player, holder);
+            }
             else player.sendSystemMessage(Component.translatable("message.brightestday.offer.absent").withStyle(ChatFormatting.GRAY));
             return false;
         }
@@ -110,6 +112,7 @@ public final class RingOffers {
         if (!ringless(player) || RingLoyalty.awaiting(player) || OrangeDuels.involved(player.level().getServer(), player.getUUID())) return;
         if (OrangeHoard.value(player) < BrightestDayConfig.get().orangeHoardValue) return;
         if (!EmotionGates.allows(player, LanternCorps.ORANGE)) return;
+        if (!CorpsCaps.admits(player, LanternCorps.ORANGE) && (OrangeDuels.cooldown(player) > 0L || OrangeDuels.grace(player.level().getServer()) > 0L)) return;
         float chance = Math.min(0.5F, SpectrumMeters.get(player, Emotion.AVARICE) / 2000.0F);
         if (player.getRandom().nextFloat() >= chance) return;
         offer(player, LanternCorps.ORANGE, "orange");

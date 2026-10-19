@@ -40,9 +40,12 @@ public final class RedBlood {
     private static final Map<UUID, Long> LAST_FED = new HashMap<>();
     private static final Map<UUID, Float> REMAINDER = new HashMap<>();
 
+    private static final List<RingPower<?>> BORROWED = List.of(RingPowerRegistry.PIERCING_LANCE, RingPowerRegistry.CHAIN_BOLT, RingPowerRegistry.BOOMERANG_DISC, RingPowerRegistry.RAPID_BARRAGE,
+            RingPowerRegistry.NOVA_BURST, RingPowerRegistry.GROUND_SLAM, RingPowerRegistry.SENTRY_TURRET, RingPowerRegistry.ENTITY_SHIELD, RingPowerRegistry.AREA_SHIELD,
+            RingPowerRegistry.DRILL);
+
     public static List<RingPower<?>> borrowed() {
-        return List.of(RingPowerRegistry.PIERCING_LANCE, RingPowerRegistry.CHAIN_BOLT, RingPowerRegistry.BOOMERANG_DISC, RingPowerRegistry.RAPID_BARRAGE,
-                RingPowerRegistry.NOVA_BURST, RingPowerRegistry.GROUND_SLAM, RingPowerRegistry.SENTRY_TURRET, RingPowerRegistry.ENTITY_SHIELD, RingPowerRegistry.AREA_SHIELD);
+        return BORROWED;
     }
 
     public static void init() {

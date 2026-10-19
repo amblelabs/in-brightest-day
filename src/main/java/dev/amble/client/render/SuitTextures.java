@@ -5,6 +5,7 @@ import dev.amble.BrightestDay;
 import dev.amble.client.effects.VoxelRenderer;
 import dev.amble.core.ringpowers.EyePaint;
 import dev.amble.core.ringpowers.LanternCorps;
+import dev.amble.core.ringpowers.MaskLayer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.DynamicTexture;
@@ -40,6 +41,8 @@ final class SuitTextures {
     private static final int FACE_LEFT = 8;
     private static final int FACE_RIGHT = 16;
     private static final int HAT_LEFT = 40;
+    private static final int HAT_FACE_ALPHA = 128;
+    private static final float HAT_FACE_COVERAGE = 0.6F;
     private static final float EYE_GLOW_WHITEN = 0.2F;
     private static final float EYE_FLARE_WHITEN = 0.45F;
     private static final float FLASH_WHITEN = 0.85F;
@@ -51,20 +54,21 @@ final class SuitTextures {
     private static final Map<Integer, float[]> THRESHOLDS = new HashMap<>();
     private static float @Nullable [] maskThresholds;
 
-    static @Nullable Entry update(int id, PlayerSkin playerSkin, LanternCorps corps, String style, HumanoidArm ringArm, int maskOffset, float maskProgress, float progress, int color,
+    static @Nullable Entry update(int id, PlayerSkin playerSkin, LanternCorps corps, String style, HumanoidArm ringArm, int maskOffset, MaskLayer maskLayer, float maskProgress, float progress, int color,
                                   EyePaint eyes, float eyeProgress, int eyeColor, float flash) {
         Identifier skinPath = playerSkin.body().texturePath();
         Skin skin = skin(skinPath);
         if (skin == null) return null;
 
         boolean slim = playerSkin.model() == PlayerModelType.SLIM;
+        boolean outer = maskLayer == MaskLayer.OUTER || maskLayer == MaskLayer.AUTO && skin.hatFace();
         String resolved = SuitStyles.resolve(corps, style);
         boolean comic = SuitStyles.comic(resolved);
         int[] suit = progress > 0.0F ? suit(corps, resolved, ringArm, slim, maskOffset) : null;
         if (suit == null) progress = 0.0F;
         if (progress <= 0.0F && (eyeProgress <= 0.0F || eyes.isEmpty())) return null;
 
-        Key key = new Key(skinPath, corps, resolved, ringArm, slim, maskOffset, Math.round(maskProgress * STEPS), Math.round(progress * STEPS), color,
+        Key key = new Key(skinPath, corps, resolved, ringArm, slim, maskOffset, outer, Math.round(maskProgress * STEPS), Math.round(progress * STEPS), color,
                 eyes, Math.round(eyeProgress * STEPS), eyeColor, Math.round(flash * STEPS));
         Entry entry = ENTRIES.get(id);
         if (entry != null && entry.size != skin.size) {
@@ -77,7 +81,7 @@ final class SuitTextures {
         }
         if (!key.equals(entry.key)) {
             entry.key = key;
-            build(entry, skin, suit, comic ? INSTANT : thresholds(slim, ringArm), key.step / (float) STEPS, key.maskStep / (float) STEPS, color,
+            build(entry, skin, suit, comic ? INSTANT : thresholds(slim, ringArm), key.step / (float) STEPS, key.maskStep / (float) STEPS, outer, color,
                     eyes, key.eyeStep / (float) STEPS, eyeColor, key.flashStep / (float) STEPS);
         }
         return entry;
@@ -97,7 +101,7 @@ final class SuitTextures {
         SuitStyles.clear();
     }
 
-    private static void build(Entry entry, Skin skin, int @Nullable [] suit, float[] thresholds, float progress, float maskProgress, int color,
+    private static void build(Entry entry, Skin skin, int @Nullable [] suit, float[] thresholds, float progress, float maskProgress, boolean outer, int color,
                               EyePaint eyes, float eyeProgress, int eyeColor, float flash) {
         float[] maskThresholds = maskThresholds();
         NativeImage body = entry.body.getPixels();
@@ -117,27 +121,30 @@ final class SuitTextures {
 
                 int source = inner >= 0 ? inner : own;
                 float reveal = reveal(progress, thresholds[source]);
-                if (sy < HEAD_HEIGHT) reveal = Math.min(reveal, reveal(maskProgress, maskThresholds[source]));
+                boolean head = sy < HEAD_HEIGHT;
+                if (head) reveal = Math.min(reveal, reveal(maskProgress, maskThresholds[source]));
                 float edge = reveal > 0.0F && reveal < 1.0F ? Mth.sin(reveal * Mth.PI) : 0.0F;
 
                 int out = base;
                 int lit = 0;
                 int flared = 0;
-                if (suit != null && ARGB.alpha(suit[own]) > 0) {
-                    out = mix(base, suit[own], reveal);
+                int paint = suit == null ? 0 : suit[own];
+                if (suit != null && outer && head) paint = inner < 0 ? 0 : ARGB.alpha(paint) > 0 ? paint : suit[inner];
+                if (ARGB.alpha(paint) > 0) {
+                    out = mix(base, paint, reveal);
                     out = ARGB.color(ARGB.alpha(out), ARGB.srgbLerp(edge * EDGE_TINT, out, glowColor));
                     if (flash > 0.0F) out = ARGB.color(ARGB.alpha(out), ARGB.srgbLerp(flash * reveal * FLASH_WHITEN, out, glowColor));
                     lit = ARGB.color(Math.max(edge, flash * reveal), glowColor);
-                } else if (suit != null && inner >= 0 && ARGB.alpha(suit[inner]) > 0) {
+                } else if (suit != null && inner >= 0 && !(outer && head) && ARGB.alpha(suit[inner]) > 0) {
                     out = ARGB.multiplyAlpha(base, 1.0F - reveal);
                 }
 
                 int eye = eyeProgress > 0.0F ? eyePixel(eyes, sx, sy, eyeColor) : 0;
-                if (eye != 0 && sx < FACE_RIGHT) {
+                if (eye != 0 && (outer ? sx >= HAT_LEFT : sx < FACE_RIGHT)) {
                     out = ARGB.opaque(ARGB.srgbLerp(eyeProgress, ARGB.opaque(out), eye));
                     lit = ARGB.color(eyeGlow, VoxelRenderer.toWhite(eye, EYE_GLOW_WHITEN));
                     flared = ARGB.color(eyeGlow, VoxelRenderer.toWhite(eye, EYE_FLARE_WHITEN));
-                } else if (eye != 0) {
+                } else if (eye != 0 && !outer) {
                     out = ARGB.multiplyAlpha(out, 1.0F - eyeProgress);
                     lit = 0;
                 }
@@ -317,8 +324,21 @@ final class SuitTextures {
                 }
             }
             if (width != height || width < SIZE || width % SIZE != 0) return Optional.empty();
-            return Optional.of(new Skin(pixels, width));
+            return Optional.of(new Skin(pixels, width, hatFace(pixels, width)));
         }).orElse(null);
+    }
+
+    private static boolean hatFace(int[] pixels, int size) {
+        int scale = size / SIZE;
+        int opaque = 0;
+        int total = 0;
+        for (int y = FACE_TOP * scale; y < (FACE_TOP + 8) * scale; y++) {
+            for (int x = HAT_LEFT * scale; x < (HAT_LEFT + 8) * scale; x++) {
+                total++;
+                if (ARGB.alpha(pixels[y * size + x]) > HAT_FACE_ALPHA) opaque++;
+            }
+        }
+        return opaque >= total * HAT_FACE_COVERAGE;
     }
 
     private static int @Nullable [] read(Identifier path) {
@@ -337,9 +357,9 @@ final class SuitTextures {
         float at(float row);
     }
 
-    private record Skin(int[] pixels, int size) {}
+    private record Skin(int[] pixels, int size, boolean hatFace) {}
 
-    private record Key(Identifier skin, LanternCorps corps, String style, HumanoidArm ringArm, boolean slim, int maskOffset, int maskStep, int step, int color,
+    private record Key(Identifier skin, LanternCorps corps, String style, HumanoidArm ringArm, boolean slim, int maskOffset, boolean outer, int maskStep, int step, int color,
                        EyePaint eyes, int eyeStep, int eyeColor, int flashStep) {}
 
     static final class Entry {

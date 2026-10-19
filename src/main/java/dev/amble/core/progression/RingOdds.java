@@ -90,7 +90,13 @@ public final class RingOdds {
                 check(hoard >= config.orangeHoardValue, "Carrying a hoard " + hoard + "/" + config.orangeHoardValue);
                 check(!OrangeDuels.involved(server, player.getUUID()), "Not already in an orange challenge");
                 float chance = Math.min(0.5F, SpectrumMeters.get(player, Emotion.AVARICE) / 2000.0F);
-                if (!CorpsCaps.admits(player, corps)) note("The ring is taken: accepting it starts a duel with its bearer");
+                if (!CorpsCaps.admits(player, corps)) {
+                    long cooldown = OrangeDuels.cooldown(player);
+                    long grace = OrangeDuels.grace(server);
+                    check(cooldown == 0L, cooldown == 0L ? "No challenge cooldown" : "Challenge cooldown, " + (cooldown / 1200L + 1) + " min left");
+                    check(grace == 0L, grace == 0L ? "Holder can be challenged" : "Holder grace, " + (grace / 1200L + 1) + " min left");
+                    note("The ring is taken: accepting it starts a duel with its bearer");
+                }
                 note("Rolled each time diamond ore or ancient debris is mined");
                 return this.blocked ? "0%" : percent(chance) + " per diamond or debris mined";
             }

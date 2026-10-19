@@ -85,7 +85,8 @@ public final class HealBeamManager {
 
             if (beam.age % HEAL_INTERVAL == 0) {
                 float before = target.getHealth();
-                target.heal(BrightestDayConfig.get().healBeamAmount);
+                BrightestDayConfig config = BrightestDayConfig.get();
+                target.heal(Math.min(config.healBeamMaxPulse, config.healBeamAmount * (float) Math.pow(config.healBeamGrowth, beam.age / HEAL_INTERVAL - 1)));
                 RingRanks.fire(player, Trigger.HEAL, Milestone.Context.of(target), Math.round(target.getHealth() - before));
                 if (target.isOnFire()) target.clearFire();
             }

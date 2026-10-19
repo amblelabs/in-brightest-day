@@ -30,6 +30,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
+import net.minecraft.util.StringUtil;
 import net.minecraft.util.Unit;
 import net.minecraft.world.entity.Relative;
 import net.minecraft.world.entity.player.Player;
@@ -67,6 +68,15 @@ public final class OrangeDuels {
             .initializer(List::of)
             .persistent(Pending.CODEC.listOf())
             .buildAndRegister(BrightestDay.id("orange_duels"));
+
+    public static final AttachmentType<Long> COOLDOWN = AttachmentRegistry.<Long>builder()
+            .persistent(Codec.LONG)
+            .copyOnDeath()
+            .buildAndRegister(BrightestDay.id("orange_challenge_cooldown"));
+
+    public static final AttachmentType<Long> GRACE = AttachmentRegistry.<Long>builder()
+            .persistent(Codec.LONG)
+            .buildAndRegister(BrightestDay.id("orange_holder_grace"));
 
     public static final AttachmentType<Unit> DUELING = AttachmentRegistry.<Unit>builder()
             .syncWith(StreamCodec.unit(Unit.INSTANCE), AttachmentSyncPredicate.all())
@@ -156,6 +166,26 @@ public final class OrangeDuels {
 
     public static boolean involved(MinecraftServer server, UUID player) {
         return FIGHTS.stream().anyMatch(fight -> fight.involves(player)) || pending(server).stream().anyMatch(pending -> pending.involves(player));
+    }
+
+    public static long cooldown(ServerPlayer challenger) {
+        MinecraftServer server = challenger.level().getServer();
+        long now = server.overworld().getGameTime();
+        return Math.max(0L, challenger.getAttachedOrElse(COOLDOWN, 0L) - now);
+    }
+
+    public static long grace(MinecraftServer server) {
+        long now = server.overworld().getGameTime();
+        return Math.max(0L, server.overworld().getAttachedOrElse(GRACE, 0L) - now);
+    }
+
+    public static boolean refuse(ServerPlayer challenger) {
+        long own = cooldown(challenger);
+        long grace = grace(challenger.level().getServer());
+        if (own <= 0L && grace <= 0L) return false;
+        String key = own >= grace ? "message.brightestday.duel.cooldown" : "message.brightestday.duel.grace";
+        challenger.sendSystemMessage(Component.translatable(key, StringUtil.formatTickDuration((int) Math.max(own, grace), 20.0F)).withColor(LanternCorps.ORANGE.color()));
+        return true;
     }
 
     public static void challenge(ServerPlayer challenger, UUID holder) {
@@ -313,6 +343,10 @@ public final class OrangeDuels {
         release(server, fight);
         ServerPlayer challenger = server.getPlayerList().getPlayer(fight.challenger);
         ServerPlayer holder = server.getPlayerList().getPlayer(fight.holder);
+        BrightestDayConfig config = BrightestDayConfig.get();
+        long now = server.overworld().getGameTime();
+        server.overworld().setAttached(GRACE, now + config.orangeHolderGraceTicks);
+        if (!winner.equals(fight.challenger) && challenger != null) challenger.setAttached(COOLDOWN, now + config.orangeChallengeCooldownTicks);
         int color = LanternCorps.ORANGE.color();
         if (reasonKey != null) {
             Component reason = Component.translatable(reasonKey, reasonName).withColor(color);
