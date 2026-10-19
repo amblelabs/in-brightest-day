@@ -1,6 +1,8 @@
 package dev.amble.core.team;
 
 import dev.amble.core.mannequin.Mannequins;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.scores.Team;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -26,7 +28,14 @@ public final class RingTargets {
 
     public static boolean isTarget(Entity attacker, Entity entity) {
         Entity root = root(entity);
-        return entity != attacker && root != attacker && isHittable(entity) && !attacker.isAlliedTo(root);
+        return entity != attacker && root != attacker && isHittable(entity) && !allied(attacker, root);
+    }
+
+    public static boolean allied(Entity attacker, Entity target) {
+        if (!(attacker instanceof Player first) || !(target instanceof Player second)) return attacker.isAlliedTo(target);
+        if (LanternTeams.areTeammates(first, second)) return true;
+        Team team = first.getTeam();
+        return team != null && team == second.getTeam() && !team.isAllowFriendlyFire();
     }
 
     public static Entity root(Entity entity) {

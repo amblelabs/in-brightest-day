@@ -224,7 +224,7 @@ public final class ScanEffects {
         Vec3 center = box.getCenter();
         double reach = Math.max(box.getXsize(), Math.max(box.getYsize(), box.getZsize())) * 0.5;
         int tint = VoxelRenderer.toWhite(scan.color, 1.0F - life);
-        for (int i = 0; i < BURST_VOXELS; i++) {
+        for (int i = 0; i < VisualQuality.count(BURST_VOXELS); i++) {
             Vec3 direction = new Vec3(random.nextGaussian(), random.nextGaussian(), random.nextGaussian()).normalize();
             double distance = reach + time * (0.12 + random.nextFloat() * 0.12);
             out.add(new ShieldEffects.Voxel(VoxelRenderer.snap(center.add(direction.scale(distance))), VoxelRenderer.snapSize(BURST_VOXEL * life * 0.5F), tint));

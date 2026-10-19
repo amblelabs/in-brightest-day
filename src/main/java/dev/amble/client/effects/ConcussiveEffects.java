@@ -90,9 +90,9 @@ public final class ConcussiveEffects {
                 int tint = VoxelRenderer.toWhite(wave.color, 0.6F * (1.0F - t));
                 float half = VoxelRenderer.snapSize(VOXEL_SIZE * (1.0F - 0.6F * t) * 0.5F);
 
-                List<ShieldEffects.Voxel> voxels = new ArrayList<>(VOXELS_PER_RING);
-                for (int i = 0; i < VOXELS_PER_RING; i++) {
-                    double angle = (i + random.nextFloat() * 0.5) / VOXELS_PER_RING * Mth.TWO_PI;
+                List<ShieldEffects.Voxel> voxels = new ArrayList<>(VisualQuality.count(VOXELS_PER_RING));
+                for (int i = 0; i < VisualQuality.count(VOXELS_PER_RING); i++) {
+                    double angle = (i + random.nextFloat() * 0.5) / VisualQuality.count(VOXELS_PER_RING) * Mth.TWO_PI;
                     double wobble = radius * (0.9 + random.nextFloat() * 0.2);
                     Vec3 point = center.add(side.scale(Math.cos(angle) * wobble)).add(up.scale(Math.sin(angle) * wobble));
                     voxels.add(new ShieldEffects.Voxel(VoxelRenderer.snap(point), half, tint));

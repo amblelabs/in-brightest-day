@@ -73,7 +73,7 @@ public class ConcussiveRingPower extends RingPower<Unit> {
         double range = config.concussiveRange;
         double coneCos = Math.cos(Math.toRadians(config.concussiveConeDegrees / 2.0));
 
-        for (Entity entity : level.getEntities(player, new AABB(eye, eye).inflate(range), entity -> !Mannequins.isHologram(entity) && !entity.isSpectator() && !player.isAlliedTo(entity) && entity.isPickable())) {
+        for (Entity entity : level.getEntities(player, new AABB(eye, eye).inflate(range), entity -> !Mannequins.isHologram(entity) && !entity.isSpectator() && !RingTargets.allied(player, entity) && entity.isPickable())) {
             Vec3 to = entity.getBoundingBox().getCenter().subtract(eye);
             double distance = to.length();
             if (distance > range || distance < 1.0E-3) continue;

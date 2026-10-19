@@ -1,5 +1,6 @@
 package dev.amble.client.effects.attacks.projectile;
 
+import dev.amble.client.effects.VisualQuality;
 import dev.amble.client.effects.ShieldEffects;
 import dev.amble.client.effects.VoxelRenderer;
 import dev.amble.core.networking.payloads.s2c.DiscS2CPayload;
@@ -68,7 +69,7 @@ public final class DiscEffects {
         if (!payload.alive()) {
             DISCS.remove(payload.discId());
             int color = disc != null ? disc.color : ARGB.opaque(payload.color());
-            ProjectileBursts.spawn(payload.position(), color, BURST_VOXELS, BURST_SPEED, BURST_SIZE, BURST_LIFETIME);
+            ProjectileBursts.spawn(payload.position(), color, VisualQuality.count(BURST_VOXELS), BURST_SPEED, BURST_SIZE, BURST_LIFETIME);
             return;
         }
         if (disc == null) {

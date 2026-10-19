@@ -162,7 +162,7 @@ public final class WhipManager {
         }
 
         for (Entity entity : crack.level.getEntities(player, new AABB(eye, eye).inflate(crack.length + 1.0),
-                entity -> !Mannequins.isHologram(entity) && entity.isAlive() && entity.isPickable() && !entity.isSpectator() && !player.isAlliedTo(entity) && entity != player.getVehicle())) {
+                entity -> !Mannequins.isHologram(entity) && entity.isAlive() && entity.isPickable() && !entity.isSpectator() && !RingTargets.allied(player, entity) && entity != player.getVehicle())) {
             if (crack.hit.contains(RingTargets.rootId(entity))) continue;
 
             Vec3 to3 = entity.getBoundingBox().getCenter().subtract(eye);

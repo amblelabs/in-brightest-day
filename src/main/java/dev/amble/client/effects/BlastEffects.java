@@ -345,7 +345,7 @@ public final class BlastEffects {
         List<Float> halves = new ArrayList<>();
         List<Integer> colors = new ArrayList<>();
         RandomSource random = RandomSource.create(player.getId());
-        for (int i = 0; i < CHARGE_VOXELS; i++) {
+        for (int i = 0; i < VisualQuality.count(CHARGE_VOXELS); i++) {
             Vec3 axis = new Vec3(random.nextGaussian(), random.nextGaussian(), random.nextGaussian()).normalize();
             Vec3 side = axis.cross(new Vec3(0.0, 1.0, 0.0)).lengthSqr() < 1.0E-4 ? new Vec3(1.0, 0.0, 0.0) : axis.cross(new Vec3(0.0, 1.0, 0.0)).normalize();
             Vec3 up = axis.cross(side);
@@ -398,7 +398,7 @@ public final class BlastEffects {
         float heat = Mth.clamp(burstTime / 3.0F, 0.0F, 1.0F);
         int tint = VoxelRenderer.toWhite(ARGB.srgbLerp(heat, ARGB.opaque(WHITE_HOT), blast.color), 1.0F - life);
 
-        int voxels = Math.round(BURST_VOXELS * blast.scale);
+        int voxels = Math.round(VisualQuality.count(BURST_VOXELS) * blast.scale);
         for (int i = 0; i < voxels; i++) {
             Vec3 direction = new Vec3(random.nextGaussian(), random.nextGaussian(), random.nextGaussian()).normalize();
             float speed = BURST_SPEED * blast.scale * (0.4F + random.nextFloat() * 0.6F);

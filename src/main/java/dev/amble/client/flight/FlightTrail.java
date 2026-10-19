@@ -1,5 +1,6 @@
 package dev.amble.client.flight;
 
+import dev.amble.client.effects.VisualQuality;
 import dev.amble.client.config.BrightestDayClientConfig;
 import dev.amble.core.ringpowers.CorpsColors;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -221,11 +222,11 @@ public final class FlightTrail {
         Vec3 nose = center.add(direction.scale(AURA_NOSE_OFFSET));
         float length = AURA_LENGTH * (0.7F + 0.3F * intensity);
 
-        for (int ring = 0; ring <= AURA_RINGS; ring++) {
-            float s = (float) ring / AURA_RINGS;
-            int segments = ring == 0 ? 1 : AURA_SEGMENTS;
+        for (int ring = 0; ring <= VisualQuality.count(AURA_RINGS); ring++) {
+            float s = (float) ring / VisualQuality.count(AURA_RINGS);
+            int segments = ring == 0 ? 1 : VisualQuality.count(AURA_SEGMENTS);
             for (int segment = 0; segment < segments; segment++) {
-                float angle = segment * Mth.TWO_PI / AURA_SEGMENTS + ring * 0.35F;
+                float angle = segment * Mth.TWO_PI / VisualQuality.count(AURA_SEGMENTS) + ring * 0.35F;
                 float wobble = 1.0F + 0.08F * Mth.sin(angle * 3.0F + time * 0.9F + s * 6.0F);
                 float radius = AURA_RADIUS * Mth.sqrt(s) * wobble;
                 Vec3 point = nose.subtract(direction.scale(s * length))

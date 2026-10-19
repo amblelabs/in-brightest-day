@@ -803,6 +803,10 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("brightestday.server.rageKillAnimal.desc", "Rage gained for killing an animal.");
         builder.add("brightestday.server.rageHurtByPlayer", "Rage: Hurt by a Player");
         builder.add("brightestday.server.rageHurtByPlayer.desc", "Rage gained when another player hurts you.");
+        builder.add("brightestday.server.rageCalmSeconds", "Rage: Calm Delay");
+        builder.add("brightestday.server.rageCalmSeconds.desc", "Seconds without gaining rage before it starts to cool down.");
+        builder.add("brightestday.server.rageDecayPerMinute", "Rage: Cooling Rate");
+        builder.add("brightestday.server.rageDecayPerMinute.desc", "Rage lost each minute once you have calmed down. Red lanterns keep their rage.");
         builder.add("brightestday.server.avariceDebris", "Avarice: Ancient Debris");
         builder.add("brightestday.server.avariceDebris.desc", "Avarice gained for mining ancient debris.");
         builder.add("brightestday.server.avariceDiamond", "Avarice: Diamond");
@@ -912,6 +916,8 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("brightestday.client.showRageVignette.desc", "While wearing a Red Lantern ring, tint the screen edges with blood-red veins that swell as threats close in.");
         builder.add("brightestday.client.showIndigoVignette", "Show Indigo Vignette");
         builder.add("brightestday.client.showIndigoVignette.desc", "While wearing an Indigo ring, tint the screen edges with an indigo haze that deepens as threats close in.");
+        builder.add("brightestday.client.effectsQuality", "Effects Quality");
+        builder.add("brightestday.client.effectsQuality.desc", "Scales how many particles and voxels ring effects draw. Lower it on weaker computers; raise it for denser effects. Below 0.5 the extra glow layer on shields is skipped.");
         builder.add("brightestday.server.synergy", "Corps Synergy");
         builder.add("brightestday.server.synergyLinkRadius", "Hope/Will Range");
         builder.add("brightestday.server.synergyLinkRadius.desc", "How close Blue and Green Lanterns must be to empower each other.");

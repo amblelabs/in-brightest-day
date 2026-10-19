@@ -1,5 +1,6 @@
 package dev.amble.client.effects.attacks.utility;
 
+import dev.amble.client.effects.VisualQuality;
 import dev.amble.client.effects.BlastEffects;
 import dev.amble.client.effects.ShieldEffects;
 import dev.amble.client.effects.VoxelRenderer;
@@ -87,7 +88,7 @@ public final class GrappleEffects {
             return;
         }
         boolean latching = payload.state() == GrappleS2CPayload.LATCHED && (hook == null || hook.state != GrappleS2CPayload.LATCHED);
-        if (latching) ProjectileBursts.spawn(payload.position(), color, LATCH_SPARKS, LATCH_SPARK_SPEED, LATCH_SPARK_SIZE, LATCH_SPARK_LIFETIME);
+        if (latching) ProjectileBursts.spawn(payload.position(), color, VisualQuality.count(LATCH_SPARKS), LATCH_SPARK_SPEED, LATCH_SPARK_SIZE, LATCH_SPARK_LIFETIME);
         if (hook == null) {
             HOOKS.put(payload.hookId(), new Hook(payload.ownerId(), color, payload.position(), payload.state(), payload.targetId()));
             return;

@@ -110,7 +110,7 @@ public class BlastConstruct extends ConstructRingPower {
         boolean hit = direct != null || aim.eye().distanceTo(impact) < range - 1.0E-3;
         DamageSource source = RingDamage.source(level, player);
 
-        for (Entity entity : level.getEntities(player, new AABB(impact, impact).inflate(blastRadius), entity -> !Mannequins.isHologram(entity) && !player.isAlliedTo(entity))) {
+        for (Entity entity : level.getEntities(player, new AABB(impact, impact).inflate(blastRadius), entity -> !Mannequins.isHologram(entity) && !RingTargets.allied(player, entity))) {
             Vec3 center = entity.getBoundingBox().getCenter();
             double distance = center.distanceTo(impact);
             if (distance > blastRadius && entity != direct) continue;

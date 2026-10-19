@@ -146,8 +146,8 @@ public final class HealBeamEffects {
 
         for (int ribbon = 0; ribbon < RIBBONS; ribbon++) {
             float phase = ribbon * Mth.TWO_PI / RIBBONS;
-            for (int i = 0; i <= RIBBON_STEPS; i++) {
-                float t = (float) i / RIBBON_STEPS;
+            for (int i = 0; i <= VisualQuality.count(RIBBON_STEPS); i++) {
+                float t = (float) i / VisualQuality.count(RIBBON_STEPS);
                 float climb = Mth.frac(t + time * 0.01F);
                 float angle = climb * Mth.TWO_PI * RIBBON_TURNS + time * RIBBON_SPIN + phase;
                 double squeeze = radius * (0.85 + 0.15 * Mth.sin(climb * Mth.PI));

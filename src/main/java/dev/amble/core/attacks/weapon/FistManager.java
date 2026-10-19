@@ -122,7 +122,7 @@ public final class FistManager {
         ServerPlayer player = punch.player;
         BrightestDayConfig config = BrightestDayConfig.get();
         for (Entity entity : punch.level.getEntities(player, box,
-                entity -> !Mannequins.isHologram(entity) && entity.isAlive() && entity.isPickable() && !entity.isSpectator() && !player.isAlliedTo(entity) && entity != player.getVehicle())) {
+                entity -> !Mannequins.isHologram(entity) && entity.isAlive() && entity.isPickable() && !entity.isSpectator() && !RingTargets.allied(player, entity) && entity != player.getVehicle())) {
             if (!punch.hit.add(RingTargets.rootId(entity))) continue;
 
             RingTargets.hurt(punch.level, entity, RingDamage.source(punch.level, player), config.fistDamage);
@@ -138,7 +138,7 @@ public final class FistManager {
         BrightestDayConfig config = BrightestDayConfig.get();
         double radius = config.fistImpactRadius;
         for (Entity entity : punch.level.getEntities(player, new AABB(impact, impact).inflate(radius),
-                entity -> !Mannequins.isHologram(entity) && entity.isAlive() && entity.isPickable() && !entity.isSpectator() && !player.isAlliedTo(entity))) {
+                entity -> !Mannequins.isHologram(entity) && entity.isAlive() && entity.isPickable() && !entity.isSpectator() && !RingTargets.allied(player, entity))) {
             Vec3 away = entity.getBoundingBox().getCenter().subtract(impact);
             double distance = away.length();
             if (distance > radius) continue;

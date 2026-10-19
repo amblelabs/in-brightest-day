@@ -1,5 +1,6 @@
 package dev.amble.client.effects.attacks.projectile;
 
+import dev.amble.client.effects.VisualQuality;
 import dev.amble.client.effects.BlastEffects;
 import dev.amble.client.effects.ShieldEffects;
 import dev.amble.client.effects.VoxelRenderer;
@@ -66,7 +67,7 @@ public final class LanceEffects {
         Vec3 start = shooter instanceof Player player ? BlastEffects.hand(player, 1.0F) : payload.end();
         int color = ARGB.opaque(payload.color());
         LANCES.add(new Lance(start, payload.end(), color, client.level.getRandom().nextLong()));
-        ProjectileBursts.spawn(payload.end(), color, IMPACT_VOXELS, IMPACT_SPEED, IMPACT_SIZE, IMPACT_LIFETIME);
+        ProjectileBursts.spawn(payload.end(), color, VisualQuality.count(IMPACT_VOXELS), IMPACT_SPEED, IMPACT_SIZE, IMPACT_LIFETIME);
         for (Vec3 hit : payload.hits()) ProjectileBursts.spawn(hit, color, HIT_VOXELS, HIT_SPEED, HIT_SIZE, HIT_LIFETIME);
     }
 

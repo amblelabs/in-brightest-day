@@ -443,6 +443,10 @@ public class BrightestDayConfig extends Config {
     public int rageKillPlayer = 150;
     public int rageKillAnimal = 25;
     public int rageHurtByPlayer = 5;
+    @ValidatedInt.Restrict(min = 0, max = 72000)
+    public int rageCalmSeconds = 120;
+    @ValidatedInt.Restrict(min = 0, max = 1000)
+    public int rageDecayPerMinute = 25;
     public int avariceDebris = 60;
     public int avariceDiamond = 30;
     public int avariceEmerald = 10;

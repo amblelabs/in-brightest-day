@@ -102,13 +102,13 @@ public final class MegaphoneClient {
 
         int color = ARGB.opaque(CorpsColors.of(player));
         float half = VOXEL_HALF * amount;
-        for (int ring = 0; ring < RINGS; ring++) {
-            double t = ring / (double) (RINGS - 1);
+        for (int ring = 0; ring < VisualQuality.count(RINGS); ring++) {
+            double t = ring / (double) (VisualQuality.count(RINGS) - 1);
             double radius = Mth.lerp(t * t, MOUTH_RADIUS, BELL_RADIUS) * amount;
             Vec3 center = mouth.add(forward.scale(t * LENGTH * amount));
             int points = Math.max(6, Mth.ceil(Mth.TWO_PI * radius / SPACING));
             float shimmer = 0.15F + 0.35F * (0.5F + 0.5F * Mth.sin(time * 0.3F - ring * 0.6F));
-            int tint = VoxelRenderer.toWhite(color, ring == RINGS - 1 ? 0.55F : shimmer);
+            int tint = VoxelRenderer.toWhite(color, ring == VisualQuality.count(RINGS) - 1 ? 0.55F : shimmer);
             for (int i = 0; i < points; i++) {
                 double angle = i * Mth.TWO_PI / points;
                 Vec3 offset = right.scale(Math.cos(angle) * radius).add(up.scale(Math.sin(angle) * radius));

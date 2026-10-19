@@ -1,5 +1,6 @@
 package dev.amble.client.effects.attacks.area;
 
+import dev.amble.client.effects.VisualQuality;
 import dev.amble.client.effects.BlastEffects;
 import dev.amble.client.effects.ShieldEffects;
 import dev.amble.client.effects.VoxelRenderer;
@@ -157,8 +158,8 @@ public final class BarrageEffects {
 
         float life = 1.0F - time / IMPACT_TICKS;
         RandomSource random = RandomSource.create(bolt.seed);
-        List<ShieldEffects.Voxel> voxels = new ArrayList<>(IMPACT_VOXELS);
-        for (int i = 0; i < IMPACT_VOXELS; i++) {
+        List<ShieldEffects.Voxel> voxels = new ArrayList<>(VisualQuality.count(IMPACT_VOXELS));
+        for (int i = 0; i < VisualQuality.count(IMPACT_VOXELS); i++) {
             Vec3 direction = new Vec3(random.nextGaussian(), random.nextGaussian(), random.nextGaussian()).normalize();
             float distance = IMPACT_SPEED * time * (0.5F + random.nextFloat() * 0.5F);
             float half = VoxelRenderer.snapSize(IMPACT_VOXEL_SIZE * life * 0.5F);

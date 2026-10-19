@@ -1,5 +1,6 @@
 package dev.amble.client.effects.attacks.projectile;
 
+import dev.amble.client.effects.VisualQuality;
 import dev.amble.client.effects.BlastEffects;
 import dev.amble.client.effects.ShieldEffects;
 import dev.amble.client.effects.VoxelRenderer;
@@ -64,7 +65,7 @@ public final class ChainBoltEffects {
         int color = ARGB.opaque(payload.color());
         BOLTS.add(new Bolt(points, color, client.level.getRandom().nextLong()));
         for (int i = 1; i < points.size(); i++) {
-            int count = payload.struck() ? HIT_VOXELS : HIT_VOXELS / 2;
+            int count = payload.struck() ? VisualQuality.count(HIT_VOXELS) : VisualQuality.count(HIT_VOXELS) / 2;
             ProjectileBursts.spawn(points.get(i), color, count, HIT_SPEED, HIT_SIZE, HIT_LIFETIME, (i - 1) * HOP_DELAY);
         }
     }

@@ -1,5 +1,6 @@
 package dev.amble.core.progression;
 
+import dev.amble.config.BrightestDayConfig;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.amble.BrightestDay;
@@ -133,8 +134,14 @@ public final class SpectrumMeters {
             Meters meters = get(player);
             boolean resting = atBattery(player);
             Meters decayed = meters;
+            BrightestDayConfig config = BrightestDayConfig.get();
             for (Emotion emotion : Emotion.values()) {
                 int value = decayed.get(emotion);
+                if (emotion == Emotion.RAGE) {
+                    long calm = now - decayed.fed().getOrDefault(emotion, 0L);
+                    if (value > 0 && !sustained(player, emotion) && calm >= config.rageCalmSeconds * 20L) decayed = decayed.with(emotion, Math.max(0, value - config.rageDecayPerMinute), -1L);
+                    continue;
+                }
                 if (value <= idleFloor(value) || sustained(player, emotion) || resting) continue;
                 long fed = decayed.fed().getOrDefault(emotion, 0L);
                 if (now - fed < DAY) continue;

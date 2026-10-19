@@ -1,5 +1,6 @@
 package dev.amble.client.effects.attacks.weapon;
 
+import dev.amble.client.effects.VisualQuality;
 import dev.amble.client.effects.ShieldEffects;
 import dev.amble.client.effects.VoxelRenderer;
 import dev.amble.core.networking.payloads.s2c.FistS2CPayload;
@@ -170,8 +171,8 @@ public final class FistEffects {
         RandomSource random = RandomSource.create(fist.seed);
         float eased = 1.0F - (1.0F - t) * (1.0F - t);
         float half = VoxelRenderer.snapSize(SHARD_SIZE * (1.0F - 0.6F * t) * 0.5F);
-        List<ShieldEffects.Voxel> voxels = new ArrayList<>(SHARDS);
-        for (int i = 0; i < SHARDS; i++) {
+        List<ShieldEffects.Voxel> voxels = new ArrayList<>(VisualQuality.count(SHARDS));
+        for (int i = 0; i < VisualQuality.count(SHARDS); i++) {
             double angle = random.nextFloat() * Mth.TWO_PI;
             double spread = 0.5 + random.nextFloat() * 0.8;
             Vec3 velocity = fist.side.scale(Math.cos(angle) * spread)

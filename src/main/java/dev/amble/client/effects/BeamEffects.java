@@ -149,7 +149,7 @@ public final class BeamEffects {
     private static void impactBurst(Vec3 end, float time, int color, List<ShieldEffects.Voxel> out) {
         RandomSource random = RandomSource.create(Mth.floor(time * 2.0F));
         int tint = VoxelRenderer.toWhite(color, 0.5F);
-        for (int i = 0; i < IMPACT_VOXELS; i++) {
+        for (int i = 0; i < VisualQuality.count(IMPACT_VOXELS); i++) {
             Vec3 offset = new Vec3(random.nextGaussian(), random.nextGaussian(), random.nextGaussian()).scale(IMPACT_SPREAD * random.nextFloat());
             float half = VoxelRenderer.snapSize(BODY_HALF * (0.4F + random.nextFloat() * 0.6F));
             out.add(new ShieldEffects.Voxel(VoxelRenderer.snap(end.add(offset)), half, tint));

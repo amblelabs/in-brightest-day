@@ -1,5 +1,6 @@
 package dev.amble.client.effects.attacks.area;
 
+import dev.amble.client.effects.VisualQuality;
 import dev.amble.client.effects.ShieldEffects;
 import dev.amble.client.effects.VoxelRenderer;
 import dev.amble.core.networking.payloads.s2c.NovaS2CPayload;
@@ -117,9 +118,9 @@ public final class NovaEffects {
 
         float life = 1.0F - t;
         RandomSource random = RandomSource.create(nova.seed ^ 0x5DEECE66DL);
-        List<ShieldEffects.Voxel> voxels = new ArrayList<>(FLASH_VOXELS + 1);
+        List<ShieldEffects.Voxel> voxels = new ArrayList<>(VisualQuality.count(FLASH_VOXELS) + 1);
         voxels.add(new ShieldEffects.Voxel(VoxelRenderer.snap(nova.center), VoxelRenderer.snapSize(FLASH_CORE_SIZE * (0.4F + life) * 0.5F), 0xFFFFFFFF));
-        for (int i = 0; i < FLASH_VOXELS; i++) {
+        for (int i = 0; i < VisualQuality.count(FLASH_VOXELS); i++) {
             Vec3 direction = new Vec3(random.nextGaussian(), random.nextGaussian(), random.nextGaussian()).normalize();
             float distance = FLASH_SPEED * time * (0.5F + random.nextFloat() * 0.5F);
             float half = VoxelRenderer.snapSize(FLASH_VOXEL_SIZE * life * (0.6F + random.nextFloat() * 0.4F) * 0.5F);

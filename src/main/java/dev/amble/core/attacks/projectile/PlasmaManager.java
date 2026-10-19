@@ -127,7 +127,7 @@ public final class PlasmaManager {
         float damage = Mth.lerp(orb.power, MIN_DAMAGE, MAX_DAMAGE);
         DamageSource source = RingDamage.source(level, orb.owner);
 
-        for (Entity entity : level.getEntities(orb.owner, new AABB(impact, impact).inflate(radius), entity -> !Mannequins.isHologram(entity) && !orb.owner.isAlliedTo(entity))) {
+        for (Entity entity : level.getEntities(orb.owner, new AABB(impact, impact).inflate(radius), entity -> !Mannequins.isHologram(entity) && !RingTargets.allied(orb.owner, entity))) {
             Vec3 center = entity.getBoundingBox().getCenter();
             double distance = center.distanceTo(impact);
             if (distance > radius) continue;

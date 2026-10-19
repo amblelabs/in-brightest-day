@@ -1,5 +1,6 @@
 package dev.amble.client.hud;
 
+import dev.amble.client.effects.VisualQuality;
 import dev.amble.BrightestDay;
 import dev.amble.client.config.BrightestDayClientConfig;
 import dev.amble.core.BrightestDayAttachments;
@@ -200,8 +201,8 @@ public final class EmotionVignette {
         float cy = height / 2.0F;
         float step = Math.min(width, height) / 2.2F / VEIN_SEGMENTS;
 
-        for (int v = 0; v < VEIN_COUNT; v++) {
-            float angle = v / (float) VEIN_COUNT * Mth.TWO_PI + random.nextFloat() * 0.3F;
+        for (int v = 0; v < VisualQuality.count(VEIN_COUNT); v++) {
+            float angle = v / (float) VisualQuality.count(VEIN_COUNT) * Mth.TWO_PI + random.nextFloat() * 0.3F;
             float x = cx + Mth.cos(angle) * width;
             float y = cy + Mth.sin(angle) * height;
             x = Mth.clamp(x, 0, width - 1);

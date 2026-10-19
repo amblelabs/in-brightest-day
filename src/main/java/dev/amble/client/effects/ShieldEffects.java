@@ -135,7 +135,7 @@ public final class ShieldEffects {
     }
 
     public static void submit(LevelRenderContext context, Vec3 camera, List<Voxel> voxels, float alpha) {
-        context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.GLOW,
+        if (VisualQuality.glow()) context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.GLOW,
                 (pose, buffer) -> draw(pose, buffer, camera, voxels, GLOW_SCALE, GLOW_ALPHA * alpha, false));
         context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.glass(),
                 (pose, buffer) -> draw(pose, buffer, camera, voxels, 1.0F, GLASS_ALPHA * alpha, true));
@@ -144,6 +144,7 @@ public final class ShieldEffects {
     public static List<Voxel> sphere(Vec3 center, float radius, float layoutRadius, float time, int color) {
         float spacing = Math.max(MIN_SPACING, layoutRadius * SPACING_PER_RADIUS);
         int count = Mth.clamp(Math.round(4.0F * Mth.PI * layoutRadius * layoutRadius / (spacing * spacing)), MIN_VOXELS, MAX_VOXELS);
+        count = VisualQuality.count(count);
         float half = VoxelRenderer.snapSize(spacing * 0.3F);
 
         List<Voxel> voxels = new ArrayList<>(count);

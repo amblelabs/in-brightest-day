@@ -1,5 +1,6 @@
 package dev.amble.client.effects.attacks.projectile;
 
+import dev.amble.client.effects.VisualQuality;
 import dev.amble.client.effects.ShieldEffects;
 import dev.amble.client.effects.VoxelRenderer;
 import dev.amble.core.networking.payloads.s2c.SwarmS2CPayload;
@@ -84,7 +85,7 @@ public final class SwarmEffects {
             dart.position = positions.get(i);
             if ((payload.burst() & 1 << i) != 0) {
                 dart.alive = false;
-                ProjectileBursts.spawn(dart.position, volley.color, BURST_VOXELS, BURST_SPEED, BURST_SIZE, BURST_LIFETIME);
+                ProjectileBursts.spawn(dart.position, volley.color, VisualQuality.count(BURST_VOXELS), BURST_SPEED, BURST_SIZE, BURST_LIFETIME);
             } else if ((payload.alive() & 1 << i) == 0) {
                 dart.alive = false;
             }
