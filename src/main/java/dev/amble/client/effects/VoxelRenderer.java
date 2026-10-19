@@ -53,7 +53,7 @@ public final class VoxelRenderer {
     }
 
     private static double snap(double value) {
-        return Math.round(value / PIXEL) * PIXEL;
+        return Math.round(value / PIXEL) * (double) PIXEL;
     }
 
     private static void face(PoseStack.Pose pose, VertexConsumer buffer,
