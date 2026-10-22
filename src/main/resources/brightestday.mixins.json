@@ -31,6 +31,7 @@
 		"client.AttachmentChangeMixin",
 		"client.AvatarRendererMixin",
 		"client.CameraMixin",
+		"client.ClientInputMixin",
 		"client.EntityGlowColorMixin",
 		"client.HudOverlayMixin",
 		"client.FirstPersonHandsAndItemsRendererMixin",

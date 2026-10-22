@@ -7,13 +7,13 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.util.Mth;
 
-public record ColorTweak(float brightness, float saturation, boolean aura, boolean auraFlightOnly, boolean suit, boolean mask, int maskOffset, MaskLayer maskLayer, String style) {
+public record ColorTweak(float brightness, float saturation, boolean aura, boolean auraFlightOnly, boolean suit, boolean mask, int maskOffset, MaskLayer maskLayer, String style, boolean trail) {
     public static final String MOVIE = "movie";
     public static final String COMIC = "comic";
     public static final int MAX_STYLE_LENGTH = 32;
     public static final float MIN_SATURATION = -0.6F;
     public static final int MAX_MASK_OFFSET = 3;
-    public static final ColorTweak NONE = new ColorTweak(0.0F, 0.0F, false, true, false, true, 0, MaskLayer.AUTO, MOVIE);
+    public static final ColorTweak NONE = new ColorTweak(0.0F, 0.0F, false, true, false, true, 0, MaskLayer.AUTO, MOVIE, true);
 
     public static final Codec<ColorTweak> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Codec.floatRange(-1.0F, 1.0F).optionalFieldOf("brightness", 0.0F).forGetter(ColorTweak::brightness),
@@ -24,7 +24,8 @@ public record ColorTweak(float brightness, float saturation, boolean aura, boole
             Codec.BOOL.optionalFieldOf("mask", true).forGetter(ColorTweak::mask),
             Codec.intRange(-MAX_MASK_OFFSET, MAX_MASK_OFFSET).optionalFieldOf("mask_offset", 0).forGetter(ColorTweak::maskOffset),
             MaskLayer.CODEC.optionalFieldOf("mask_layer", MaskLayer.AUTO).forGetter(ColorTweak::maskLayer),
-            Codec.string(1, MAX_STYLE_LENGTH).optionalFieldOf("style", MOVIE).forGetter(ColorTweak::style)
+            Codec.string(1, MAX_STYLE_LENGTH).optionalFieldOf("style", MOVIE).forGetter(ColorTweak::style),
+            Codec.BOOL.optionalFieldOf("trail", true).forGetter(ColorTweak::trail)
     ).apply(instance, ColorTweak::new));
 
     public static final StreamCodec<ByteBuf, ColorTweak> STREAM_CODEC = StreamCodec.composite(
@@ -37,23 +38,28 @@ public record ColorTweak(float brightness, float saturation, boolean aura, boole
             ByteBufCodecs.VAR_INT, ColorTweak::maskOffset,
             MaskLayer.STREAM_CODEC, ColorTweak::maskLayer,
             ByteBufCodecs.stringUtf8(MAX_STYLE_LENGTH), ColorTweak::style,
+            ByteBufCodecs.BOOL, ColorTweak::trail,
             ColorTweak::new
     );
 
     public ColorTweak withSuit(boolean suit) {
-        return new ColorTweak(this.brightness, this.saturation, this.aura, this.auraFlightOnly, suit, this.mask, this.maskOffset, this.maskLayer, this.style);
+        return new ColorTweak(this.brightness, this.saturation, this.aura, this.auraFlightOnly, suit, this.mask, this.maskOffset, this.maskLayer, this.style, this.trail);
     }
 
     public ColorTweak withMask(boolean mask) {
-        return new ColorTweak(this.brightness, this.saturation, this.aura, this.auraFlightOnly, this.suit, mask, this.maskOffset, this.maskLayer, this.style);
+        return new ColorTweak(this.brightness, this.saturation, this.aura, this.auraFlightOnly, this.suit, mask, this.maskOffset, this.maskLayer, this.style, this.trail);
     }
 
     public ColorTweak withMaskLayer(MaskLayer maskLayer) {
-        return new ColorTweak(this.brightness, this.saturation, this.aura, this.auraFlightOnly, this.suit, this.mask, this.maskOffset, maskLayer, this.style);
+        return new ColorTweak(this.brightness, this.saturation, this.aura, this.auraFlightOnly, this.suit, this.mask, this.maskOffset, maskLayer, this.style, this.trail);
     }
 
     public ColorTweak withStyle(String style) {
-        return new ColorTweak(this.brightness, this.saturation, this.aura, this.auraFlightOnly, this.suit, this.mask, this.maskOffset, this.maskLayer, style);
+        return new ColorTweak(this.brightness, this.saturation, this.aura, this.auraFlightOnly, this.suit, this.mask, this.maskOffset, this.maskLayer, style, this.trail);
+    }
+
+    public ColorTweak withTrail(boolean trail) {
+        return new ColorTweak(this.brightness, this.saturation, this.aura, this.auraFlightOnly, this.suit, this.mask, this.maskOffset, this.maskLayer, this.style, trail);
     }
 
     public boolean comic() {
@@ -70,7 +76,8 @@ public record ColorTweak(float brightness, float saturation, boolean aura, boole
                 this.mask,
                 Mth.clamp(this.maskOffset, -MAX_MASK_OFFSET, MAX_MASK_OFFSET),
                 this.maskLayer,
-                this.style.isEmpty() || this.style.length() > MAX_STYLE_LENGTH ? MOVIE : this.style
+                this.style.isEmpty() || this.style.length() > MAX_STYLE_LENGTH ? MOVIE : this.style,
+                this.trail
         );
     }
 }

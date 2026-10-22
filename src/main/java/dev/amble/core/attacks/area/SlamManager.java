@@ -142,7 +142,7 @@ public final class SlamManager {
         level.playSound(null, center.x, center.y, center.z, SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.0F, 0.6F);
         level.playSound(null, center.x, center.y, center.z, SoundEvents.WIND_CHARGE_BURST, SoundSource.PLAYERS, 1.2F, 0.6F);
 
-        AreaAttacks.broadcast(player, new SlamS2CPayload(center, (float) radius, slam.color));
+        AreaAttacks.broadcast(player, new SlamS2CPayload(center, (float) radius, slam.color, player.getId()));
     }
 
     private static void dust(ServerLevel level, Vec3 center, double radius) {

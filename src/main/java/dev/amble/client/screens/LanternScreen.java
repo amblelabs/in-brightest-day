@@ -1,6 +1,5 @@
 package dev.amble.client.screens;
 
-import dev.amble.client.config.BrightestDayClientConfig;
 import dev.amble.client.team.TeamScreen;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.items.PowerRingItem;
@@ -11,6 +10,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import dev.amble.core.menus.LanternMenu;
 import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.ringpowers.MaskLayer;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -114,10 +114,10 @@ public class LanternScreen extends AbstractContainerScreen<LanternMenu> {
                 true
         ));
         trail.setOnPress(() -> {
-            BrightestDayClientConfig config = BrightestDayClientConfig.get();
-            if (config == null) return;
-            config.showFlightTrails = !config.showFlightTrails;
-            config.save();
+            ColorTweak current = BrightestDayAttachments.getColorTweak(this.minecraft.player);
+            ColorTweak toggled = current.withTrail(!current.trail());
+            BrightestDayAttachments.setColorTweak(this.minecraft.player, toggled);
+            ClientPlayNetworking.send(new SetColorTweakC2SPayload(toggled));
             trail.icon(trailIcon());
             trail.setMessage(trailLabel());
             trail.setTooltip(Tooltip.create(trailLabel()));
@@ -148,8 +148,8 @@ public class LanternScreen extends AbstractContainerScreen<LanternMenu> {
     }
 
     private static boolean trailsShown() {
-        BrightestDayClientConfig config = BrightestDayClientConfig.get();
-        return config == null || config.showFlightTrails;
+        Minecraft client = Minecraft.getInstance();
+        return client.player == null || BrightestDayAttachments.getColorTweak(client.player).trail();
     }
 
     private static ItemStack trailIcon() {
@@ -165,7 +165,7 @@ public class LanternScreen extends AbstractContainerScreen<LanternMenu> {
 
         ColorTweak current = BrightestDayAttachments.getColorTweak(this.minecraft.player);
         ColorTweak tweak = new ColorTweak(this.brightness.tweak(), this.saturation.tweak(), this.aura.mode() != AuraToggle.Mode.OFF, this.aura.mode() != AuraToggle.Mode.ALWAYS, current.suit(),
-                current.mask(), this.maskHeight.offset(), this.maskLayer, current.style());
+                current.mask(), this.maskHeight.offset(), this.maskLayer, current.style(), current.trail());
         if (tweak.equals(current)) return;
 
         BrightestDayAttachments.setColorTweak(this.minecraft.player, tweak);

@@ -70,6 +70,8 @@ import dev.amble.client.flight.FlightAnimator;
 import dev.amble.client.flight.AileronRolls;
 import dev.amble.client.team.ClientTeams;
 import dev.amble.client.flight.FlightTrail;
+import dev.amble.client.flight.GroundLaunchClient;
+import dev.amble.client.flight.LaunchAnimations;
 import dev.amble.client.render.EyeFlareRenderTypes;
 import dev.amble.client.hud.FlightSpeedHud;
 import dev.amble.client.hud.EmotionVignette;
@@ -121,6 +123,8 @@ public class BrightestDayClient implements ClientModInitializer {
         Holograms.init();
         BlockColorRegistry.register(List.of(BlockTintSources.constant(CRYSTAL_TINT)), BrightestDayBlocks.ZAMARON_CRYSTAL_CLUSTER);
         FlightTrail.init();
+        GroundLaunchClient.init();
+        LaunchAnimations.init();
         EyeFlareRenderTypes.init();
         AileronRolls.init();
         ClientTeams.init();

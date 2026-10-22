@@ -61,6 +61,11 @@ public final class FlightBoost {
         player.level().playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.BREEZE_WIND_CHARGE_BURST.value(), SoundSource.PLAYERS, 1.0F, 1.2F);
     }
 
+    public static void burst(ServerPlayer player) {
+        SERVER.put(player, BURST_TICKS);
+        ServerPlayNetworking.send(player, new FlightBoostS2CPayload(BURST_TICKS, 0));
+    }
+
     public static void startClient(Player player, int ticks) {
         CLIENT.put(player, ticks);
     }
@@ -68,13 +73,13 @@ public final class FlightBoost {
     public static void tickClient(Player player) {
         Integer remaining = CLIENT.get(player);
         if (remaining == null) return;
-        if (remaining <= 1 || !FlightRingPower.isFlying(player)) CLIENT.remove(player);
+        if (remaining <= 1 || !FlightRingPower.canFly(player)) CLIENT.remove(player);
         else CLIENT.put(player, remaining - 1);
     }
 
     private static void tickServer(MinecraftServer server) {
         synchronized (SERVER) {
-            SERVER.entrySet().removeIf(entry -> entry.getValue() <= 1 || !FlightRingPower.isFlying(entry.getKey()));
+            SERVER.entrySet().removeIf(entry -> entry.getValue() <= 1 || !FlightRingPower.canFly(entry.getKey()));
             SERVER.replaceAll((player, remaining) -> remaining - 1);
         }
         if (server.getTickCount() % 1200 == 0) {

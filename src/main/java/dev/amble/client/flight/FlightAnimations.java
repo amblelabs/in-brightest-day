@@ -29,6 +29,9 @@ public final class FlightAnimations {
     public static final Identifier FALLING = BrightestDay.id("falling.json");
     public static final Identifier START_FALLING = BrightestDay.id("start_falling.json");
     public static final Identifier FACE_PLANT = BrightestDay.id("face_plant");
+    public static final Identifier LAUNCH_START = BrightestDay.id("launch_start");
+    public static final Identifier LAUNCH_LOOP = BrightestDay.id("launch_loop");
+    public static final Identifier LAUNCH_OFF = BrightestDay.id("launch_off");
     public static final List<Identifier> HERO_LANDINGS = List.of(
             BrightestDay.id("hero_landing_head_up"),
             BrightestDay.id("hero_landing_head_down"),
@@ -47,6 +50,8 @@ public final class FlightAnimations {
     private static final int FALL_FADE_TICKS = 8;
     static final int LAND_FADE_TICKS = 9;
     static final int RISE_FADE_TICKS = 14;
+    private static final int LAUNCH_CHARGE_FADE_TICKS = 4;
+    private static final int LAUNCH_OFF_FADE_TICKS = 2;
 
     public static void init() {
         PlayerAnimationFactory.ANIMATION_DATA_FACTORY.registerFactory(LAYER, PRIORITY, avatar -> {
@@ -83,6 +88,20 @@ public final class FlightAnimations {
         Animation animation = animation(id);
         if (animation == null) return;
         controller.replaceAnimationWithFade(AbstractFadeModifier.standardFadeIn(LAND_FADE_TICKS, EasingType.EASE_OUT_CUBIC), RawAnimation.begin().thenLoop(animation));
+    }
+
+    static void launchCharge(PlayerAnimationController controller) {
+        Animation loop = animation(LAUNCH_LOOP);
+        if (loop == null) return;
+        Animation start = animation(LAUNCH_START);
+        RawAnimation animation = start == null ? RawAnimation.begin().thenLoop(loop) : RawAnimation.begin().thenPlay(start).thenLoop(loop);
+        fadeTo(controller, animation, LAUNCH_CHARGE_FADE_TICKS);
+    }
+
+    static void launchOff(PlayerAnimationController controller) {
+        Animation off = animation(LAUNCH_OFF);
+        if (off == null) return;
+        fadeTo(controller, RawAnimation.begin().thenPlay(off), LAUNCH_OFF_FADE_TICKS);
     }
 
     static void rise(PlayerAnimationController controller) {

@@ -332,16 +332,29 @@ public final class FlightAnimator {
         FlightAnimations.setSpeed(controller, Mth.lerp(ease(motion.flightBlend), hoverSpeed, flightSpeed));
     }
 
+    public static void slam(Player player) {
+        PlayerAnimationController controller = FlightAnimations.controller(player);
+        if (controller == null) return;
+        Motion motion = MOTIONS.computeIfAbsent(player, key -> new Motion());
+        motion.peakY = player.getY();
+        motion.descent = 0.0F;
+        land(player, controller, motion, false);
+    }
+
     private static void land(Player player, PlayerAnimationController controller, Motion motion) {
+        land(player, controller, motion, true);
+    }
+
+    private static void land(Player player, PlayerAnimationController controller, Motion motion, boolean natural) {
         long roll = scramble(player.getUUID().getLeastSignificantBits() ^ player.blockPosition().asLong() * 31L ^ player.level().getGameTime() / 10L);
-        boolean facePlant = Long.remainderUnsigned(roll, FACE_PLANT_ODDS) == 0;
+        boolean facePlant = natural && Long.remainderUnsigned(roll, FACE_PLANT_ODDS) == 0;
         Identifier pose = facePlant ? FlightAnimations.FACE_PLANT : FlightAnimations.HERO_LANDINGS.get((int) Long.remainderUnsigned(roll >>> 16, FlightAnimations.HERO_LANDINGS.size()));
         FlightAnimations.land(controller, pose);
         FlightAnimations.setSpeed(controller, 1.0F);
         motion.phase = Phase.LAND;
         motion.landTicks = 0;
         motion.landHold = facePlant ? FACE_PLANT_HOLD : LAND_HOLD;
-        impact(player, Mth.clamp((motion.impact - FALL_LAND_SPEED) / (FULL_IMPACT - FALL_LAND_SPEED), 0.0F, 1.0F));
+        if (natural) impact(player, Mth.clamp((motion.impact - FALL_LAND_SPEED) / (FULL_IMPACT - FALL_LAND_SPEED), 0.0F, 1.0F));
     }
 
     private static void impact(Player player, float strength) {
@@ -372,6 +385,7 @@ public final class FlightAnimator {
     }
 
     public static float landWeight(Player player, float partialTicks) {
+        if (LaunchAnimations.active(player)) return 1.0F;
         Motion motion = MOTIONS.get(player);
         if (motion == null) return 0.0F;
         if (motion.phase == Phase.LAND) return ease(Mth.clamp((motion.landTicks + partialTicks) / FlightAnimations.LAND_FADE_TICKS, 0.0F, 1.0F));
@@ -570,6 +584,11 @@ public final class FlightAnimator {
         float yaw = Mth.rotLerp(partialTicks, player.yBodyRotO, player.yBodyRot) * Mth.DEG_TO_RAD;
         Vec3 facing = new Vec3(-Mth.sin(yaw), 0.0, Mth.cos(yaw));
         return new Vec3(0.0, local.y, 0.0).add(facing.scale(-local.z));
+    }
+
+    public static boolean phaseActive(Player player) {
+        Motion motion = MOTIONS.get(player);
+        return motion != null && motion.phase != Phase.NONE;
     }
 
     public static boolean isAnimating(Player player) {

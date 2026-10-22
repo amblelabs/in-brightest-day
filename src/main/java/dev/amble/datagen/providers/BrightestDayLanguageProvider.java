@@ -514,7 +514,9 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.white_fusion.faded", "The White light fades from the ring.");
         builder.add("message.brightestday.white_fusion.lacking", "The rings need a whole heart. Still lacking: %s");
         builder.add("message.brightestday.white_fusion.unbalanced", "The rings need balance. Your spectrum spreads %s / %s.");
-        builder.add("message.brightestday.white_fusion.formed", "Every light of the spectrum becomes one. You bear the White for %s minutes.");
+        builder.add("message.brightestday.white_fusion.formed", "Every light of the spectrum becomes one. You bear the White for %s minutes, longer while your heart stays bright.");
+        builder.add("message.brightestday.white_fusion.steady", "The White holds steady (%s/%s). Its time stands still.");
+        builder.add("message.brightestday.white_fusion.fading", "The White is fading (%s/%s). Lift your will, hope, compassion and love.");
         builder.add("message.brightestday.white_fusion.returned", "Rings lent to the White light have returned to you.");
         builder.add("tooltip.brightestday.ring.construct", "Construct ring by %s · %s left");
         builder.add("tooltip.brightestday.ring.fused_white", "Fused White · %s left");
@@ -779,8 +781,8 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("brightestday.server.flightBoostDrainPerSecond.desc", "Ring charge drained per second while boosting at the default speed.");
         builder.add("brightestday.client.showFlightSpeedometer", "Show Speedometer");
         builder.add("brightestday.client.showFlightSpeedometer.desc", "Whether the flight speedometer appears while ring-flying.");
-        builder.add("brightestday.client.showFlightTrails", "Show Flight Trails");
-        builder.add("brightestday.client.showFlightTrails.desc", "Whether ring-fliers leave a glowing trail behind them.");
+        builder.add("brightestday.client.showTrails", "Show Flight Trails");
+        builder.add("brightestday.client.showTrails.desc", "Whether you see ring-fliers' glowing trails. Each player can also hide their own trail from the ring menu.");
         builder.add("brightestday.server.aileronRolls", "Aileron Rolls");
         builder.add("brightestday.server.aileronRolls.desc", "Double-tap a strafe key while flying at speed to barrel roll in that direction.");
         builder.add("brightestday.server.aileronRollDistance", "Aileron Roll Distance");

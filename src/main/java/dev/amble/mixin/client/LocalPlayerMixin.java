@@ -1,5 +1,7 @@
 package dev.amble.mixin.client;
 
+import dev.amble.client.flight.GroundLaunchClient;
+
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import dev.amble.core.networking.payloads.c2s.SetFlightC2SPayload;
 import dev.amble.core.ringpowers.impl.FlightRingPower;
@@ -56,7 +58,7 @@ public abstract class LocalPlayerMixin {
     @Inject(method = "aiStep", at = @At("TAIL"))
     private void brightestday$landing(CallbackInfo ci) {
         LocalPlayer self = (LocalPlayer) (Object) this;
-        if (!this.brightestday$justToggled && self.onGround() && FlightRingPower.canFly(self)) {
+        if (!this.brightestday$justToggled && !GroundLaunchClient.launching() && self.onGround() && FlightRingPower.canFly(self)) {
             this.brightestday$setFlight(self, false);
         }
     }

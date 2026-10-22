@@ -60,6 +60,11 @@ public final class WhiteFusion {
     private static final int BONUS_MINUTES = 25;
     private static final long MINUTE_MILLIS = 60_000L;
     private static final long NOTICE_COOLDOWN = 100L;
+    private static final int UPKEEP_FLOOR = 500;
+    private static final long SECOND_MILLIS = 1000L;
+    private static final long COLLAPSE_EXTRA_MILLIS = 2000L;
+    private static final List<Emotion> POSITIVE = List.of(Emotion.WILL, Emotion.HOPE, Emotion.COMPASSION, Emotion.LOVE);
+    private static final Map<UUID, Boolean> UPKEPT = new HashMap<>();
 
     public record Return(UUID bearer, ItemStack ring) {
         public static final Codec<Return> CODEC = RecordCodecBuilder.create(instance -> instance.group(
@@ -129,12 +134,13 @@ public final class WhiteFusion {
             FUSING.clear();
             TRACKED.clear();
             NOTICED.clear();
+            UPKEPT.clear();
         });
     }
 
     public static boolean valid(MinecraftServer server, ItemStack stack) {
         BrightestDayComponents.FusedWhite data = stack.get(BrightestDayComponents.FUSED_WHITE);
-        if (data == null || System.currentTimeMillis() >= data.expires()) return false;
+        if (data == null) return false;
         return server.overworld().getAttachedOrElse(FUSIONS, Map.of()).containsKey(data.id());
     }
 
@@ -205,7 +211,10 @@ public final class WhiteFusion {
             }
             seekClusters(server);
         }
-        if (server.getTickCount() % 20 == 0) expire(server);
+        if (server.getTickCount() % 20 == 0) {
+            upkeep(server);
+            expire(server);
+        }
         if (server.getTickCount() % 1200 == 0) {
             long now = server.overworld().getGameTime();
             NOTICED.values().removeIf(noticed -> now - noticed >= NOTICE_COOLDOWN);
@@ -329,6 +338,37 @@ public final class WhiteFusion {
         fusing.level.sendParticles(ParticleTypes.END_ROD, at.x, at.y, at.z, 80, 0.4, 0.4, 0.4, 0.2);
         fusing.level.playSound(null, at.x, at.y, at.z, SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 2.0F, 1.6F);
         fuser.sendSystemMessage(Component.translatable("message.brightestday.white_fusion.formed", minutes).withStyle(ChatFormatting.BOLD).withColor(LanternCorps.WHITE.color()));
+    }
+
+    private static float positivity(ServerPlayer player) {
+        float total = 0.0F;
+        for (Emotion emotion : POSITIVE) total += SpectrumMeters.get(player, emotion);
+        return total / POSITIVE.size();
+    }
+
+    private static void upkeep(MinecraftServer server) {
+        Map<UUID, Fused> fusions = server.overworld().getAttachedOrElse(FUSIONS, Map.of());
+        if (fusions.isEmpty()) return;
+        Map<UUID, Fused> updated = new HashMap<>(fusions);
+        boolean changed = false;
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            BrightestDayComponents.FusedWhite data = BrightestDayAttachments.getRing(player).get(BrightestDayComponents.FUSED_WHITE);
+            Fused fused = data == null ? null : updated.get(data.id());
+            if (fused == null) continue;
+            float positivity = positivity(player);
+            boolean upkept = positivity >= UPKEEP_FLOOR;
+            long shift = upkept ? SECOND_MILLIS : positivity < Emotion.GATE ? -COLLAPSE_EXTRA_MILLIS : 0L;
+            if (shift != 0L) {
+                updated.put(data.id(), new Fused(fused.expires() + shift, fused.returns()));
+                changed = true;
+            }
+            Boolean previous = UPKEPT.put(player.getUUID(), upkept);
+            if (previous == null || previous != upkept) {
+                player.sendOverlayMessage(Component.translatable(upkept ? "message.brightestday.white_fusion.steady" : "message.brightestday.white_fusion.fading",
+                        Math.round(positivity), UPKEEP_FLOOR).withColor(LanternCorps.WHITE.color()));
+            }
+        }
+        if (changed) server.overworld().setAttached(FUSIONS, Map.copyOf(updated));
     }
 
     private static void expire(MinecraftServer server) {

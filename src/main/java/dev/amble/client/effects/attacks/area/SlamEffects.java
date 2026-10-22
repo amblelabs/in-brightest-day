@@ -17,6 +17,8 @@ import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.entity.player.Player;
+import dev.amble.client.flight.FlightAnimator;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 import java.util.ArrayList;
@@ -67,6 +69,7 @@ public final class SlamEffects {
     private static void spawn(Minecraft client, SlamS2CPayload payload) {
         if (client.level == null) return;
         SLAMS.add(new Slam(payload.center(), payload.radius(), ARGB.opaque(payload.color()), client.level.getRandom().nextLong()));
+        if (client.level.getEntity(payload.playerId()) instanceof Player player) FlightAnimator.slam(player);
     }
 
     private static void tick(Minecraft client) {

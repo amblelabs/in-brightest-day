@@ -25,10 +25,12 @@ import net.minecraft.world.phys.Vec3;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.WeakHashMap;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
 public class FlightRingPower extends RingPower<FlightRingPower.Data> {
     public static Consumer<Boolean> compactSender = compact -> {};
+    public static BooleanSupplier launching = () -> false;
 
     public static final double CRUISE_SPEED = 1.2;
     public static final double BOOST_SPEED = 3.5;
@@ -171,11 +173,13 @@ public class FlightRingPower extends RingPower<FlightRingPower.Data> {
         double cruise = cruiseSpeed(player);
         float yaw = player.getYRot() * Mth.DEG_TO_RAD;
         Vec3 left = new Vec3(Mth.cos(yaw), 0.0, Mth.sin(yaw));
-        double vertical = (ascending ? 1.0 : 0.0) - (player.isShiftKeyDown() ? 1.0 : 0.0);
+        boolean launched = launching.getAsBoolean();
+        double vertical = (ascending ? 1.0 : 0.0) - (player.isShiftKeyDown() && !launched ? 1.0 : 0.0);
 
         Vec3 wish = player.getLookAngle().scale(input.z)
                 .add(left.scale(input.x))
                 .add(0.0, vertical, 0.0);
+        if ((boosting || launched) && wish.lengthSqr() < 1.0E-4) wish = player.getLookAngle();
 
         Vec3 target;
         double response;

@@ -17,6 +17,9 @@ import dev.amble.core.networking.payloads.c2s.FireConstructC2SPayload;
 import dev.amble.core.networking.payloads.c2s.AileronRollC2SPayload;
 import dev.amble.core.networking.payloads.c2s.TeamActionC2SPayload;
 import dev.amble.core.networking.payloads.c2s.FlightBoostC2SPayload;
+import dev.amble.core.networking.payloads.c2s.GroundLaunchC2SPayload;
+import dev.amble.core.networking.payloads.c2s.GroundChargeC2SPayload;
+import dev.amble.core.networking.payloads.s2c.GroundLaunchS2CPayload;
 import dev.amble.core.networking.payloads.c2s.FlightSpeedC2SPayload;
 import dev.amble.core.networking.payloads.c2s.ForgeC2SPayload;
 import dev.amble.core.networking.payloads.c2s.ForgeStrokeC2SPayload;
@@ -112,6 +115,9 @@ public class Networking {
         PayloadTypeRegistry.serverboundPlay().register(SetFlightC2SPayload.TYPE, SetFlightC2SPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(FlightSpeedC2SPayload.TYPE, FlightSpeedC2SPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(FlightBoostC2SPayload.TYPE, FlightBoostC2SPayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(GroundLaunchC2SPayload.TYPE, GroundLaunchC2SPayload.CODEC);
+        PayloadTypeRegistry.serverboundPlay().register(GroundChargeC2SPayload.TYPE, GroundChargeC2SPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(GroundLaunchS2CPayload.TYPE, GroundLaunchS2CPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(AileronRollC2SPayload.TYPE, AileronRollC2SPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(TeamActionC2SPayload.TYPE, TeamActionC2SPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(TeamInvitesS2CPayload.TYPE, TeamInvitesS2CPayload.CODEC);
@@ -216,6 +222,8 @@ public class Networking {
         ServerPlayNetworking.registerGlobalReceiver(SetFlightC2SPayload.TYPE, SetFlightC2SPayload::handle);
         ServerPlayNetworking.registerGlobalReceiver(FlightSpeedC2SPayload.TYPE, FlightSpeedC2SPayload::handle);
         ServerPlayNetworking.registerGlobalReceiver(FlightBoostC2SPayload.TYPE, FlightBoostC2SPayload::handle);
+        ServerPlayNetworking.registerGlobalReceiver(GroundLaunchC2SPayload.TYPE, GroundLaunchC2SPayload::handle);
+        ServerPlayNetworking.registerGlobalReceiver(GroundChargeC2SPayload.TYPE, GroundChargeC2SPayload::handle);
         ServerPlayNetworking.registerGlobalReceiver(AileronRollC2SPayload.TYPE, AileronRollC2SPayload::handle);
         ServerPlayNetworking.registerGlobalReceiver(TeamActionC2SPayload.TYPE, TeamActionC2SPayload::handle);
         ServerPlayNetworking.registerGlobalReceiver(DrillModeC2SPayload.TYPE, DrillModeC2SPayload::handle);
