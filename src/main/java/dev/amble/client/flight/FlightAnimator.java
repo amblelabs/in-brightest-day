@@ -2,6 +2,7 @@ package dev.amble.client.flight;
 
 import dev.amble.client.config.BrightestDayClientConfig;
 import dev.amble.core.ringpowers.CorpsColors;
+import dev.amble.core.items.PowerRingItem;
 import com.zigythebird.playeranim.animation.PlayerAnimationController;
 import com.zigythebird.playeranimcore.animation.layered.modifier.AdjustmentModifier;
 import com.zigythebird.playeranimcore.math.Vec3f;
@@ -151,7 +152,7 @@ public final class FlightAnimator {
     private static void update(Minecraft client, AbstractClientPlayer player) {
         boolean airborne = FlightRingPower.isFlying(player);
         Vec3 step = player.position().subtract(player.xo, player.yo, player.zo);
-        boolean dropping = !airborne && freeFalling(player, step);
+        boolean dropping = !airborne && freeFalling(player, step) && PowerRingItem.getWornCorps(player).isPresent();
         Motion motion = MOTIONS.get(player);
         if (motion == null) {
             if (!airborne && !dropping) return;
