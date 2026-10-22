@@ -30,8 +30,8 @@ public class AreaShieldConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int chargeTicks() {
-        return BrightestDayConfig.get().areaShieldChargeTicks;
+    public int cooldownTicks() {
+        return 8;
     }
 
     @Override

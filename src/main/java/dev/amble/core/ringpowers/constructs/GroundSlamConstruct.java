@@ -20,8 +20,8 @@ public class GroundSlamConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int chargeTicks() {
-        return BrightestDayConfig.get().slamChargeTicks;
+    public int cooldownTicks() {
+        return 12;
     }
 
     @Override

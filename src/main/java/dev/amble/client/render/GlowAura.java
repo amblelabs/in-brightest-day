@@ -12,6 +12,7 @@ import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.ringpowers.CorpsColors;
 import dev.amble.core.ringpowers.ColorTweak;
 import dev.amble.core.ringpowers.impl.FlightRingPower;
+import dev.amble.core.ringpowers.impl.LightRingPower;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BindGroupLayouts;
@@ -52,8 +53,10 @@ public final class GlowAura {
     }
 
     private static boolean wanted(Player player) {
+        if (PowerRingItem.getWornCorps(player).isEmpty() || !PowerRingItem.hasCharge(player)) return false;
+        if (LightRingPower.isEmitting(player)) return true;
         ColorTweak tweak = BrightestDayAttachments.getColorTweak(player);
-        if (!tweak.aura() || PowerRingItem.getWornCorps(player).isEmpty() || !PowerRingItem.hasCharge(player)) return false;
+        if (!tweak.aura()) return false;
         return !tweak.auraFlightOnly() || FlightRingPower.isFlying(player);
     }
 

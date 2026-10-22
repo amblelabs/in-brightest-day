@@ -21,9 +21,11 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 
 public final class WallEffects {
@@ -31,12 +33,12 @@ public final class WallEffects {
     private static final int FADE_TICKS = 6;
     private static final float CELL_HALF = 0.49F;
     private static final float CELL_ALPHA = 0.85F;
-    private static final float PREVIEW_HALF = 0.48F;
 
     private static final Map<Integer, ClientWall> WALLS = new HashMap<>();
 
     private static final class ClientWall {
         final List<BlockPos> cells;
+        final Set<BlockPos> members;
         final int casterId;
         final int color;
         final int duration;
@@ -46,6 +48,7 @@ public final class WallEffects {
 
         ClientWall(WallSpawnS2CPayload payload, @Nullable ClientLevel level) {
             this.cells = payload.cells();
+            this.members = new HashSet<>(this.cells);
             this.casterId = payload.casterId();
             this.color = ARGB.opaque(payload.color());
             this.duration = payload.duration();
@@ -102,16 +105,19 @@ public final class WallEffects {
             int color = liveColor(client.level, wall);
             List<ShieldEffects.Voxel> cells = new ArrayList<>(wall.cells.size());
             int count = wall.cells.size();
+            boolean settled = time > POP_TICKS * 1.5F && wall.fade < 0;
             for (int i = 0; i < count; i++) {
                 float delay = (float) i / count * POP_TICKS;
                 float pop = Mth.clamp((time - delay) / POP_TICKS * 2.0F, 0.0F, 1.0F);
                 float scale = pop * fade;
                 if (scale <= 0.01F) continue;
 
-                int tint = VoxelRenderer.toWhite(color, 0.1F + 0.12F * Mth.sin(time * 0.2F + i * 0.9F));
-                cells.add(new ShieldEffects.Voxel(Vec3.atCenterOf(wall.cells.get(i)), CELL_HALF * scale, tint));
+                BlockPos pos = wall.cells.get(i);
+                int tint = VoxelRenderer.toWhite(color, 0.08F + 0.1F * Mth.sin(time * 0.1F + (pos.getX() + pos.getY() + pos.getZ()) * 0.45F));
+                int faces = settled ? openFaces(wall.members, pos) : VoxelRenderer.ALL_FACES;
+                if (faces != 0) cells.add(new ShieldEffects.Voxel(Vec3.atCenterOf(pos), settled ? 0.5F : CELL_HALF * scale, tint, faces));
             }
-            ShieldEffects.submit(context, camera, cells, CELL_ALPHA);
+            ShieldEffects.submitGlass(context, camera, cells, CELL_ALPHA, VoxelRenderer.PIXEL, ShieldEffects.HARD_LIGHT_FILL);
         }
     }
 
@@ -125,8 +131,29 @@ public final class WallEffects {
     public static void submitPreview(LevelRenderContext context, Vec3 camera, Iterable<BlockPos> cells, int color, float alpha) {
         int opaque = ARGB.opaque(color);
         List<ShieldEffects.Voxel> voxels = new ArrayList<>();
-        for (BlockPos pos : cells) voxels.add(new ShieldEffects.Voxel(Vec3.atCenterOf(pos), PREVIEW_HALF, opaque));
-        ShieldEffects.submit(context, camera, voxels, alpha);
+        Set<BlockPos> members = cells instanceof Set<BlockPos> set ? set : toSet(cells);
+        for (BlockPos pos : cells) {
+            int faces = openFaces(members, pos);
+            if (faces != 0) voxels.add(new ShieldEffects.Voxel(Vec3.atCenterOf(pos), 0.5F, opaque, faces));
+        }
+        ShieldEffects.submitGlass(context, camera, voxels, alpha, VoxelRenderer.PIXEL, ShieldEffects.HARD_LIGHT_FILL);
+    }
+
+    public static int openFaces(Set<BlockPos> cells, BlockPos pos) {
+        int faces = 0;
+        if (!cells.contains(pos.above())) faces |= VoxelRenderer.UP;
+        if (!cells.contains(pos.below())) faces |= VoxelRenderer.DOWN;
+        if (!cells.contains(pos.north())) faces |= VoxelRenderer.NORTH;
+        if (!cells.contains(pos.south())) faces |= VoxelRenderer.SOUTH;
+        if (!cells.contains(pos.west())) faces |= VoxelRenderer.WEST;
+        if (!cells.contains(pos.east())) faces |= VoxelRenderer.EAST;
+        return faces;
+    }
+
+    private static Set<BlockPos> toSet(Iterable<BlockPos> cells) {
+        Set<BlockPos> set = new HashSet<>();
+        for (BlockPos pos : cells) set.add(pos);
+        return set;
     }
 
     private WallEffects() {}

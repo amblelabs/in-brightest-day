@@ -79,21 +79,6 @@ public class BrightestDayConfig extends Config {
     @ConfigGroup.Pop
     public int sculptBlocksPerUpkeep = 128;
 
-    public ConfigGroup charge = new ConfigGroup("charge");
-    @ValidatedInt.Restrict(min = 0, max = 100)
-    public int blastChargeTicks = 25;
-    @ValidatedInt.Restrict(min = 0, max = 100)
-    public int beamChargeTicks = 12;
-    @ValidatedInt.Restrict(min = 0, max = 100)
-    public int healBeamChargeTicks = 10;
-    @ValidatedInt.Restrict(min = 0, max = 100)
-    public int entityShieldChargeTicks = 6;
-    @ValidatedInt.Restrict(min = 0, max = 100)
-    public int areaShieldChargeTicks = 8;
-    @ValidatedInt.Restrict(min = 0, max = 100)
-    @ConfigGroup.Pop
-    public int wallChargeTicks = 6;
-
     public ConfigGroup concussive = new ConfigGroup("concussive");
     @ValidatedDouble.Restrict(min = 1.0, max = 24.0)
     public double concussiveRange = 6.0;
@@ -153,8 +138,6 @@ public class BrightestDayConfig extends Config {
     public ConfigGroup glider = new ConfigGroup("glider");
     @ValidatedInt.Restrict(min = 0, max = 1000)
     public int gliderCost = 150;
-    @ValidatedInt.Restrict(min = 0, max = 100)
-    public int gliderChargeTicks = 15;
     @ValidatedInt.Restrict(min = 20, max = 12000, type = ValidatedNumber.WidgetType.TEXTBOX)
     public int gliderDurationTicks = 1200;
     @ValidatedDouble.Restrict(min = 4.0, max = 128.0)
@@ -168,8 +151,6 @@ public class BrightestDayConfig extends Config {
     public ConfigGroup drill = new ConfigGroup("drill");
     @ValidatedInt.Restrict(min = 0, max = 1000)
     public int drillCost = 25;
-    @ValidatedInt.Restrict(min = 0, max = 100)
-    public int drillChargeTicks = 0;
     @ValidatedFloat.Restrict(min = 1.0F, max = 60.0F)
     public float drillSpeed = 12.0F;
     @ValidatedInt.Restrict(min = 0, max = 200)
@@ -189,8 +170,6 @@ public class BrightestDayConfig extends Config {
     public ConfigGroup light = new ConfigGroup("light");
     @ValidatedInt.Restrict(min = 0, max = 500)
     public int lightOrbCost = 20;
-    @ValidatedInt.Restrict(min = 0, max = 100)
-    public int lightOrbChargeTicks = 6;
     @ValidatedInt.Restrict(min = 0, max = 50)
     public int lightOrbUpkeepPerSize = 1;
     @ValidatedInt.Restrict(min = 1, max = 64)
@@ -228,8 +207,6 @@ public class BrightestDayConfig extends Config {
     public ConfigGroup swarmMissiles = new ConfigGroup("swarmMissiles");
     @ValidatedInt.Restrict(min = 0, max = 1000)
     public int swarmCost = 150;
-    @ValidatedInt.Restrict(min = 0, max = 100)
-    public int swarmChargeTicks = 20;
     @ValidatedInt.Restrict(min = 1, max = 16)
     public int swarmDarts = 6;
     @ValidatedFloat.Restrict(min = 0.0F, max = 20.0F)
@@ -258,8 +235,6 @@ public class BrightestDayConfig extends Config {
     public ConfigGroup chainBolt = new ConfigGroup("chainBolt");
     @ValidatedInt.Restrict(min = 0, max = 1000)
     public int chainCost = 150;
-    @ValidatedInt.Restrict(min = 0, max = 100)
-    public int chainChargeTicks = 20;
     @ValidatedFloat.Restrict(min = 0.0F, max = 40.0F)
     public float chainDamage = 8.0F;
     @ValidatedDouble.Restrict(min = 4.0, max = 96.0)
@@ -277,8 +252,6 @@ public class BrightestDayConfig extends Config {
     public ConfigGroup boomerangDisc = new ConfigGroup("boomerangDisc");
     @ValidatedInt.Restrict(min = 0, max = 1000)
     public int discCost = 100;
-    @ValidatedInt.Restrict(min = 0, max = 100)
-    public int discChargeTicks = 15;
     @ValidatedFloat.Restrict(min = 0.0F, max = 40.0F)
     public float discDamage = 11.0F;
     @ValidatedDouble.Restrict(min = 4.0, max = 64.0)
@@ -303,8 +276,6 @@ public class BrightestDayConfig extends Config {
     public ConfigGroup groundSlam = new ConfigGroup("groundSlam");
     @ValidatedInt.Restrict(min = 0, max = 1000)
     public int slamCost = 250;
-    @ValidatedInt.Restrict(min = 0, max = 100)
-    public int slamChargeTicks = 12;
     @ValidatedFloat.Restrict(min = 0.0F, max = 40.0F)
     public float slamBaseDamage = 9.0F;
     @ValidatedFloat.Restrict(min = 0.0F, max = 2.0F)
@@ -324,8 +295,6 @@ public class BrightestDayConfig extends Config {
     public ConfigGroup rapidBarrage = new ConfigGroup("rapidBarrage");
     @ValidatedInt.Restrict(min = 0, max = 1000)
     public int barrageCost = 120;
-    @ValidatedInt.Restrict(min = 0, max = 100)
-    public int barrageChargeTicks = 6;
     @ValidatedFloat.Restrict(min = 0.0F, max = 20.0F)
     public float barrageDamage = 2.5F;
     @ValidatedDouble.Restrict(min = 4.0, max = 96.0)
@@ -343,8 +312,6 @@ public class BrightestDayConfig extends Config {
     public ConfigGroup giantFist = new ConfigGroup("giantFist");
     @ValidatedInt.Restrict(min = 0, max = 1000)
     public int fistCost = 150;
-    @ValidatedInt.Restrict(min = 0, max = 100)
-    public int fistChargeTicks = 15;
     @ValidatedFloat.Restrict(min = 0.0F, max = 60.0F)
     public float fistDamage = 18.0F;
     @ValidatedDouble.Restrict(min = 1.0, max = 24.0)
@@ -360,8 +327,6 @@ public class BrightestDayConfig extends Config {
     public ConfigGroup energyWhip = new ConfigGroup("energyWhip");
     @ValidatedInt.Restrict(min = 0, max = 1000)
     public int whipCost = 100;
-    @ValidatedInt.Restrict(min = 0, max = 100)
-    public int whipChargeTicks = 8;
     @ValidatedFloat.Restrict(min = 0.0F, max = 40.0F)
     public float whipDamage = 11.0F;
     @ValidatedDouble.Restrict(min = 2.0, max = 24.0)
@@ -379,8 +344,6 @@ public class BrightestDayConfig extends Config {
     public ConfigGroup sentryTurret = new ConfigGroup("sentryTurret");
     @ValidatedInt.Restrict(min = 0, max = 1000)
     public int turretCost = 250;
-    @ValidatedInt.Restrict(min = 0, max = 100)
-    public int turretChargeTicks = 20;
     @ValidatedInt.Restrict(min = 20, max = 6000)
     public int turretLifetimeTicks = 400;
     @ValidatedInt.Restrict(min = 1, max = 16)
@@ -401,10 +364,8 @@ public class BrightestDayConfig extends Config {
     @ValidatedInt.Restrict(min = 0, max = 1000)
     public int boatCost = 40;
     @ValidatedInt.Restrict(min = 0, max = 100)
-    public int boatDrainPerSecond = 1;
-    @ValidatedInt.Restrict(min = 0, max = 100)
     @ConfigGroup.Pop
-    public int mountChargeTicks = 10;
+    public int boatDrainPerSecond = 1;
 
     public ConfigGroup visuals = new ConfigGroup("visuals");
     @ValidatedInt.Restrict(min = 1, max = 120)
@@ -416,8 +377,6 @@ public class BrightestDayConfig extends Config {
     public int sphereCostPerRadius = 40;
     @ValidatedInt.Restrict(min = 0, max = 200)
     public int sphereDrainPerRadius = 3;
-    @ValidatedInt.Restrict(min = 0, max = 100)
-    public int sphereChargeTicks = 15;
     @ValidatedDouble.Restrict(min = 0.1, max = 4.0)
     @ConfigGroup.Pop
     public double breakFreeSpeed = 0.6;
@@ -428,13 +387,11 @@ public class BrightestDayConfig extends Config {
     public String oathModelUrl = "https://alphacephei.com/vosk/models/vosk-model-small-en-us-0.15.zip";
 
     public ConfigGroup plasma = new ConfigGroup("plasma");
-    public int plasmaCost = 250;
     @ConfigGroup.Pop
-    public int plasmaChargeTicks = 40;
+    public int plasmaCost = 250;
 
     public ConfigGroup crystal = new ConfigGroup("crystal");
     public int crystalCost = 150;
-    public int crystalChargeTicks = 15;
     public int crystalPrisonTicks = 80;
     @ConfigGroup.Pop
     public double crystalRange = 32.0;

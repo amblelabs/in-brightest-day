@@ -129,11 +129,9 @@ public final class RingOdds {
                 }
                 int online = server.getPlayerList().getPlayerCount();
                 check(online >= config.indigoMinPlayers, "Enough players online " + online + "/" + config.indigoMinPlayers);
-                long eligible = server.getPlayerList().getPlayers().stream()
-                        .filter(other -> BrightestDayAttachments.getRing(other).isEmpty() && !other.isSpectator() && !RingBonds.bonded(other) && EmotionGates.allows(other, LanternCorps.INDIGO))
-                        .count();
-                note("One ringless player is chosen at random when the tribe picks");
-                return this.blocked || eligible == 0 ? "0%" : percent(1.0F / eligible) + " at the next pick (" + eligible + " eligible)";
+                meter(player, Emotion.COMPASSION, Emotion.GATE);
+                note("The first ringless player to reach the compassion threshold is chosen");
+                return this.blocked ? "0%" : "100% on reaching it first";
             }
             case WHITE -> {
                 int lowest = EmotionGates.lowest(player);

@@ -11,7 +11,7 @@ import net.minecraft.world.item.component.SwingAnimation;
 
 public class GrapplingHookConstruct extends ConstructRingPower {
     private static final int COST = 40;
-    private static final int CHARGE_TICKS = 5;
+    private static final int COOLDOWN_TICKS = 5;
 
     public GrapplingHookConstruct() {
         super(BrightestDay.id("grappling_hook"));
@@ -23,8 +23,8 @@ public class GrapplingHookConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int chargeTicks() {
-        return CHARGE_TICKS;
+    public int cooldownTicks() {
+        return COOLDOWN_TICKS;
     }
 
     @Override

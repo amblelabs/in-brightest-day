@@ -20,8 +20,8 @@ public class SwarmMissilesConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int chargeTicks() {
-        return BrightestDayConfig.get().swarmChargeTicks;
+    public int cooldownTicks() {
+        return 20;
     }
 
     @Override

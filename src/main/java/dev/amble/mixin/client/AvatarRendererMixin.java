@@ -28,6 +28,7 @@ public abstract class AvatarRendererMixin {
         LanternSuit.extract(entity, state, partialTicks);
         InsigniaEffects.extract(entity, state, partialTicks);
         FlightAnimator.extractDive(entity, state, partialTicks);
+        FlightAnimator.extractLanding(entity, state, partialTicks);
         Holograms.extract(entity, state);
     }
 

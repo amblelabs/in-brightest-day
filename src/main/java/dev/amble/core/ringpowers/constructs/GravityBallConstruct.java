@@ -15,7 +15,7 @@ public class GravityBallConstruct extends ConstructRingPower {
     private static final double LIFT = 1.5;
     private static final int BASE_COST = 150;
     private static final int COST_PER_LEVEL = 80;
-    private static final int CHARGE_TICKS = 14;
+    private static final int COOLDOWN_TICKS = 14;
 
     private final boolean repels;
 
@@ -39,8 +39,8 @@ public class GravityBallConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int chargeTicks() {
-        return CHARGE_TICKS;
+    public int cooldownTicks() {
+        return COOLDOWN_TICKS;
     }
 
     @Override

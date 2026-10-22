@@ -44,6 +44,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Locale;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -55,6 +57,7 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
     private static final int AUTO_LOWER_TICKS = 100;
 
     private static final Map<ServerPlayer, Long> LAST_FIRED = new WeakHashMap<>();
+    private static final Map<ServerPlayer, Map<Identifier, Long>> READY = new WeakHashMap<>();
     private static final Map<ServerPlayer, Long> CHARGE_STARTED = new WeakHashMap<>();
     private static final Map<ServerPlayer, Long> LAST_USED = new WeakHashMap<>();
 
@@ -117,7 +120,7 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
 
         long now = player.level().getGameTime();
         boolean busy = BeamManager.isBeaming(player) || HealBeamManager.isHealing(player) || SculptManager.isSculpting(player)
-                || TractorManager.isHolding(player) || AcidManager.isSpewing(player) || LightRingPower.isEmitting(player) || BarrageManager.isFiring(player) || DrillManager.isDrilling(player) || Megaphone.isActive(player) || ContainmentSphere.isActive(player);
+                || TractorManager.isHolding(player) || AcidManager.isSpewing(player) || BarrageManager.isFiring(player) || DrillManager.isDrilling(player) || Megaphone.isActive(player) || ContainmentSphere.isActive(player);
         Long last = LAST_USED.get(player);
         if (busy || last == null) {
             LAST_USED.put(player, now);
@@ -251,12 +254,20 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
         long now = level.getGameTime();
         Long last = LAST_FIRED.get(player);
         if (last != null && now - last < COOLDOWN_TICKS) return;
+        Map<Identifier, Long> ready = READY.computeIfAbsent(player, key -> new HashMap<>());
+        long readyAt = ready.getOrDefault(construct.get().id(), 0L);
+        if (now < readyAt) {
+            player.sendOverlayMessage(Component.translatable("message.brightestday.construct_recharging", Component.translatable(construct.get().getTranslationKey()),
+                    String.format(Locale.ROOT, "%.1f", (readyAt - now) / 20.0F)));
+            return;
+        }
 
         if (!player.hasInfiniteMaterials() && !PowerRingItem.consumeCharge(player, construct.get().cost(radius))) {
             level.playSound(null, player.getX(), player.getEyeY(), player.getZ(), SoundEvents.BEACON_DEACTIVATE, SoundSource.PLAYERS, 0.6F, 1.6F);
             return;
         }
         LAST_FIRED.put(player, now);
+        if (construct.get().cooldownTicks() > 0) ready.put(construct.get().id(), now + construct.get().cooldownTicks());
         if (!Poses.channeling(player)) raise(player);
         if (RingSync.misfire(player, construct.get())) return;
 

@@ -82,7 +82,7 @@ public final class SphereEffects {
             if (scale <= 0.01F) continue;
 
             Vec3 center = player.getEyePosition(partialTicks).add(player.getViewVector(partialTicks).scale(sphere.radius + ContainmentSphere.GAP));
-            ShieldEffects.submit(context, camera, ShieldEffects.sphere(center, sphere.radius * scale, sphere.radius, time, sphere.color), ALPHA);
+            ShieldEffects.submitShell(context, camera, center, sphere.radius * scale, sphere.radius, time, sphere.color, ALPHA);
 
             List<ShieldEffects.Voxel> beam = new ArrayList<>();
             Vec3 hand = BlastEffects.hand(player, partialTicks);

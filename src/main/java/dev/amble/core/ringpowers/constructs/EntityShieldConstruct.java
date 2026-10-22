@@ -25,8 +25,8 @@ public class EntityShieldConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int chargeTicks() {
-        return BrightestDayConfig.get().entityShieldChargeTicks;
+    public int cooldownTicks() {
+        return 6;
     }
 
     @Override

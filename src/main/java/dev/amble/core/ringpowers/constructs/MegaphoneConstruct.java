@@ -12,7 +12,7 @@ import java.util.EnumSet;
 
 public class MegaphoneConstruct extends ConstructRingPower {
     private static final int USE_COST = 10;
-    private static final int CHARGE_TICKS = 4;
+    private static final int COOLDOWN_TICKS = 4;
 
     public MegaphoneConstruct() {
         super(BrightestDay.id("megaphone"), EnumSet.allOf(LanternCorps.class));
@@ -24,8 +24,8 @@ public class MegaphoneConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int chargeTicks() {
-        return CHARGE_TICKS;
+    public int cooldownTicks() {
+        return COOLDOWN_TICKS;
     }
 
     @Override

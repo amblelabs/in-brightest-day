@@ -12,7 +12,6 @@ import dev.amble.core.rings.ConstructRings;
 import dev.amble.core.ringpowers.LanternCorps;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -24,6 +23,9 @@ import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
+import net.minecraft.server.players.NameAndId;
+import net.minecraft.world.Container;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
@@ -31,6 +33,7 @@ import net.minecraft.world.item.ItemStack;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
@@ -41,6 +44,7 @@ import java.util.UUID;
 
 public final class CorpsLeaders {
     private static final long VOTE_TICKS = 2400L;
+    private static final String LEADER_MARK = "\u2605 ";
 
     public static final AttachmentType<Map<LanternCorps, UUID>> LEADERS = AttachmentRegistry.<Map<LanternCorps, UUID>>builder()
             .initializer(Map::of)
@@ -82,15 +86,8 @@ public final class CorpsLeaders {
             List<UUID> remaining = new ArrayList<>(exiled);
             remaining.remove(handler.player.getUUID());
             server.overworld().setAttached(EXILED, List.copyOf(remaining));
-            strip(handler.player, null);
+            removeRings(handler.player, "message.brightestday.corps.rings_removed", null);
         });
-        CommandRegistrationCallback.EVENT.register((dispatcher, registry, environment) -> dispatcher.register(
-                Commands.literal("corps")
-                        .then(Commands.literal("info").executes(CorpsLeaders::info))
-                        .then(Commands.literal("kick").then(Commands.argument("player", EntityArgument.player()).executes(CorpsLeaders::kick)))
-                        .then(Commands.literal("vote").then(Commands.argument("choice", StringArgumentType.word())
-                                .suggests((context, builder) -> builder.suggest("yes").suggest("no").buildFuture())
-                                .executes(CorpsLeaders::vote)))));
     }
 
     public static Optional<UUID> leader(MinecraftServer server, LanternCorps corps) {
@@ -114,10 +111,13 @@ public final class CorpsLeaders {
         leaders.putAll(server.overworld().getAttachedOrElse(LEADERS, Map.of()));
         if (leader == null) leaders.remove(corps);
         else leaders.put(corps, leader);
+        UUID previous = server.overworld().getAttachedOrElse(LEADERS, Map.of()).get(corps);
         server.overworld().setAttached(LEADERS, Map.copyOf(leaders));
+        if (previous != null) refreshTab(server, previous);
+        if (leader != null) refreshTab(server, leader);
     }
 
-    private static @Nullable LanternCorps worn(Player player) {
+    public static @Nullable LanternCorps worn(Player player) {
         ItemStack ring = BrightestDayAttachments.getRing(player);
         if (ring.isEmpty() || ConstructRings.temporary(ring)) return null;
         return PowerRingItem.getCorps(ring).orElse(null);
@@ -131,7 +131,7 @@ public final class CorpsLeaders {
         return members;
     }
 
-    private static int info(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+    public static int info(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         ServerPlayer player = context.getSource().getPlayerOrException();
         LanternCorps corps = worn(player);
         if (corps == null) {
@@ -144,7 +144,7 @@ public final class CorpsLeaders {
         return 1;
     }
 
-    private static int kick(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+    public static int kick(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         ServerPlayer caller = context.getSource().getPlayerOrException();
         ServerPlayer target = EntityArgument.getPlayer(context, "player");
         LanternCorps corps = worn(caller);
@@ -175,13 +175,13 @@ public final class CorpsLeaders {
 
     private static Component ballot(LanternCorps corps) {
         Component yes = Component.translatable("message.brightestday.corps.vote_yes").withStyle(style -> style.withColor(ChatFormatting.GREEN).withBold(true)
-                .withClickEvent(new ClickEvent.RunCommand("/corps vote yes")));
+                .withClickEvent(new ClickEvent.RunCommand("/" + BrightestDay.MOD_ID + " vote yes")));
         Component no = Component.translatable("message.brightestday.corps.vote_no").withStyle(style -> style.withColor(ChatFormatting.RED).withBold(true)
-                .withClickEvent(new ClickEvent.RunCommand("/corps vote no")));
+                .withClickEvent(new ClickEvent.RunCommand("/" + BrightestDay.MOD_ID + " vote no")));
         return Component.empty().append(yes).append(Component.literal("  ")).append(no);
     }
 
-    private static int vote(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
+    public static int vote(CommandContext<CommandSourceStack> context) throws CommandSyntaxException {
         ServerPlayer player = context.getSource().getPlayerOrException();
         String choice = StringArgumentType.getString(context, "choice");
         LanternCorps corps = worn(player);
@@ -236,22 +236,132 @@ public final class CorpsLeaders {
             }
         }
         ServerPlayer target = server.getPlayerList().getPlayer(vote.target);
-        if (target != null) {
-            strip(target, vote.corps);
-            return;
+        if (target != null) removeRings(target, "message.brightestday.corps.kicked", vote.corps);
+        else exile(server, vote.target);
+    }
+
+    public static int indigo(CommandContext<CommandSourceStack> context) {
+        MinecraftServer server = context.getSource().getServer();
+        Optional<UUID> indigo = WorldProgress.get(server).indigoOne();
+        Component message = indigo.map(id -> Component.translatable("message.brightestday.corps.indigo_one", name(server, id)))
+                .orElse(Component.translatable("message.brightestday.corps.no_indigo_one"));
+        context.getSource().sendSuccess(() -> message.copy().withColor(LanternCorps.INDIGO.color()), false);
+        return indigo.isPresent() ? 1 : 0;
+    }
+
+    public static int showLeader(CommandContext<CommandSourceStack> context, LanternCorps corps) {
+        MinecraftServer server = context.getSource().getServer();
+        Component leader = leader(server, corps).map(id -> name(server, id)).orElse(Component.translatable("message.brightestday.corps.no_leader"));
+        context.getSource().sendSuccess(() -> Component.translatable("message.brightestday.corps.leader_is", corps.displayName(), leader).withColor(corps.color()), false);
+        return 1;
+    }
+
+    public static int assignLeader(CommandContext<CommandSourceStack> context, LanternCorps corps, Collection<NameAndId> profiles) {
+        MinecraftServer server = context.getSource().getServer();
+        NameAndId profile = profiles.iterator().next();
+        setLeader(server, corps, profile.id());
+        announce(server, corps, Component.translatable("message.brightestday.corps.leader", Component.literal(profile.name()), corps.displayName()).withStyle(ChatFormatting.BOLD));
+        context.getSource().sendSuccess(() -> Component.translatable("message.brightestday.corps.leader_set", profile.name(), corps.displayName()).withColor(corps.color()), true);
+        return 1;
+    }
+
+    public static int clearLeader(CommandContext<CommandSourceStack> context, LanternCorps corps) {
+        setLeader(context.getSource().getServer(), corps, null);
+        context.getSource().sendSuccess(() -> Component.translatable("message.brightestday.corps.leader_cleared", corps.displayName()).withColor(corps.color()), true);
+        return 1;
+    }
+
+    public static int forceKick(CommandContext<CommandSourceStack> context, Collection<NameAndId> profiles) {
+        MinecraftServer server = context.getSource().getServer();
+        for (NameAndId profile : profiles) {
+            dropLeadership(server, profile.id());
+            ServerPlayer online = server.getPlayerList().getPlayer(profile.id());
+            if (online != null) removeRings(online, "message.brightestday.corps.kicked_by_admin", null);
+            else exile(server, profile.id());
+            context.getSource().sendSuccess(() -> Component.translatable("message.brightestday.corps.kick_done", profile.name()), true);
         }
+        return profiles.size();
+    }
+
+    public static int relinquish(CommandContext<CommandSourceStack> context, Collection<NameAndId> profiles) {
+        MinecraftServer server = context.getSource().getServer();
+        for (NameAndId profile : profiles) {
+            dropLeadership(server, profile.id());
+            ServerPlayer online = server.getPlayerList().getPlayer(profile.id());
+            if (online != null) removeRings(online, "message.brightestday.corps.rings_removed", null);
+            else exile(server, profile.id());
+            Component state = Component.translatable(online != null ? "message.brightestday.corps.relinquished_now" : "message.brightestday.corps.relinquished_later", profile.name());
+            context.getSource().sendSuccess(() -> state, true);
+        }
+        return profiles.size();
+    }
+
+    public static int disband(CommandContext<CommandSourceStack> context, LanternCorps corps) {
+        MinecraftServer server = context.getSource().getServer();
+        Set<UUID> bearers = new HashSet<>(RingBonds.bearers(server, corps));
+        for (ServerPlayer player : members(server, corps)) bearers.add(player.getUUID());
+        VOTES.remove(corps);
+        setLeader(server, corps, null);
+        announce(server, corps, Component.translatable("message.brightestday.corps.disbanded", corps.displayName()).withStyle(ChatFormatting.BOLD));
+        for (UUID bearer : bearers) {
+            ServerPlayer online = server.getPlayerList().getPlayer(bearer);
+            if (online != null) removeRings(online, "message.brightestday.corps.rings_removed", null);
+            else exile(server, bearer);
+        }
+        context.getSource().sendSuccess(() -> Component.translatable("message.brightestday.corps.disband_done", corps.displayName(), bearers.size()).withColor(corps.color()), true);
+        return bearers.size();
+    }
+
+    public static @Nullable Component tabName(ServerPlayer player) {
+        LanternCorps corps = worn(player);
+        if (corps == null || !isLeader(player, corps)) return null;
+        return Component.literal(LEADER_MARK).withColor(corps.color()).append(player.getDisplayName());
+    }
+
+    private static void refreshTab(MinecraftServer server, UUID id) {
+        ServerPlayer player = server.getPlayerList().getPlayer(id);
+        if (player != null) server.getPlayerList().broadcastAll(new ClientboundPlayerInfoUpdatePacket(ClientboundPlayerInfoUpdatePacket.Action.UPDATE_DISPLAY_NAME, player));
+    }
+
+    private static void dropLeadership(MinecraftServer server, UUID id) {
+        for (Map.Entry<LanternCorps, UUID> entry : Map.copyOf(server.overworld().getAttachedOrElse(LEADERS, Map.of())).entrySet()) {
+            if (entry.getValue().equals(id)) setLeader(server, entry.getKey(), null);
+        }
+    }
+
+    private static void exile(MinecraftServer server, UUID id) {
+        RingBonds.forgetOwner(server, id);
         List<UUID> exiled = new ArrayList<>(server.overworld().getAttachedOrElse(EXILED, List.of()));
-        if (!exiled.contains(vote.target)) exiled.add(vote.target);
+        if (!exiled.contains(id)) exiled.add(id);
         server.overworld().setAttached(EXILED, List.copyOf(exiled));
     }
 
-    private static void strip(ServerPlayer player, @Nullable LanternCorps corps) {
-        LanternCorps worn = worn(player);
-        if (worn == null || corps != null && worn != corps) return;
-        RingBonds.release(player.level().getServer(), BrightestDayAttachments.getRing(player));
-        BrightestDayAttachments.setRing(player, ItemStack.EMPTY);
-        player.sendSystemMessage(Component.translatable("message.brightestday.corps.kicked", worn.displayName()).withStyle(ChatFormatting.BOLD).withColor(worn.color()));
+    private static void removeRings(ServerPlayer player, String messageKey, @Nullable LanternCorps corps) {
+        MinecraftServer server = player.level().getServer();
+        ItemStack worn = BrightestDayAttachments.getRing(player);
+        LanternCorps shown = corps != null ? corps : PowerRingItem.getCorps(worn).orElse(null);
+        boolean removed = false;
+        if (!worn.isEmpty()) {
+            RingBonds.release(server, worn);
+            BrightestDayAttachments.setRing(player, ItemStack.EMPTY);
+            removed = true;
+        }
+        for (Container container : List.<Container>of(player.getInventory(), player.getEnderChestInventory())) {
+            for (int slot = 0; slot < container.getContainerSize(); slot++) {
+                if (container.getItem(slot).getItem() instanceof PowerRingItem) {
+                    container.setItem(slot, ItemStack.EMPTY);
+                    removed = true;
+                }
+            }
+        }
+        if (player.containerMenu.getCarried().getItem() instanceof PowerRingItem) player.containerMenu.setCarried(ItemStack.EMPTY);
+        RingBonds.forget(player);
+        dropLeadership(server, player.getUUID());
+        if (!removed) return;
+        Component corpsName = shown == null ? Component.empty() : shown.displayName();
+        player.sendSystemMessage(Component.translatable(messageKey, corpsName).withStyle(ChatFormatting.BOLD).withColor(shown == null ? 0xFFFFFF : shown.color()));
     }
+
 
     private static void announce(MinecraftServer server, LanternCorps corps, Component message) {
         Component colored = message.copy().withColor(corps.color());

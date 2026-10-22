@@ -51,7 +51,7 @@ public final class RedRage {
     public static void init() {
         ServerTickEvents.END_SERVER_TICK.register(RedRage::tick);
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) ->
-                !(entity instanceof Player player && source.is(DamageTypeTags.IS_FIRE) && wearsRed(player)));
+                !(entity instanceof Player player && source.is(DamageTypeTags.IS_FIRE) && isRed(player)));
     }
 
     public static boolean wearsRed(Player player) {

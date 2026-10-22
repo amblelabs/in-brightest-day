@@ -30,8 +30,8 @@ public class HealBeamConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int chargeTicks() {
-        return BrightestDayConfig.get().healBeamChargeTicks;
+    public int cooldownTicks() {
+        return 10;
     }
 
     @Override

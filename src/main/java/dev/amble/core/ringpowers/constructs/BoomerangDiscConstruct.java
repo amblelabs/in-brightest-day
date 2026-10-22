@@ -18,8 +18,8 @@ public class BoomerangDiscConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int chargeTicks() {
-        return BrightestDayConfig.get().discChargeTicks;
+    public int cooldownTicks() {
+        return 15;
     }
 
     @Override

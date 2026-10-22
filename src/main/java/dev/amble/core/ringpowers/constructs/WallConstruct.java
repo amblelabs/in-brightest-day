@@ -33,8 +33,8 @@ public class WallConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int chargeTicks() {
-        return BrightestDayConfig.get().wallChargeTicks;
+    public int cooldownTicks() {
+        return 6;
     }
 
     @Override

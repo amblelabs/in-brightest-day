@@ -1,5 +1,6 @@
 package dev.amble.client.screens;
 
+import dev.amble.client.config.BrightestDayClientConfig;
 import dev.amble.client.team.TeamScreen;
 import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.items.PowerRingItem;
@@ -11,6 +12,7 @@ import dev.amble.core.menus.LanternMenu;
 import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.ringpowers.MaskLayer;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
@@ -98,6 +100,28 @@ public class LanternScreen extends AbstractContainerScreen<LanternMenu> {
                 () -> this.minecraft.gui.setScreen(new InsigniaScreen(this)),
                 true
         ));
+        this.addRenderableWidget(new IconButton(
+                this.leftPos - IconButton.SIZE - 2, this.topPos + 14 + IconButton.SIZE * 5,
+                new ItemStack(Items.ARMOR_STAND),
+                Component.translatable("gui.brightestday.hand.editor"),
+                () -> this.minecraft.gui.setScreen(new HandPoseScreen(this)),
+                true
+        ));
+        IconButton trail = this.addRenderableWidget(new IconButton(
+                this.leftPos - IconButton.SIZE - 2, this.topPos + 16 + IconButton.SIZE * 6,
+                trailIcon(), trailLabel(),
+                () -> {},
+                true
+        ));
+        trail.setOnPress(() -> {
+            BrightestDayClientConfig config = BrightestDayClientConfig.get();
+            if (config == null) return;
+            config.showFlightTrails = !config.showFlightTrails;
+            config.save();
+            trail.icon(trailIcon());
+            trail.setMessage(trailLabel());
+            trail.setTooltip(Tooltip.create(trailLabel()));
+        });
 
         ColorTweak tweak = BrightestDayAttachments.getColorTweak(this.minecraft.player);
         this.brightness = this.addRenderableWidget(new ColorTweakSlider(
@@ -121,6 +145,19 @@ public class LanternScreen extends AbstractContainerScreen<LanternMenu> {
                     this.updateTweak();
                 })
                 .bounds(this.leftPos + SLIDER_X + SLIDER_WIDTH - LAYER_WIDTH, this.topPos + MASK_Y, LAYER_WIDTH, SLIDER_HEIGHT).build());
+    }
+
+    private static boolean trailsShown() {
+        BrightestDayClientConfig config = BrightestDayClientConfig.get();
+        return config == null || config.showFlightTrails;
+    }
+
+    private static ItemStack trailIcon() {
+        return new ItemStack(trailsShown() ? Items.FIREWORK_ROCKET : Items.FIREWORK_STAR);
+    }
+
+    private static Component trailLabel() {
+        return Component.translatable(trailsShown() ? "gui.brightestday.trail.on" : "gui.brightestday.trail.off");
     }
 
     private void updateTweak() {

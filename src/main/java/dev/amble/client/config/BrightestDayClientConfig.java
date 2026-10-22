@@ -20,6 +20,8 @@ public class BrightestDayClientConfig extends Config {
     public boolean showIndigoVignette = true;
     @ValidatedFloat.Restrict(min = 0.25F, max = 1.5F)
     public float effectsQuality = 1.0F;
+    @ValidatedFloat.Restrict(min = 30.0F, max = 170.0F)
+    public float maxFlightFov = 140.0F;
 
     public static BrightestDayClientConfig get() {
         return instance;

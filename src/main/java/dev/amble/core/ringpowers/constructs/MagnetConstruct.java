@@ -9,7 +9,7 @@ import net.minecraft.server.level.ServerPlayer;
 public class MagnetConstruct extends ConstructRingPower {
     private static final int BASE_COST = 40;
     private static final int COST_PER_SIZE = 20;
-    private static final int CHARGE_TICKS = 8;
+    private static final int COOLDOWN_TICKS = 8;
 
     public MagnetConstruct() {
         super(BrightestDay.id("magnet"));
@@ -56,8 +56,8 @@ public class MagnetConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int chargeTicks() {
-        return CHARGE_TICKS;
+    public int cooldownTicks() {
+        return COOLDOWN_TICKS;
     }
 
     @Override

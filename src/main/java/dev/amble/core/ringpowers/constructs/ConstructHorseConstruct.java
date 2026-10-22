@@ -17,8 +17,8 @@ public class ConstructHorseConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int chargeTicks() {
-        return BrightestDayConfig.get().mountChargeTicks;
+    public int cooldownTicks() {
+        return 10;
     }
 
     @Override

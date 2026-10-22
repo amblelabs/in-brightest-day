@@ -123,11 +123,13 @@ public final class ArmedPose {
             data.setData(COLOR, CorpsColors.of(player));
             data.setData(CHARGED, PowerRingItem.hasCharge(player));
             data.setData(ACTIVITY, activity(player, partialTicks));
-            data.setData(CONSTRUCTING, ActiveConstructs.hasActive(player) || PoseAnimations.glowing(player));
+            data.setData(CONSTRUCTING, ActiveConstructs.hasActive(player) || PoseAnimations.glowing(player) || LightRingPower.isEmitting(player));
             data.setData(CHARGE_ANIMATING, LanternChargeAnimations.handheld(player) || PoseAnimations.posing(player));
             data.setData(COMMS, CommsClient.talking(player, partialTicks));
             data.setData(SYNC, RingSync.sync(player));
+            data.setData(RingPositions.PLAYER_ID, player.getId());
         } else if (Holograms.is(entity)) {
+            data.setData(RingPositions.PLAYER_ID, -1);
             data.setData(AMOUNT, 0.0F);
             data.setData(COLOR, Holograms.color(entity));
             data.setData(CHARGED, Holograms.lit(entity));
@@ -137,6 +139,7 @@ public final class ArmedPose {
             data.setData(COMMS, 0.0F);
         } else {
             data.setData(AMOUNT, 0.0F);
+            data.setData(RingPositions.PLAYER_ID, -1);
         }
     }
 

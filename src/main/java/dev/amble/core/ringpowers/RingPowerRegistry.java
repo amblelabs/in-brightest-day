@@ -1,5 +1,7 @@
 package dev.amble.core.ringpowers;
 
+import dev.amble.BrightestDay;
+
 import dev.amble.core.ringpowers.constructs.AreaShieldConstruct;
 import dev.amble.core.ringpowers.constructs.BulwarkConstruct;
 import dev.amble.core.ringpowers.constructs.ConstructRingConstruct;
@@ -21,7 +23,7 @@ import dev.amble.core.ringpowers.constructs.CrystalPrisonConstruct;
 import dev.amble.core.ringpowers.constructs.DrillConstruct;
 import dev.amble.core.ringpowers.constructs.EnergyWhipConstruct;
 import dev.amble.core.ringpowers.constructs.EntityShieldConstruct;
-import dev.amble.core.ringpowers.constructs.GiantFistConstruct;
+import dev.amble.core.ringpowers.constructs.HandConstruct;
 import dev.amble.core.ringpowers.constructs.GliderConstruct;
 import dev.amble.core.ringpowers.constructs.GrapplingHookConstruct;
 import dev.amble.core.ringpowers.constructs.GroundSlamConstruct;
@@ -66,6 +68,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class RingPowerRegistry {
     private static final Map<Identifier, RingPower<?>> REGISTRY = new LinkedHashMap<>();
     private static final Map<LanternCorps, List<RingPower<?>>> BY_CORPS = new ConcurrentHashMap<>();
+    private static final Identifier LEGACY_FIST = BrightestDay.id("giant_fist");
 
     public static final FlightRingPower FLIGHT = register(new FlightRingPower());
     public static final ArmedRingPower ARMED = register(new ArmedRingPower());
@@ -94,7 +97,7 @@ public final class RingPowerRegistry {
     public static final NovaBurstConstruct NOVA_BURST = register(new NovaBurstConstruct());
     public static final GroundSlamConstruct GROUND_SLAM = register(new GroundSlamConstruct());
     public static final RapidBarrageConstruct RAPID_BARRAGE = register(new RapidBarrageConstruct());
-    public static final GiantFistConstruct GIANT_FIST = register(new GiantFistConstruct());
+    public static final HandConstruct HAND = register(new HandConstruct());
     public static final EnergyWhipConstruct ENERGY_WHIP = register(new EnergyWhipConstruct());
     public static final SentryTurretConstruct SENTRY_TURRET = register(new SentryTurretConstruct());
     public static final ToolForgeConstruct TOOL_FORGE = register(new ToolForgeConstruct());
@@ -126,7 +129,9 @@ public final class RingPowerRegistry {
     }
 
     public static Optional<RingPower<?>> get(Identifier id) {
-        return Optional.ofNullable(REGISTRY.get(id));
+        RingPower<?> power = REGISTRY.get(id);
+        if (power == null && id.equals(LEGACY_FIST)) power = HAND;
+        return Optional.ofNullable(power);
     }
 
     public static Collection<RingPower<?>> all() {

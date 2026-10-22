@@ -16,7 +16,7 @@ public class IconButton extends AbstractButton {
 
     private final @Nullable Identifier texture;
     private @Nullable ItemStack icon;
-    private final Runnable onPress;
+    private Runnable onPress;
     private final boolean themed;
 
     public IconButton(int x, int y, Identifier texture, Component message, Runnable onPress) {
@@ -38,6 +38,14 @@ public class IconButton extends AbstractButton {
         this.onPress = onPress;
         this.themed = themed;
         this.setTooltip(Tooltip.create(message));
+    }
+
+    public void setOnPress(Runnable onPress) {
+        this.onPress = onPress;
+    }
+
+    public void icon(ItemStack icon) {
+        this.icon = icon;
     }
 
     @Override

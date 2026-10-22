@@ -4,6 +4,7 @@ import dev.amble.core.ringpowers.CorpsColors;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import dev.amble.client.effects.attacks.area.BarrageEffects;
+import dev.amble.client.effects.attacks.weapon.HandClient;
 import dev.amble.client.effects.drill.DrillEffects;
 import dev.amble.client.forge.ForgeClient;
 import dev.amble.client.flight.FlightRenderTypes;
@@ -58,7 +59,8 @@ public final class BlastEffects {
     private static final float GLOW_ALPHA = 0.35F;
     private static final int WHITE_HOT = 0xFFF4E8;
 
-    private static final float SHOULDER_HEIGHT = 1.4F;
+    private static final float SHOULDER_DROP = 0.22F;
+    private static final float STANDING_EYE = 1.62F;
     private static final float SHOULDER_OFFSET = 0.35F;
     private static final float ARM_LENGTH = 0.7F;
 
@@ -186,6 +188,14 @@ public final class BlastEffects {
         }
     }
 
+    public static boolean charging() {
+        return charge > 0;
+    }
+
+    public static int chargeTicks() {
+        return charge;
+    }
+
     private static boolean releasable(LocalPlayer player) {
         if (charge <= 0) return false;
         int release = ArmedRingPower.selectedConstruct(player).map(ConstructRingPower::releaseTicks).orElse(-1);
@@ -194,6 +204,7 @@ public final class BlastEffects {
 
     private static void release(LocalPlayer player) {
         retractCharge();
+        HandClient.beforeFire(player);
         boolean sustained = ArmedRingPower.selectedConstruct(player).map(construct -> construct.sustained(player)).orElse(false);
         ClientPlayNetworking.send(new FireConstructC2SPayload(ConstructClient.selectedSize(player)));
         if (sustained) {
@@ -279,13 +290,15 @@ public final class BlastEffects {
     }
 
     public static Vec3 hand(Player player, float partialTicks) {
+        Vec3 rendered = RingPositions.of(player, partialTicks);
+        if (rendered != null) return rendered;
         Vec3 posed = PoseAnimations.ringPosition(player, partialTicks);
         if (posed != null) return posed;
         float yaw = Mth.rotLerp(partialTicks, player.yBodyRotO, player.yBodyRot) * Mth.DEG_TO_RAD;
         Vec3 right = new Vec3(-Mth.cos(yaw), 0.0, -Mth.sin(yaw));
         float side = player.getMainArm() == HumanoidArm.RIGHT ? 1.0F : -1.0F;
-        return player.getPosition(partialTicks)
-                .add(0.0, SHOULDER_HEIGHT, 0.0)
+        return player.getEyePosition(partialTicks)
+                .subtract(0.0, SHOULDER_DROP * player.getEyeHeight() / STANDING_EYE, 0.0)
                 .add(right.scale(side * SHOULDER_OFFSET))
                 .add(RemoteAim.look(player, partialTicks).scale(ARM_LENGTH));
     }
@@ -331,7 +344,7 @@ public final class BlastEffects {
             context.submitNodeCollector().submitCustomGeometry(poseStack, FlightRenderTypes.GLOW,
                     (pose, buffer) -> draw(pose, buffer, centers, halves, colors, GLOW_SCALE, GLOW_ALPHA * life, false));
             context.submitNodeCollector().submitCustomGeometry(poseStack, FlightRenderTypes.glass(),
-                    (pose, buffer) -> draw(pose, buffer, centers, halves, colors, 1.0F, GLASS_ALPHA * life, true));
+                    (pose, buffer) -> draw(pose, buffer, centers, halves, colors, 1.0F, VoxelRenderer.denser(GLASS_ALPHA * life), true));
         }
     }
 
@@ -364,7 +377,7 @@ public final class BlastEffects {
         context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.GLOW,
                 (pose, buffer) -> draw(pose, buffer, centers, halves, colors, GLOW_SCALE, GLOW_ALPHA * alpha, false));
         context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.glass(),
-                (pose, buffer) -> draw(pose, buffer, centers, halves, colors, 1.0F, GLASS_ALPHA * alpha, true));
+                (pose, buffer) -> draw(pose, buffer, centers, halves, colors, 1.0F, VoxelRenderer.denser(GLASS_ALPHA * alpha), true));
     }
 
     private static void beam(Blast blast, float time, float life, Vec3 camera, List<Vec3> centers, List<Float> halves, List<Integer> colors) {

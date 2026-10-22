@@ -18,8 +18,8 @@ public class BeamConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int chargeTicks() {
-        return BrightestDayConfig.get().beamChargeTicks;
+    public int cooldownTicks() {
+        return 12;
     }
 
     @Override

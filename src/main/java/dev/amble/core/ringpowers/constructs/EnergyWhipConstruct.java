@@ -18,8 +18,8 @@ public class EnergyWhipConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int chargeTicks() {
-        return BrightestDayConfig.get().whipChargeTicks;
+    public int cooldownTicks() {
+        return 8;
     }
 
     @Override

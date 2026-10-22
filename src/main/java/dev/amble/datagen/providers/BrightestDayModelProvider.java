@@ -11,6 +11,7 @@ import net.minecraft.client.color.item.Dye;
 import net.minecraft.client.data.models.model.ItemModelUtils;
 import net.minecraft.client.renderer.item.ClientItem;
 import net.minecraft.client.renderer.item.ItemModel;
+import net.minecraft.client.renderer.item.properties.numeric.UseDuration;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.block.Blocks;
 import dev.amble.core.ringpowers.constructs.ConstructTool;
@@ -54,6 +55,12 @@ public class BrightestDayModelProvider extends FabricModelProvider {
                 itemModelGenerators.itemModelOutput.accept(tool.item(), ItemModelGenerators.createFlatModelDispatch(
                         constructModel(tool.vanillaModel()), constructModel(tool.vanillaModel() + "_in_hand")
                 ), new ClientItem.Properties(true, false, 1.95F));
+            } else if (tool == ConstructTool.BOW) {
+                itemModelGenerators.itemModelOutput.accept(tool.item(), ItemModelUtils.conditional(ItemModelUtils.isUsingItem(),
+                        ItemModelUtils.rangeSelect(new UseDuration(false), 0.05F, constructModel("bow_pulling_0"),
+                                ItemModelUtils.override(constructModel("bow_pulling_1"), 0.65F),
+                                ItemModelUtils.override(constructModel("bow_pulling_2"), 0.9F)),
+                        constructModel("bow")));
             } else if (tool == ConstructTool.SPYGLASS) {
                 itemModelGenerators.itemModelOutput.accept(tool.item(), ItemModelGenerators.createFlatModelDispatch(
                         constructModel(tool.vanillaModel()), constructModel(tool.vanillaModel() + "_in_hand")

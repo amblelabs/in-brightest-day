@@ -9,7 +9,7 @@ import net.minecraft.server.level.ServerPlayer;
 import java.util.EnumSet;
 
 public class ConstructRingConstruct extends ConstructRingPower {
-    private static final int CHARGE_TICKS = 10;
+    private static final int COOLDOWN_TICKS = 10;
 
     public ConstructRingConstruct() {
         super(BrightestDay.id("construct_ring"), EnumSet.of(LanternCorps.GREEN, LanternCorps.YELLOW, LanternCorps.RED, LanternCorps.ORANGE,
@@ -22,8 +22,8 @@ public class ConstructRingConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int chargeTicks() {
-        return CHARGE_TICKS;
+    public int cooldownTicks() {
+        return COOLDOWN_TICKS;
     }
 
     @Override

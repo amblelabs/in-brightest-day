@@ -36,8 +36,8 @@ public class LightOrbConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int chargeTicks() {
-        return BrightestDayConfig.get().lightOrbChargeTicks;
+    public int cooldownTicks() {
+        return 6;
     }
 
     @Override

@@ -340,6 +340,18 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("message.brightestday.corps.vote_failed", "The vote to cast out %s failed, %s of %s needed votes.");
         builder.add("message.brightestday.corps.vote_passed", "%s has been cast out of the %s.");
         builder.add("message.brightestday.corps.kicked", "Your corps has cast you out. The %s ring leaves your finger.");
+        builder.add("message.brightestday.corps.kicked_by_admin", "An operator has removed you from the %s. Your rings are gone.");
+        builder.add("message.brightestday.corps.rings_removed", "Your lantern rings have been taken from you.");
+        builder.add("message.brightestday.corps.kick_done", "Removed %s from their corps.");
+        builder.add("message.brightestday.corps.relinquished_now", "Took every ring from %s.");
+        builder.add("message.brightestday.corps.relinquished_later", "%s is offline; their rings will be taken when they next join.");
+        builder.add("message.brightestday.corps.disbanded", "The %s has been disbanded.");
+        builder.add("message.brightestday.corps.disband_done", "Disbanded the %s (%s bearers).");
+        builder.add("message.brightestday.corps.indigo_one", "Indigo-1 is %s.");
+        builder.add("message.brightestday.corps.no_indigo_one", "There is no Indigo-1 right now.");
+        builder.add("message.brightestday.corps.leader_is", "The %s is led by %s.");
+        builder.add("message.brightestday.corps.leader_set", "%s now leads the %s.");
+        builder.add("message.brightestday.corps.leader_cleared", "The %s no longer has a leader.");
         builder.add("message.brightestday.duel.cooldown", "You cannot challenge for the orange light again for %s.");
         builder.add("message.brightestday.duel.grace", "The orange holder is still recovering from their last duel. Try again in %s.");
         builder.add("message.brightestday.duel.queued", "%s is not here. Your challenge will stand until you are both in this world.");
@@ -417,15 +429,11 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("brightestday.server.boatCost.desc", "Ring charge spent to summon a construct boat.");
         builder.add("brightestday.server.boatDrainPerSecond", "Boat Drain");
         builder.add("brightestday.server.boatDrainPerSecond.desc", "Ring charge drained each second while riding a construct boat.");
-        builder.add("brightestday.server.mountChargeTicks", "Mount Charge-Up");
-        builder.add("brightestday.server.mountChargeTicks.desc", "Ticks a construct mount charges before it forms (20 ticks = 1 second).");
         builder.add("brightestday.server.sphere", "Containment Sphere");
         builder.add("brightestday.server.sphereCostPerRadius", "Cost per Radius");
         builder.add("brightestday.server.sphereCostPerRadius.desc", "Ring charge spent per block of radius to raise a containment sphere.");
         builder.add("brightestday.server.sphereDrainPerRadius", "Drain per Radius");
         builder.add("brightestday.server.sphereDrainPerRadius.desc", "Ring charge drained each second per block of radius while the sphere is held.");
-        builder.add("brightestday.server.sphereChargeTicks", "Charge-Up Ticks");
-        builder.add("brightestday.server.sphereChargeTicks.desc", "Ticks the containment sphere charges before forming (20 ticks = 1 second).");
         builder.add("brightestday.server.breakFreeSpeed", "Break-Free Speed");
         builder.add("brightestday.server.breakFreeSpeed.desc", "How fast (blocks per tick) a held player must move against a tractor beam or containment sphere to break free. Walking can't, flying can.");
         builder.add("hud.brightestday.blood_hunt", "%s Prey %sm");
@@ -580,6 +588,8 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("gui.brightestday.brightness", "Brightness: %s");
         builder.add("gui.brightestday.saturation", "Saturation: %s");
         builder.add("gui.brightestday.aura", "Aura");
+        builder.add("gui.brightestday.trail.on", "Flight Trail: On");
+        builder.add("gui.brightestday.trail.off", "Flight Trail: Off");
         builder.add("gui.brightestday.aura.flying", "Aura: Fly");
         builder.add("gui.brightestday.aura.always", "Aura: On");
         builder.add("gui.brightestday.suit", "Suit");
@@ -618,7 +628,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
                 In brightest night,
                 Beware your fears made into light.
                 Let those who try to stop what's right,
-                Burn like my power,
+                Burn like his power,
                 Sinestro's might!""");
         builder.add(LanternCorps.RED.oathKey(), """
                 With blood and rage of crimson red,
@@ -750,8 +760,6 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("brightestday.server.glider", "Glider");
         builder.add("brightestday.server.gliderCost", "Charge Cost");
         builder.add("brightestday.server.gliderCost.desc", "Ring charge spent to give someone a glider.");
-        builder.add("brightestday.server.gliderChargeTicks", "Charge-Up");
-        builder.add("brightestday.server.gliderChargeTicks.desc", "Ticks the glider must charge before it's sent.");
         builder.add("brightestday.server.gliderDurationTicks", "Duration");
         builder.add("brightestday.server.gliderDurationTicks.desc", "How many ticks the glider lasts on its target (20 ticks = 1 second).");
         builder.add("brightestday.server.gliderRange", "Range");
@@ -785,13 +793,9 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("brightestday.server.plasma", "Plasma Burst");
         builder.add("brightestday.server.plasmaCost", "Cost");
         builder.add("brightestday.server.plasmaCost.desc", "Ring charge spent to fire a plasma burst.");
-        builder.add("brightestday.server.plasmaChargeTicks", "Charge-Up Ticks");
-        builder.add("brightestday.server.plasmaChargeTicks.desc", "Ticks the plasma burst charges before firing (20 ticks = 1 second).");
         builder.add("brightestday.server.crystal", "Crystal Prison");
         builder.add("brightestday.server.crystalCost", "Cost");
         builder.add("brightestday.server.crystalCost.desc", "Ring charge spent to encase a target in crystal.");
-        builder.add("brightestday.server.crystalChargeTicks", "Charge-Up Ticks");
-        builder.add("brightestday.server.crystalChargeTicks.desc", "Ticks the crystal prison charges before firing (20 ticks = 1 second).");
         builder.add("brightestday.server.crystalPrisonTicks", "Prison Duration");
         builder.add("brightestday.server.crystalPrisonTicks.desc", "How many ticks a target stays trapped in the crystal.");
         builder.add("brightestday.server.crystalRange", "Range");
@@ -918,6 +922,8 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("brightestday.client.showIndigoVignette.desc", "While wearing an Indigo ring, tint the screen edges with an indigo haze that deepens as threats close in.");
         builder.add("brightestday.client.effectsQuality", "Effects Quality");
         builder.add("brightestday.client.effectsQuality.desc", "Scales how many particles and voxels ring effects draw. Lower it on weaker computers; raise it for denser effects. Below 0.5 the extra glow layer on shields is skipped.");
+        builder.add("brightestday.client.maxFlightFov", "Max Flight FOV");
+        builder.add("brightestday.client.maxFlightFov.desc", "The widest your field of view can stretch while flying fast, in degrees.");
         builder.add("brightestday.server.synergy", "Corps Synergy");
         builder.add("brightestday.server.synergyLinkRadius", "Hope/Will Range");
         builder.add("brightestday.server.synergyLinkRadius.desc", "How close Blue and Green Lanterns must be to empower each other.");
@@ -932,8 +938,6 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("brightestday.server.drill", "Drill");
         builder.add("brightestday.server.drillCost", "Charge Cost");
         builder.add("brightestday.server.drillCost.desc", "Ring charge spent to start drilling.");
-        builder.add("brightestday.server.drillChargeTicks", "Charge-Up");
-        builder.add("brightestday.server.drillChargeTicks.desc", "Ticks spent charging before the drill starts.");
         builder.add("brightestday.server.drillSpeed", "Drill Speed");
         builder.add("brightestday.server.drillSpeed.desc", "Mining speed of the drill, comparable to a pickaxe's (netherite is 9). Larger bores split this across their width.");
         builder.add("brightestday.server.drillDrainPerSecond", "Drain Per Second");
@@ -956,8 +960,6 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("brightestday.server.swarmMissiles", "Swarm Missiles");
         builder.add("brightestday.server.swarmCost", "Charge Cost");
         builder.add("brightestday.server.swarmCost.desc", "Ring charge spent to launch a swarm volley.");
-        builder.add("brightestday.server.swarmChargeTicks", "Charge-Up");
-        builder.add("brightestday.server.swarmChargeTicks.desc", "Ticks spent charging before the volley launches.");
         builder.add("brightestday.server.swarmDarts", "Dart Count");
         builder.add("brightestday.server.swarmDarts.desc", "Number of homing darts launched per volley.");
         builder.add("brightestday.server.swarmDamage", "Damage");
@@ -982,8 +984,6 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("brightestday.server.chainBolt", "Chain Bolt");
         builder.add("brightestday.server.chainCost", "Charge Cost");
         builder.add("brightestday.server.chainCost.desc", "Ring charge spent to fire a chain bolt.");
-        builder.add("brightestday.server.chainChargeTicks", "Charge-Up");
-        builder.add("brightestday.server.chainChargeTicks.desc", "Ticks spent charging before the bolt fires.");
         builder.add("brightestday.server.chainDamage", "Damage");
         builder.add("brightestday.server.chainDamage.desc", "Damage dealt to the first target struck.");
         builder.add("brightestday.server.chainRange", "Range");
@@ -999,8 +999,6 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("brightestday.server.boomerangDisc", "Boomerang Disc");
         builder.add("brightestday.server.discCost", "Charge Cost");
         builder.add("brightestday.server.discCost.desc", "Ring charge spent to throw a boomerang disc.");
-        builder.add("brightestday.server.discChargeTicks", "Charge-Up");
-        builder.add("brightestday.server.discChargeTicks.desc", "Ticks spent charging before the disc is thrown.");
         builder.add("brightestday.server.discDamage", "Damage");
         builder.add("brightestday.server.discDamage.desc", "Damage dealt each time the disc passes through a target.");
         builder.add("brightestday.server.discRange", "Range");
@@ -1021,8 +1019,6 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("brightestday.server.groundSlam", "Ground Slam");
         builder.add("brightestday.server.slamCost", "Charge Cost");
         builder.add("brightestday.server.slamCost.desc", "Ring charge spent to perform a ground slam.");
-        builder.add("brightestday.server.slamChargeTicks", "Charge-Up");
-        builder.add("brightestday.server.slamChargeTicks.desc", "Ticks spent charging before you dive.");
         builder.add("brightestday.server.slamBaseDamage", "Base Damage");
         builder.add("brightestday.server.slamBaseDamage.desc", "Damage dealt by a slam from no height.");
         builder.add("brightestday.server.slamDamagePerBlock", "Damage Per Block");
@@ -1040,8 +1036,6 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("brightestday.server.rapidBarrage", "Rapid Barrage");
         builder.add("brightestday.server.barrageCost", "Charge Cost");
         builder.add("brightestday.server.barrageCost.desc", "Ring charge spent to start a barrage.");
-        builder.add("brightestday.server.barrageChargeTicks", "Charge-Up");
-        builder.add("brightestday.server.barrageChargeTicks.desc", "Ticks spent charging before the barrage starts.");
         builder.add("brightestday.server.barrageDamage", "Damage");
         builder.add("brightestday.server.barrageDamage.desc", "Damage dealt by each bolt.");
         builder.add("brightestday.server.barrageRange", "Range");
@@ -1054,11 +1048,9 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("brightestday.server.barrageDrainPerSecond.desc", "Ring charge drained each second while firing.");
         builder.add("brightestday.server.barrageSpreadDegrees", "Spread");
         builder.add("brightestday.server.barrageSpreadDegrees.desc", "Random inaccuracy of each bolt, in degrees.");
-        builder.add("brightestday.server.giantFist", "Giant Fist");
+        builder.add("brightestday.server.giantFist", "Hand");
         builder.add("brightestday.server.fistCost", "Charge Cost");
         builder.add("brightestday.server.fistCost.desc", "Ring charge spent to throw a giant fist.");
-        builder.add("brightestday.server.fistChargeTicks", "Charge-Up");
-        builder.add("brightestday.server.fistChargeTicks.desc", "Ticks spent charging before the punch.");
         builder.add("brightestday.server.fistDamage", "Damage");
         builder.add("brightestday.server.fistDamage.desc", "Damage dealt to targets struck by the fist.");
         builder.add("brightestday.server.fistRange", "Range");
@@ -1072,8 +1064,6 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("brightestday.server.energyWhip", "Energy Whip");
         builder.add("brightestday.server.whipCost", "Charge Cost");
         builder.add("brightestday.server.whipCost.desc", "Ring charge spent to crack the whip.");
-        builder.add("brightestday.server.whipChargeTicks", "Charge-Up");
-        builder.add("brightestday.server.whipChargeTicks.desc", "Ticks spent charging before the whip cracks.");
         builder.add("brightestday.server.whipDamage", "Damage");
         builder.add("brightestday.server.whipDamage.desc", "Damage dealt by the sweeping crack.");
         builder.add("brightestday.server.whipLength", "Length");
@@ -1089,8 +1079,6 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("brightestday.server.sentryTurret", "Sentry Turret");
         builder.add("brightestday.server.turretCost", "Charge Cost");
         builder.add("brightestday.server.turretCost.desc", "Ring charge spent to place a sentry turret.");
-        builder.add("brightestday.server.turretChargeTicks", "Charge-Up");
-        builder.add("brightestday.server.turretChargeTicks.desc", "Ticks spent charging before the turret is placed.");
         builder.add("brightestday.server.turretLifetimeTicks", "Lifetime");
         builder.add("brightestday.server.turretLifetimeTicks.desc", "Ticks a turret stays active before dissolving.");
         builder.add("brightestday.server.turretMaxCount", "Max Turrets");
@@ -1110,7 +1098,36 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("brightestday.ring_power.nova_burst", "Nova Burst");
         builder.add("brightestday.ring_power.ground_slam", "Ground Slam");
         builder.add("brightestday.ring_power.rapid_barrage", "Rapid Barrage");
-        builder.add("brightestday.ring_power.giant_fist", "Giant Fist");
+        builder.add("brightestday.ring_power.hand", "Hand");
+        builder.add("gui.brightestday.hand.editor", "Hand Poses");
+        builder.add("gui.brightestday.hand.name", "Pose name");
+        builder.add("gui.brightestday.hand.custom_slot", "Custom %s");
+        builder.add("gui.brightestday.hand.from", "From: %s");
+        builder.add("gui.brightestday.hand.save", "Save");
+        builder.add("gui.brightestday.hand.finger.index", "Index: %s%%");
+        builder.add("gui.brightestday.hand.finger.middle", "Middle: %s%%");
+        builder.add("gui.brightestday.hand.finger.ring", "Ring: %s%%");
+        builder.add("gui.brightestday.hand.finger.pinky", "Pinky: %s%%");
+        builder.add("gui.brightestday.hand.thumb_curl", "Thumb Curl: %s%%");
+        builder.add("gui.brightestday.hand.thumb_spread", "Thumb Spread: %s%%");
+        builder.add("gui.brightestday.hand.direction.forward", "Forward");
+        builder.add("gui.brightestday.hand.direction.up", "From Below");
+        builder.add("gui.brightestday.hand.direction.down", "From Above");
+        builder.add("gui.brightestday.hand.direction.left", "From the Left");
+        builder.add("gui.brightestday.hand.direction.right", "From the Right");
+        builder.add("gui.brightestday.hand.direction.behind", "From Behind");
+        builder.add("gui.brightestday.hand.pose.fist", "Fist");
+        builder.add("gui.brightestday.hand.pose.open", "Open Palm");
+        builder.add("gui.brightestday.hand.pose.point", "Point");
+        builder.add("gui.brightestday.hand.pose.peace", "Peace");
+        builder.add("gui.brightestday.hand.pose.thumbs_up", "Thumbs Up");
+        builder.add("gui.brightestday.hand.pose.claw", "Claw");
+        builder.add("gui.brightestday.hand.pose.flat", "Flat");
+        builder.add("gui.brightestday.hand.pose.pinch", "Pinch");
+        builder.add("message.brightestday.hand.saved", "Saved custom pose %s.");
+        builder.add("message.brightestday.construct_recharging", "%s is recharging (%ss).");
+        builder.add("message.brightestday.hand.aiming", "%s, %s. Swipe to pick a side, scroll to change pose, sneak for behind.");
+        builder.add("gui.brightestday.hand.drag_hint", "Drag fingertips to pose, drag to spin");
         builder.add("brightestday.ring_power.energy_whip", "Energy Whip");
         builder.add("brightestday.ring_power.sentry_turret", "Sentry Turret");
         builder.add("message.brightestday.ground_slam_airborne", "You must be airborne to slam.");
@@ -1136,8 +1153,6 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("brightestday.server.light", "Light");
         builder.add("brightestday.server.lightOrbCost", "Light Orb Cost");
         builder.add("brightestday.server.lightOrbCost.desc", "Ring charge spent to place a light orb.");
-        builder.add("brightestday.server.lightOrbChargeTicks", "Light Orb Charge-Up");
-        builder.add("brightestday.server.lightOrbChargeTicks.desc", "Ticks the light orb must charge before it's placed.");
         builder.add("brightestday.server.lightOrbUpkeepPerSize", "Light Orb Upkeep");
         builder.add("brightestday.server.lightOrbUpkeepPerSize.desc", "Ring charge drained per second for each size step of every standing light orb.");
         builder.add("brightestday.server.lightOrbMaxCount", "Max Light Orbs");
@@ -1191,7 +1206,6 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("brightestday.server.beam", "Beam");
         builder.add("brightestday.server.healBeam", "Healing Beam");
         builder.add("brightestday.server.wall", "Wall");
-        builder.add("brightestday.server.charge", "Charge-Up");
         builder.add("brightestday.server.charge.desc", "How many ticks each construct must charge before it fires (20 ticks = 1 second).");
         builder.add("brightestday.server.blastRange", "Range");
         builder.add("brightestday.server.blastRange.desc", "Maximum distance in blocks the blast travels before detonating.");
@@ -1239,18 +1253,6 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("brightestday.server.sculptMaxTotalBlocks.desc", "Maximum blocks across all of a player's sculptures; the oldest sculptures dissolve to make room.");
         builder.add("brightestday.server.sculptBlocksPerUpkeep", "Blocks per Upkeep Charge");
         builder.add("brightestday.server.sculptBlocksPerUpkeep.desc", "Each point of upkeep charge sustains this many sculpted blocks.");
-        builder.add("brightestday.server.blastChargeTicks", "Blast");
-        builder.add("brightestday.server.blastChargeTicks.desc", "Ticks the blast must charge before firing.");
-        builder.add("brightestday.server.beamChargeTicks", "Beam");
-        builder.add("brightestday.server.beamChargeTicks.desc", "Ticks the beam must charge before firing.");
-        builder.add("brightestday.server.healBeamChargeTicks", "Healing Beam");
-        builder.add("brightestday.server.healBeamChargeTicks.desc", "Ticks the healing beam must charge before firing.");
-        builder.add("brightestday.server.entityShieldChargeTicks", "Bubble Shield");
-        builder.add("brightestday.server.entityShieldChargeTicks.desc", "Ticks the bubble shield must charge before casting.");
-        builder.add("brightestday.server.areaShieldChargeTicks", "Dome Shield");
-        builder.add("brightestday.server.areaShieldChargeTicks.desc", "Ticks the dome shield must charge before casting.");
-        builder.add("brightestday.server.wallChargeTicks", "Wall");
-        builder.add("brightestday.server.wallChargeTicks.desc", "Ticks the wall must charge before casting.");
         builder.add("block.brightestday.hard_light", "Hard Light");
         builder.add(RingPowerRegistry.TOOL_FORGE.getTranslationKey(), "Forge");
 
@@ -1258,6 +1260,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("item.brightestday.construct_axe", "Construct Axe");
         builder.add("item.brightestday.construct_battleaxe", "Construct Battleaxe");
         builder.add("item.brightestday.construct_sword", "Construct Sword");
+        builder.add("item.brightestday.construct_bow", "Construct Bow");
         builder.add("item.brightestday.construct_shovel", "Construct Shovel");
         builder.add("item.brightestday.construct_hoe", "Construct Hoe");
         builder.add("item.brightestday.construct_spear", "Construct Spear");

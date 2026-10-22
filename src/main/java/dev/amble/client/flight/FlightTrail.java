@@ -172,7 +172,7 @@ public final class FlightTrail {
                     int glassColor = ARGB.srgbLerp(0.3F, color, 0xFFFFFFFF);
                     for (Voxel voxel : voxels) {
                         int tint = VoxelRenderer.toWhite(glassColor, 1.0F - voxel.life());
-                        VoxelRenderer.cube(pose, buffer, voxel.center(), voxel.half(), VoxelRenderer.nearFade(voxel.center(), ARGB.color(Math.round(GLASS_ALPHA * voxel.life() * 255), tint)), true);
+                        VoxelRenderer.cube(pose, buffer, voxel.center(), voxel.half(), VoxelRenderer.nearFade(voxel.center(), ARGB.color(Math.round(VoxelRenderer.denser(GLASS_ALPHA * voxel.life()) * 255), tint)), true);
                     }
                 });
             }

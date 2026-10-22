@@ -9,7 +9,7 @@ import java.util.EnumSet;
 
 public class InsigniaConstruct extends ConstructRingPower {
     private static final int USE_COST = 2;
-    private static final int CHARGE_TICKS = 4;
+    private static final int COOLDOWN_TICKS = 4;
 
     public InsigniaConstruct() {
         super(BrightestDay.id("insignia"), EnumSet.of(LanternCorps.GREEN, LanternCorps.YELLOW, LanternCorps.RED, LanternCorps.ORANGE,
@@ -22,8 +22,8 @@ public class InsigniaConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int chargeTicks() {
-        return CHARGE_TICKS;
+    public int cooldownTicks() {
+        return COOLDOWN_TICKS;
     }
 
     @Override

@@ -215,6 +215,11 @@ public final class RingBonds {
         save(server, bonds);
     }
 
+    public static void forgetOwner(MinecraftServer server, UUID owner) {
+        Map<UUID, Entry> bonds = new HashMap<>(bonds(server));
+        if (bonds.entrySet().removeIf(entry -> entry.getValue().owner().equals(owner))) save(server, bonds);
+    }
+
     public static void forget(ServerPlayer player) {
         MinecraftServer server = player.level().getServer();
         Map<UUID, Entry> bonds = new HashMap<>(bonds(server));

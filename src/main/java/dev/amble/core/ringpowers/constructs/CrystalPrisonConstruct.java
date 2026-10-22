@@ -18,8 +18,8 @@ public class CrystalPrisonConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int chargeTicks() {
-        return BrightestDayConfig.get().crystalChargeTicks;
+    public int cooldownTicks() {
+        return 15;
     }
 
     @Override

@@ -44,6 +44,7 @@ public final class RingRanks {
     private static final float[] CAPACITY = {0.0F, 0.6F, 0.73F, 0.86F, 1.0F};
     private static final Map<RingPower<?>, Integer> RANK_GATED = Map.ofEntries(
             Map.entry(RingPowerRegistry.LUMBERJACK, 2),
+            Map.entry(RingPowerRegistry.HAND, 2),
             Map.entry(RingPowerRegistry.CONSTRUCT_HORSE, 1),
             Map.entry(RingPowerRegistry.CONSTRUCT_BOAT, 1),
             Map.entry(RingPowerRegistry.CONTAINMENT_SPHERE, 3),
@@ -56,12 +57,12 @@ public final class RingRanks {
             Map.entry(RingPowerRegistry.GRAVITY_BALL, 3),
             Map.entry(RingPowerRegistry.GRAVITY_REPULSOR, 3));
     private static final Map<LanternCorps, Map<RingPower<?>, Integer>> CORPS_GATED = Map.of(
-            LanternCorps.YELLOW, Map.of(RingPowerRegistry.GIANT_FIST, 2),
-            LanternCorps.BLUE, Map.of(RingPowerRegistry.TOOL_FORGE, 3, RingPowerRegistry.GIANT_FIST, 2));
+            LanternCorps.BLUE, Map.of(RingPowerRegistry.TOOL_FORGE, 3),
+            LanternCorps.RED, Map.of(RingPowerRegistry.TOOL_FORGE, 4));
     private static final Map<LanternCorps, Map<Integer, Set<RingPower<?>>>> LOCKED = new ConcurrentHashMap<>();
     private static final List<String> PRIORITY = List.of(
             "blast", "entity_shield", "boomerang_disc", "energy_whip", "chain_bolt", "wall", "piercing_lance", "swarm_missiles",
-            "rapid_barrage", "area_shield", "beam", "giant_fist", "nova_burst", "ground_slam", "sentry_turret", "glider",
+            "rapid_barrage", "area_shield", "beam", "nova_burst", "ground_slam", "sentry_turret", "glider",
             "grappling_hook", "light_orb", "drill", "tool_forge");
 
     public record Ranks(Map<LanternCorps, Integer> ranks, Map<String, Integer> counters, Map<LanternCorps, List<String>> assigned) {
@@ -260,7 +261,7 @@ public final class RingRanks {
             LanternCorps.STAR_SAPPHIRE, LanternCorps.INDIGO);
 
     public static boolean starter(LanternCorps corps, RingPower<?> power) {
-        return power == RingPowerRegistry.TOOL_FORGE && FORGE_STARTERS.contains(corps);
+        return power == RingPowerRegistry.BEAM || power == RingPowerRegistry.TOOL_FORGE && FORGE_STARTERS.contains(corps);
     }
 
     public static Set<RingPower<?>> locked(Player player, LanternCorps corps) {

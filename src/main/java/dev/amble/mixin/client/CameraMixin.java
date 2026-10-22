@@ -56,7 +56,7 @@ public abstract class CameraMixin {
 
     @ModifyReturnValue(method = "calculateFov", at = @At("RETURN"))
     private float brightestday$limitFovWhileFlying(float fov) {
-        return this.entity instanceof Player player && FlightAnimator.isAnimating(player) ? Math.min(fov, FlightAnimator.MAX_FOV) : fov;
+        return this.entity instanceof Player player && FlightAnimator.isAnimating(player) ? Math.min(fov, FlightAnimator.maxFov()) : fov;
     }
 
     @Inject(method = "alignWithEntity", at = @At("TAIL"))

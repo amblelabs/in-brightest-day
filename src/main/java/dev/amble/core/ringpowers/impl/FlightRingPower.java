@@ -156,8 +156,9 @@ public class FlightRingPower extends RingPower<FlightRingPower.Data> {
         if (!isFlying(player)) return false;
         float yaw = player.getYRot() * Mth.DEG_TO_RAD;
         Vec3 facing = new Vec3(-Mth.sin(yaw), 0.0, Mth.cos(yaw));
-        double forward = player.position().subtract(player.xo, player.yo, player.zo).dot(facing);
-        return forward > (wasDiving ? DIVE_EXIT_SPEED : DIVE_ENTER_SPEED);
+        Vec3 step = player.position().subtract(player.xo, player.yo, player.zo);
+        double travel = Math.max(step.dot(facing), -step.y);
+        return travel > (wasDiving ? DIVE_EXIT_SPEED : DIVE_ENTER_SPEED);
     }
 
     public static boolean fitsStanding(Player player) {
@@ -216,6 +217,6 @@ public class FlightRingPower extends RingPower<FlightRingPower.Data> {
 
     public static void registerEvents() {
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) ->
-                !(entity instanceof Player player && source.is(DamageTypeTags.IS_FALL) && hasFlight(player)));
+                !(entity instanceof Player player && source.is(DamageTypeTags.IS_FALL) && hasFlight(player) && PowerRingItem.hasCharge(player)));
     }
 }

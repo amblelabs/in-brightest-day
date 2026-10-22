@@ -23,7 +23,7 @@ public class ToolForgeConstruct extends ConstructRingPower {
     private static final Map<ServerPlayer, Long> LAST_FORGED = new WeakHashMap<>();
 
     public ToolForgeConstruct() {
-        super(BrightestDay.id("tool_forge"), CorpsArsenal.shared(LanternCorps.BLUE));
+        super(BrightestDay.id("tool_forge"), CorpsArsenal.shared(LanternCorps.BLUE, LanternCorps.RED));
     }
 
     @Override
@@ -34,6 +34,11 @@ public class ToolForgeConstruct extends ConstructRingPower {
     @Override
     public boolean usesGesture() {
         return true;
+    }
+
+    @Override
+    public int cooldownTicks() {
+        return 25;
     }
 
     @Override

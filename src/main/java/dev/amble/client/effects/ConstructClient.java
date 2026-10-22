@@ -1,5 +1,6 @@
 package dev.amble.client.effects;
 
+import dev.amble.client.effects.attacks.weapon.HandClient;
 import dev.amble.client.flight.FlightControls;
 import dev.amble.core.blocks.LanternBlock;
 import dev.amble.core.forge.BatteryCoreBlock;
@@ -28,15 +29,12 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 public final class ConstructClient {
     private static final float PREVIEW_ALPHA = 0.3F;
-    private static final float WALL_PREVIEW_HALF = 0.48F;
 
     private static final Map<Identifier, Integer> SIZES = new HashMap<>();
 
@@ -69,6 +67,7 @@ public final class ConstructClient {
     }
 
     public static boolean onScroll(int wheel) {
+        if (HandClient.onScroll(wheel)) return true;
         if (FlightControls.onScroll(wheel)) return true;
         if (CommsClient.onScroll(wheel)) return true;
         if (TractorEffects.onScroll(wheel)) return true;
@@ -109,11 +108,7 @@ public final class ConstructClient {
 
         if (construct.get() instanceof WallConstruct) {
             Vec3 base = player.pick(WallConstruct.RANGE, partialTicks, false).getLocation();
-            List<ShieldEffects.Voxel> cells = new ArrayList<>();
-            for (BlockPos pos : WallGeometry.cells(base, player.getViewYRot(partialTicks), size)) {
-                cells.add(new ShieldEffects.Voxel(Vec3.atCenterOf(pos), WALL_PREVIEW_HALF, color));
-            }
-            ShieldEffects.submit(context, camera, cells, PREVIEW_ALPHA);
+            WallEffects.submitPreview(context, camera, WallGeometry.cells(base, player.getViewYRot(partialTicks), size), color, PREVIEW_ALPHA);
         } else if (construct.get() instanceof GravityBallConstruct) {
             Vec3 hit = player.pick(GravityBallConstruct.RANGE, partialTicks, false).getLocation();
             GravityBallEffects.preview(context, camera, GravityBallConstruct.target(hit, player.getEyePosition(partialTicks)), size, color, time, PREVIEW_ALPHA);
@@ -121,7 +116,7 @@ public final class ConstructClient {
             BulwarkEffects.preview(context, camera, player, size, color, partialTicks, PREVIEW_ALPHA);
         } else if (construct.get() instanceof AreaShieldConstruct) {
             Vec3 target = player.pick(AreaShieldConstruct.RANGE, partialTicks, false).getLocation();
-            ShieldEffects.submit(context, camera, ShieldEffects.sphere(target, size, size * 2.0F, time, color), PREVIEW_ALPHA);
+            ShieldEffects.submitShell(context, camera, target, size, size, time, color, PREVIEW_ALPHA);
         }
     }
 

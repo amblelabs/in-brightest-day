@@ -7,6 +7,9 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import dev.amble.core.BrightestDayItems;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
@@ -23,6 +26,11 @@ public abstract class PlayerMixin extends LivingEntity implements CompactFlyer {
 
     protected PlayerMixin(EntityType<? extends LivingEntity> type, Level level) {
         super(type, level);
+    }
+
+    @Inject(method = "getProjectile", at = @At("HEAD"), cancellable = true)
+    private void brightestday$constructBowAmmo(ItemStack weapon, CallbackInfoReturnable<ItemStack> cir) {
+        if (weapon.is(BrightestDayItems.CONSTRUCT_BOW)) cir.setReturnValue(new ItemStack(Items.ARROW));
     }
 
     @Inject(method = "causeFoodExhaustion", at = @At("HEAD"), cancellable = true)

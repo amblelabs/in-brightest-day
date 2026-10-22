@@ -21,6 +21,7 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.commands.arguments.GameProfileArgument;
 import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -61,7 +62,9 @@ public final class SpectrumCommands {
                                 .then(Commands.literal("reset").then(player().executes(SpectrumCommands::progressReset))))
                         .then(admin("ring")
                                 .then(Commands.literal("give").then(player().then(corps().executes(SpectrumCommands::ringGive))))
-                                .then(Commands.literal("take").then(player().executes(SpectrumCommands::ringTake))))
+                                .then(Commands.literal("take").then(player().executes(SpectrumCommands::ringTake)))
+                                .then(Commands.literal("relinquish").then(Commands.argument("player", GameProfileArgument.gameProfile())
+                                        .executes(context -> CorpsLeaders.relinquish(context, GameProfileArgument.getGameProfiles(context, "player"))))))
                         .then(admin("charge")
                                 .then(Commands.literal("fill").then(player().executes(context -> chargeSet(context, -1))))
                                 .then(Commands.literal("set").then(player().then(amount(0, BrightestDayComponents.MAX_POWER)
@@ -88,7 +91,20 @@ public final class SpectrumCommands {
                                 .then(Commands.literal("remove").then(Commands.argument("pos", BlockPosArgument.blockPos())
                                         .executes(context -> batteryRemove(context, BlockPosArgument.getBlockPos(context, "pos"))))))
                         .then(Commands.literal("corps")
-                                .then(Commands.literal("list").executes(SpectrumCommands::corpsList)))
+                                .then(Commands.literal("list").executes(SpectrumCommands::corpsList))
+                                .then(Commands.literal("info").executes(CorpsLeaders::info))
+                                .then(Commands.literal("indigo").executes(CorpsLeaders::indigo))
+                                .then(admin("leader").then(corps().executes(context -> CorpsLeaders.showLeader(context, corps(context)))
+                                        .then(Commands.literal("clear").executes(context -> CorpsLeaders.clearLeader(context, corps(context))))
+                                        .then(Commands.argument("player", GameProfileArgument.gameProfile())
+                                                .executes(context -> CorpsLeaders.assignLeader(context, corps(context), GameProfileArgument.getGameProfiles(context, "player"))))))
+                                .then(admin("kick").then(Commands.argument("player", GameProfileArgument.gameProfile())
+                                        .executes(context -> CorpsLeaders.forceKick(context, GameProfileArgument.getGameProfiles(context, "player")))))
+                                .then(admin("disband").then(corps().executes(context -> CorpsLeaders.disband(context, corps(context))))))
+                        .then(Commands.literal("kick").then(Commands.argument("player", EntityArgument.player()).executes(CorpsLeaders::kick)))
+                        .then(Commands.literal("vote").then(Commands.argument("choice", StringArgumentType.word())
+                                .suggests((context, builder) -> builder.suggest("yes").suggest("no").buildFuture())
+                                .executes(CorpsLeaders::vote)))
                         .then(admin("pilgrimage")
                                 .then(Commands.literal("status").then(player().executes(SpectrumCommands::pilgrimageStatus)))
                                 .then(Commands.literal("set").then(player().then(amount(0, 1000).executes(SpectrumCommands::pilgrimageSet))))

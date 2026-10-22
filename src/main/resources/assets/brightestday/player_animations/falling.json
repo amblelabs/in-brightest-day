@@ -1,0 +1,71 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"falling.json": {
+			"loop": true,
+			"animation_length": 0.25,
+			"bones": {
+				"body": {
+					"rotation": [82.5, 0, 0]
+				},
+				"head": {
+					"rotation": [-15, 0, 0]
+				},
+				"right_arm": {
+					"rotation": [65.2148, 65.7562, 186.5036]
+				},
+				"left_arm": {
+					"rotation": [65.2148, -65.7562, -186.5036]
+				},
+				"right_leg": {
+					"rotation": [30.2837, -14.2399, 17.6047]
+				},
+				"left_leg": {
+					"rotation": [30.2837, 14.2399, -17.6047]
+				}
+			}
+		},
+		"start_falling.json": {
+			"loop": "hold_on_last_frame",
+			"animation_length": 0.5,
+			"bones": {
+				"body": {
+					"rotation": {
+						"0.0": [0, 0, 0],
+						"0.5": [82.5, 0, 0]
+					}
+				},
+				"head": {
+					"rotation": {
+						"0.0": [0, 0, 0],
+						"0.5": [-15, 0, 0]
+					}
+				},
+				"right_arm": {
+					"rotation": {
+						"0.0": [0, 0, 0],
+						"0.5": [65.2148, 65.7562, 186.5036]
+					}
+				},
+				"left_arm": {
+					"rotation": {
+						"0.0": [0, 0, 0],
+						"0.5": [65.2148, -65.7562, -186.5036]
+					}
+				},
+				"right_leg": {
+					"rotation": {
+						"0.0": [0, 0, 0],
+						"0.5": [30.2837, -14.2399, 17.6047]
+					}
+				},
+				"left_leg": {
+					"rotation": {
+						"0.0": [0, 0, 0],
+						"0.5": [30.2837, 14.2399, -17.6047]
+					}
+				}
+			}
+		}
+	}
+}

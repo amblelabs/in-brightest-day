@@ -110,7 +110,7 @@ public final class PowerWheel {
             Map.entry(RingPowerRegistry.NOVA_BURST, Items.FIREWORK_STAR),
             Map.entry(RingPowerRegistry.GROUND_SLAM, Items.MACE),
             Map.entry(RingPowerRegistry.RAPID_BARRAGE, Items.PRISMARINE_SHARD),
-            Map.entry(RingPowerRegistry.GIANT_FIST, Items.HEAVY_CORE),
+            Map.entry(RingPowerRegistry.HAND, Items.HEAVY_CORE),
             Map.entry(RingPowerRegistry.GRAVITY_BALL, Items.ENDER_PEARL),
             Map.entry(RingPowerRegistry.GRAVITY_REPULSOR, Items.WIND_CHARGE),
             Map.entry(RingPowerRegistry.ENERGY_WHIP, Items.BREEZE_ROD),
@@ -135,7 +135,7 @@ public final class PowerWheel {
     );
     private static final List<Group> GROUPS = List.of(
             new Group("construct_group.brightestday.attacks", Items.BLAZE_ROD, List.of("blast", "swarm_missiles", "piercing_lance", "chain_bolt", "boomerang_disc", "rapid_barrage", "nova_burst", "ground_slam", "plasma_burst", "crystal_prison", "gravity_ball", "gravity_repulsor")),
-            new Group("construct_group.brightestday.weapons", Items.IRON_SWORD, List.of("giant_fist", "energy_whip", "sentry_turret")),
+            new Group("construct_group.brightestday.weapons", Items.IRON_SWORD, List.of("energy_whip", "sentry_turret")),
             new Group("construct_group.brightestday.utility", Items.COMPASS, List.of("glider", "grappling_hook", "light_orb", "lumberjack", "ore_probe", "megaphone", "construct_horse", "construct_boat", "ring_compass", "construct_ring")),
             new Group("construct_group.brightestday.shield", Items.SHIELD, List.of("entity_shield", "area_shield", "bulwark", "containment_sphere"))
     );

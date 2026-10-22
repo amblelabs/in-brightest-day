@@ -16,8 +16,8 @@ public class RapidBarrageConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int chargeTicks() {
-        return BrightestDayConfig.get().barrageChargeTicks;
+    public int cooldownTicks() {
+        return 6;
     }
 
     @Override

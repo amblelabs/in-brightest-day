@@ -2,6 +2,7 @@ package dev.amble.client.effects;
 
 import com.zigythebird.playeranimcore.animation.layered.modifier.AbstractModifier;
 import com.zigythebird.playeranimcore.bones.PlayerAnimBone;
+import dev.amble.client.flight.FlightAnimator;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Ease;
 import net.minecraft.util.Mth;
@@ -24,6 +25,7 @@ public class ArmedAimModifier extends AbstractModifier {
     public void get3DTransform(@NotNull PlayerAnimBone bone) {
         super.get3DTransform(bone);
         if (!(this.avatar instanceof Player player)) return;
+        if (FlightAnimator.landWeight(player, Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false)) > 0.0F) return;
 
         String name = bone.getName();
         if ("head".equals(name)) {

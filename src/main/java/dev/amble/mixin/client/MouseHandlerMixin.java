@@ -1,5 +1,6 @@
 package dev.amble.mixin.client;
 
+import dev.amble.client.effects.attacks.weapon.HandClient;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.sugar.Local;
 import dev.amble.client.effects.ConstructClient;
@@ -27,6 +28,12 @@ public abstract class MouseHandlerMixin {
 
     @Inject(method = "turnPlayer", at = @At("HEAD"), cancellable = true)
     private void brightestday$steerPowerWheel(double mousea, CallbackInfo ci) {
-        if (PowerWheel.onMouse(this.accumulatedDX, this.accumulatedDY)) ci.cancel();
+        if (PowerWheel.onMouse(this.accumulatedDX, this.accumulatedDY)) {
+            ci.cancel();
+            return;
+        }
+        double scale = HandClient.onMouse(this.accumulatedDX, this.accumulatedDY);
+        this.accumulatedDX *= scale;
+        this.accumulatedDY *= scale;
     }
 }

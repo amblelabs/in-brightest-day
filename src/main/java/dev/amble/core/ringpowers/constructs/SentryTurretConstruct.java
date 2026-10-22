@@ -18,8 +18,8 @@ public class SentryTurretConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int chargeTicks() {
-        return BrightestDayConfig.get().turretChargeTicks;
+    public int cooldownTicks() {
+        return 20;
     }
 
     @Override

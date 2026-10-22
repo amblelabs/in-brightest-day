@@ -32,8 +32,8 @@ public class ChainBoltConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int chargeTicks() {
-        return BrightestDayConfig.get().chainChargeTicks;
+    public int cooldownTicks() {
+        return 20;
     }
 
     @Override

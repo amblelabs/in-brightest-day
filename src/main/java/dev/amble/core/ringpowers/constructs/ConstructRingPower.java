@@ -27,6 +27,7 @@ import java.util.EnumSet;
 import java.util.Set;
 
 public abstract class ConstructRingPower extends RingPower<Unit> {
+    public static final int SHORT_CHARGE = 5;
 
     protected ConstructRingPower(Identifier id) {
         this(id, CorpsArsenal.SHARED);
@@ -105,7 +106,11 @@ public abstract class ConstructRingPower extends RingPower<Unit> {
     }
 
     public int chargeTicks() {
-        return 25;
+        return SHORT_CHARGE;
+    }
+
+    public int cooldownTicks() {
+        return 0;
     }
 
     public int releaseTicks() {

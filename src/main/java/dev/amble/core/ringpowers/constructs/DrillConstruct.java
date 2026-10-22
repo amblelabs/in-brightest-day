@@ -24,8 +24,8 @@ public class DrillConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int chargeTicks() {
-        return BrightestDayConfig.get().drillChargeTicks;
+    public int cooldownTicks() {
+        return 0;
     }
 
     @Override

@@ -9,7 +9,7 @@ import java.util.EnumSet;
 
 public class OreProbeConstruct extends ConstructRingPower {
     private static final int USE_COST = 120;
-    private static final int CHARGE_TICKS = 20;
+    private static final int COOLDOWN_TICKS = 20;
 
     public OreProbeConstruct() {
         super(BrightestDay.id("ore_probe"), EnumSet.of(LanternCorps.ORANGE, LanternCorps.WHITE));
@@ -21,8 +21,8 @@ public class OreProbeConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int chargeTicks() {
-        return CHARGE_TICKS;
+    public int cooldownTicks() {
+        return COOLDOWN_TICKS;
     }
 
     @Override

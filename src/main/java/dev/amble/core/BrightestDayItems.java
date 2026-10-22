@@ -13,6 +13,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.item.BowItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.FlintAndSteelItem;
@@ -62,6 +63,7 @@ public class BrightestDayItems {
             .durability(238)
             .component(DataComponents.TOOL, ShearsItem.createToolProperties()), ShearsItem::new);
     public static final Item CONSTRUCT_SPYGLASS = registerConstructTool(ConstructTool.SPYGLASS, properties -> properties.stacksTo(1), SpyglassItem::new);
+    public static final Item CONSTRUCT_BOW = registerConstructTool(ConstructTool.BOW, properties -> properties.durability(384), BowItem::new);
 
     static {
         ConstructMimics.register(CONSTRUCT_SHEARS, Items.SHEARS);

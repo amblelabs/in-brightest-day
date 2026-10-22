@@ -168,7 +168,7 @@ public final class Milestones {
         pool(green, 2, "green_hostiles", 40, Trigger.KILL, ringHostile());
         pool(green, 3, "green_outclass", 1, Trigger.KILL, (player, context) -> context.target() != null && OUTCLASSING.contains(context.target().getType()));
         pool(green, 3, "green_otherworld", 600, Trigger.SECOND, outside(false));
-        pool(green, 3, "green_imagination", 25, Trigger.CONSTRUCT, construct("sculpt", "giant_fist"));
+        pool(green, 3, "green_imagination", 25, Trigger.CONSTRUCT, construct("sculpt", "hand"));
         versus(green, 3, "green_duels", 2, Trigger.KILL, bearer(),
                 "green_raiders", 15, Trigger.KILL, (player, context) -> context.target() != null && context.target().getType().builtInRegistryHolder().is(EntityTypeTags.RAIDERS));
         pool(green, 3, "green_endure", 60, Trigger.SECOND, below(3.0F));

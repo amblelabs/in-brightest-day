@@ -17,7 +17,7 @@ import net.minecraft.world.phys.Vec3;
 
 public class BloodHuntConstruct extends ConstructRingPower {
     private static final int USE_COST = 80;
-    private static final int CHARGE_TICKS = 10;
+    private static final int COOLDOWN_TICKS = 10;
     private static final double RANGE = 48.0;
 
     public BloodHuntConstruct() {
@@ -30,8 +30,8 @@ public class BloodHuntConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int chargeTicks() {
-        return CHARGE_TICKS;
+    public int cooldownTicks() {
+        return COOLDOWN_TICKS;
     }
 
     @Override

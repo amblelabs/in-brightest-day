@@ -48,6 +48,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
@@ -177,7 +178,7 @@ public final class IndigoOne {
         });
         tickGather(server, now);
 
-        if (server.getTickCount() % 100 != 0 || !multiplayer(server)) return;
+        if (server.getTickCount() % 20 != 0 || !multiplayer(server)) return;
         Optional<UUID> current = WorldProgress.get(server).indigoOne();
         LAST_GIFT.keySet().removeIf(id -> current.isEmpty() || !current.get().equals(id));
         GATHERED_AT.values().removeIf(last -> now - last >= GATHER_COOLDOWN);
@@ -194,10 +195,11 @@ public final class IndigoOne {
         }
         List<ServerPlayer> online = server.getPlayerList().getPlayers();
         if (online.size() < BrightestDayConfig.get().indigoMinPlayers) return;
-        List<ServerPlayer> ringless = online.stream().filter(player -> BrightestDayAttachments.getRing(player).isEmpty() && !player.isSpectator() && !RingBonds.bonded(player) && EmotionGates.allows(player, LanternCorps.INDIGO)).toList();
+        List<ServerPlayer> ringless = online.stream().filter(player -> BrightestDayAttachments.getRing(player).isEmpty() && !player.isSpectator() && !RingBonds.bonded(player) && EmotionGates.allows(player, LanternCorps.INDIGO)
+                && SpectrumMeters.get(player, Emotion.COMPASSION) >= Emotion.GATE).toList();
         if (ringless.isEmpty()) return;
 
-        ServerPlayer chosen = ringless.get(server.overworld().getRandom().nextInt(ringless.size()));
+        ServerPlayer chosen = ringless.stream().max(Comparator.comparingInt(player -> SpectrumMeters.get(player, Emotion.COMPASSION))).orElseThrow();
         LAST_GIFT.put(chosen.getUUID(), now);
         WorldProgress.update(server, state -> state.withIndigoOne(chosen.getUUID()));
         chosen.sendSystemMessage(Component.translatable("message.brightestday.indigo.chosen").withStyle(ChatFormatting.BOLD).withColor(INDIGO));

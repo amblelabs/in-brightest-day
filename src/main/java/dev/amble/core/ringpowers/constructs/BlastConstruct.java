@@ -88,8 +88,8 @@ public class BlastConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int chargeTicks() {
-        return BrightestDayConfig.get().blastChargeTicks;
+    public int cooldownTicks() {
+        return 25;
     }
 
     @Override

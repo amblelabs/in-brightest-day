@@ -11,7 +11,7 @@ import java.util.EnumSet;
 
 public class LumberjackConstruct extends ConstructRingPower {
     private static final int USE_COST = 60;
-    private static final int CHARGE_TICKS = 15;
+    private static final int COOLDOWN_TICKS = 15;
 
     public LumberjackConstruct() {
         super(BrightestDay.id("lumberjack"), EnumSet.complementOf(EnumSet.of(LanternCorps.RED)));
@@ -23,8 +23,8 @@ public class LumberjackConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int chargeTicks() {
-        return CHARGE_TICKS;
+    public int cooldownTicks() {
+        return COOLDOWN_TICKS;
     }
 
     @Override

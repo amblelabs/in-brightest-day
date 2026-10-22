@@ -30,8 +30,8 @@ public class GliderConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int chargeTicks() {
-        return BrightestDayConfig.get().gliderChargeTicks;
+    public int cooldownTicks() {
+        return 15;
     }
 
     @Override

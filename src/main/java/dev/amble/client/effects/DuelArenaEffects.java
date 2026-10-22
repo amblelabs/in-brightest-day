@@ -71,7 +71,7 @@ public final class DuelArenaEffects {
             float scale = Mth.clamp(time / GROW_TICKS, 0.0F, 1.0F);
             if (arena.fade >= 0) scale *= 1.0F - Mth.clamp((arena.fade + partialTicks) / FADE_TICKS, 0.0F, 1.0F);
             if (scale <= 0.01F) continue;
-            ShieldEffects.submit(context, camera, ShieldEffects.sphere(arena.center, arena.radius * scale, arena.radius, time, arena.color), ALPHA * scale);
+            ShieldEffects.submitShell(context, camera, arena.center, arena.radius * scale, arena.radius, time, arena.color, ALPHA * scale);
         }
     }
 

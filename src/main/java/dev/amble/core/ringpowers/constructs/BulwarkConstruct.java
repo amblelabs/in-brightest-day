@@ -9,7 +9,7 @@ import net.minecraft.server.level.ServerPlayer;
 
 public class BulwarkConstruct extends ConstructRingPower {
     private static final int USE_COST = 40;
-    private static final int CHARGE_TICKS = 4;
+    private static final int COOLDOWN_TICKS = 4;
 
     public BulwarkConstruct() {
         super(BrightestDay.id("bulwark"), CorpsArsenal.shared(LanternCorps.BLUE));
@@ -21,8 +21,8 @@ public class BulwarkConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int chargeTicks() {
-        return CHARGE_TICKS;
+    public int cooldownTicks() {
+        return COOLDOWN_TICKS;
     }
 
     @Override

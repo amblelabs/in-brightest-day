@@ -10,7 +10,7 @@ import java.util.EnumSet;
 
 public class RingCompassConstruct extends ConstructRingPower {
     private static final int USE_COST = 10;
-    private static final int CHARGE_TICKS = 4;
+    private static final int COOLDOWN_TICKS = 4;
 
     public RingCompassConstruct() {
         super(BrightestDay.id("ring_compass"), EnumSet.of(LanternCorps.GREEN, LanternCorps.YELLOW, LanternCorps.RED, LanternCorps.BLUE,
@@ -23,8 +23,8 @@ public class RingCompassConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int chargeTicks() {
-        return CHARGE_TICKS;
+    public int cooldownTicks() {
+        return COOLDOWN_TICKS;
     }
 
     @Override
