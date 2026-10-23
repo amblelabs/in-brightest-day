@@ -15,6 +15,8 @@ import dev.amble.core.forge.CentralPowerBattery;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.ringpowers.LanternCorps;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.permission.v1.PermissionContextOwner;
+import net.fabricmc.fabric.api.permission.v1.PermissionPredicates;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
@@ -28,92 +30,128 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.PermissionLevel;
 import net.minecraft.util.Prediction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.levelgen.Heightmap;
 
 import java.util.Arrays;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import static net.minecraft.commands.Commands.literal;
+
 public final class SpectrumCommands {
     private static final DynamicCommandExceptionType UNKNOWN = new DynamicCommandExceptionType(value -> Component.literal("Unknown value: " + value));
 
     public static void init() {
         CommandRegistrationCallback.EVENT.register((dispatcher, registry, environment) -> dispatcher.register(
-                Commands.literal(BrightestDay.MOD_ID)
-                        .then(admin("meter")
-                                .then(Commands.literal("get").then(player().then(emotion().executes(SpectrumCommands::meterGet))))
-                                .then(Commands.literal("set").then(player().then(emotion().then(amount(0, Emotion.MAX).executes(context -> meterChange(context, false))))))
-                                .then(Commands.literal("add").then(player().then(emotion().then(amount(-Emotion.MAX, Emotion.MAX).executes(context -> meterChange(context, true)))))))
-                        .then(admin("rank")
-                                .then(Commands.literal("get").then(player().executes(SpectrumCommands::rankGet)))
-                                .then(Commands.literal("set").then(player().then(corps().then(Commands.argument("rank", IntegerArgumentType.integer(1, RingRanks.MAX_RANK))
+                literal(BrightestDay.MOD_ID)
+                        .then(moderators("meter")
+                                .then(literal("get").then(player().then(emotion().executes(SpectrumCommands::meterGet))))
+                                .then(literal("set").then(player().then(emotion().then(amount(0, Emotion.MAX).executes(context -> meterChange(context, false))))))
+                                .then(literal("add").then(player().then(emotion().then(amount(-Emotion.MAX, Emotion.MAX).executes(context -> meterChange(context, true)))))))
+                        .then(moderators("rank")
+                                .then(literal("get").then(player().executes(SpectrumCommands::rankGet)))
+                                .then(literal("set").then(player().then(corps().then(Commands.argument("rank", IntegerArgumentType.integer(1, RingRanks.MAX_RANK))
                                         .executes(SpectrumCommands::rankSet))))))
-                        .then(admin("milestone")
-                                .then(Commands.literal("complete").then(player().then(corps().executes(SpectrumCommands::milestoneComplete))))
-                                .then(Commands.literal("reroll").then(player().then(corps().executes(SpectrumCommands::milestoneReroll))))
-                                .then(Commands.literal("list").then(player().executes(SpectrumCommands::milestoneList))))
-                        .then(admin("progress")
-                                .then(Commands.literal("reset").then(player().executes(SpectrumCommands::progressReset))))
-                        .then(admin("ring")
-                                .then(Commands.literal("give").then(player().then(corps().executes(SpectrumCommands::ringGive))))
-                                .then(Commands.literal("take").then(player().executes(SpectrumCommands::ringTake)))
-                                .then(Commands.literal("relinquish").then(Commands.argument("player", GameProfileArgument.gameProfile())
+                        .then(moderators("milestone")
+                                .then(literal("complete").then(player().then(corps().executes(SpectrumCommands::milestoneComplete))))
+                                .then(literal("reroll").then(player().then(corps().executes(SpectrumCommands::milestoneReroll))))
+                                .then(literal("list").then(player().executes(SpectrumCommands::milestoneList))))
+                        .then(moderators("progress")
+                                .then(literal("reset").then(player().executes(SpectrumCommands::progressReset))))
+                        .then(moderators("ring", "ring")
+                                .then(literal("give").then(player().then(corps().executes(SpectrumCommands::ringGive))))
+                                .then(literal("take").then(player().executes(SpectrumCommands::ringTake)))
+                                .then(literal("relinquish").then(Commands.argument("player", GameProfileArgument.gameProfile())
                                         .executes(context -> CorpsLeaders.relinquish(context, GameProfileArgument.getGameProfiles(context, "player"))))))
-                        .then(admin("charge")
-                                .then(Commands.literal("fill").then(player().executes(context -> chargeSet(context, -1))))
-                                .then(Commands.literal("set").then(player().then(amount(0, BrightestDayComponents.MAX_POWER)
+                        .then(moderators("charge")
+                                .then(literal("fill").then(player().executes(context -> chargeSet(context, -1))))
+                                .then(literal("set").then(player().then(amount(0, BrightestDayComponents.MAX_POWER)
                                         .executes(context -> chargeSet(context, IntegerArgumentType.getInteger(context, "amount")))))))
-                        .then(admin("odds")
+                        .then(moderators("odds")
                                 .then(player().then(corps().executes(SpectrumCommands::odds))))
-                        .then(admin("offer")
-                                .then(Commands.literal("force").then(player().then(corps().executes(context -> offer(context, true)))))
+                        .then(moderators("offer")
+                                .then(literal("force").then(player().then(corps().executes(context -> offer(context, true)))))
                                 .then(player().then(corps().executes(context -> offer(context, false)))))
-                        .then(admin("meteor")
-                                .then(Commands.literal("drop").executes(context -> meteorDrop(context, null))
+                        .then(moderators("meteor")
+                                .then(literal("drop").executes(context -> meteorDrop(context, null))
                                         .then(Commands.argument("pos", BlockPosArgument.blockPos())
                                                 .executes(context -> meteorDrop(context, BlockPosArgument.getBlockPos(context, "pos"))))))
-                        .then(admin("sanctuary")
-                                .then(Commands.literal("locate").executes(SpectrumCommands::sanctuaryLocate))
-                                .then(Commands.literal("tp").executes(SpectrumCommands::sanctuaryTeleport))
-                                .then(Commands.literal("build").executes(SpectrumCommands::sanctuaryBuild)))
-                        .then(admin("indigo")
-                                .then(Commands.literal("set").then(player().executes(SpectrumCommands::indigoSet)))
-                                .then(Commands.literal("clear").executes(SpectrumCommands::indigoClear)))
-                        .then(admin("battery")
-                                .then(Commands.literal("list").executes(SpectrumCommands::batteryList))
-                                .then(Commands.literal("activate").executes(SpectrumCommands::batteryActivate))
-                                .then(Commands.literal("remove").then(Commands.argument("pos", BlockPosArgument.blockPos())
+                        .then(moderators("sanctuary")
+                                .then(literal("locate").executes(SpectrumCommands::sanctuaryLocate))
+                                .then(literal("tp").executes(SpectrumCommands::sanctuaryTeleport))
+                                .then(literal("build").executes(SpectrumCommands::sanctuaryBuild)))
+                        .then(moderators("indigo")
+                                .then(literal("set").then(player().executes(SpectrumCommands::indigoSet)))
+                                .then(literal("clear").executes(SpectrumCommands::indigoClear)))
+                        .then(moderators("battery")
+                                .then(literal("list").executes(SpectrumCommands::batteryList))
+                                .then(literal("activate").executes(SpectrumCommands::batteryActivate))
+                                .then(literal("remove").then(Commands.argument("pos", BlockPosArgument.blockPos())
                                         .executes(context -> batteryRemove(context, BlockPosArgument.getBlockPos(context, "pos"))))))
-                        .then(Commands.literal("corps")
-                                .then(Commands.literal("list").executes(SpectrumCommands::corpsList))
-                                .then(Commands.literal("info").executes(CorpsLeaders::info))
-                                .then(Commands.literal("indigo").executes(CorpsLeaders::indigo))
-                                .then(admin("leader").then(corps().executes(context -> CorpsLeaders.showLeader(context, corps(context)))
-                                        .then(Commands.literal("clear").executes(context -> CorpsLeaders.clearLeader(context, corps(context))))
+                        .then(literal("corps")
+                                .then(literal("list").executes(SpectrumCommands::corpsList))
+                                .then(literal("info").executes(CorpsLeaders::info))
+                                .then(literal("indigo").executes(CorpsLeaders::indigo))
+                                .then(moderators("leader").then(corps().executes(context -> CorpsLeaders.showLeader(context, corps(context)))
+                                        .then(literal("clear").executes(context -> CorpsLeaders.clearLeader(context, corps(context))))
                                         .then(Commands.argument("player", GameProfileArgument.gameProfile())
                                                 .executes(context -> CorpsLeaders.assignLeader(context, corps(context), GameProfileArgument.getGameProfiles(context, "player"))))))
-                                .then(admin("kick").then(Commands.argument("player", GameProfileArgument.gameProfile())
+                                .then(moderators("kick").then(Commands.argument("player", GameProfileArgument.gameProfile())
                                         .executes(context -> CorpsLeaders.forceKick(context, GameProfileArgument.getGameProfiles(context, "player")))))
-                                .then(admin("disband").then(corps().executes(context -> CorpsLeaders.disband(context, corps(context))))))
-                        .then(Commands.literal("kick").then(Commands.argument("player", EntityArgument.player()).executes(CorpsLeaders::kick)))
-                        .then(Commands.literal("vote").then(Commands.argument("choice", StringArgumentType.word())
+                                .then(moderators("disband").then(corps().executes(context -> CorpsLeaders.disband(context, corps(context))))))
+                        .then(literal("kick").then(Commands.argument("player", EntityArgument.player()).executes(CorpsLeaders::kick)))
+                        .then(literal("vote").then(Commands.argument("choice", StringArgumentType.word())
                                 .suggests((context, builder) -> builder.suggest("yes").suggest("no").buildFuture())
                                 .executes(CorpsLeaders::vote)))
-                        .then(admin("pilgrimage")
-                                .then(Commands.literal("status").then(player().executes(SpectrumCommands::pilgrimageStatus)))
-                                .then(Commands.literal("set").then(player().then(amount(0, 1000).executes(SpectrumCommands::pilgrimageSet))))
-                                .then(Commands.literal("reset").then(player().executes(SpectrumCommands::pilgrimageReset))))
-                        .then(admin("info").then(player().executes(SpectrumCommands::info)))));
+                        .then(moderators("pilgrimage")
+                                .then(literal("status").then(player().executes(SpectrumCommands::pilgrimageStatus)))
+                                .then(literal("set").then(player().then(amount(0, 1000).executes(SpectrumCommands::pilgrimageSet))))
+                                .then(literal("reset").then(player().executes(SpectrumCommands::pilgrimageReset))))
+                        .then(moderators("info").then(player().executes(SpectrumCommands::info)))));
     }
 
-    private static LiteralArgumentBuilder<CommandSourceStack> admin(String name) {
-        return Commands.literal(name).requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS));
+    public static <T extends PermissionContextOwner> Predicate<T> permission(String permission, PermissionLevel level) {
+        return PermissionPredicates.require(BrightestDay.id(permission), level);
+    }
+
+    public static LiteralArgumentBuilder<CommandSourceStack> moderators(String name, String permission) {
+        return Commands.literal(name).requires(SpectrumCommands.permission(permission, PermissionLevel.MODERATORS));
+    }
+
+    public static LiteralArgumentBuilder<CommandSourceStack> moderators(String name) {
+        return moderators(name);
+    }
+
+    public static LiteralArgumentBuilder<CommandSourceStack> gameMasters(String name, String permission) {
+        return Commands.literal(name).requires(SpectrumCommands.permission(permission, PermissionLevel.GAMEMASTERS));
+    }
+
+    public static LiteralArgumentBuilder<CommandSourceStack> gameMasters(String name) {
+        return gameMasters(name, name);
+    }
+
+    public static LiteralArgumentBuilder<CommandSourceStack> admins(String name, String permission) {
+        return Commands.literal(name).requires(SpectrumCommands.permission(permission, PermissionLevel.ADMINS));
+    }
+
+    public static LiteralArgumentBuilder<CommandSourceStack> admins(String name) {
+        return admins(name, name);
+    }
+
+    public static LiteralArgumentBuilder<CommandSourceStack> owners(String name, String permission) {
+        return Commands.literal(name).requires(SpectrumCommands.permission(permission, PermissionLevel.OWNERS));
+    }
+
+    public static LiteralArgumentBuilder<CommandSourceStack> owners(String name) {
+        return owners(name, name);
     }
 
     private static RequiredArgumentBuilder<CommandSourceStack, ?> player() {
