@@ -1,5 +1,6 @@
 package dev.amble.client;
 
+import dev.amble.client.verification.ClientBetaPlayerLimitTracker;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import dev.amble.core.networking.payloads.c2s.FlightCompactC2SPayload;
 import dev.amble.core.ringpowers.impl.FlightRingPower;
@@ -110,6 +111,8 @@ public class BrightestDayClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        ClientBetaPlayerLimitTracker.init();
+
         BrightestDayClientConfig.load();
         BrightestDayKeybinds.init();
         FlightAnimator.init();
@@ -143,7 +146,7 @@ public class BrightestDayClient implements ClientModInitializer {
         FlightRingPower.compactSender = compact -> {
             if (ClientPlayNetworking.canSend(FlightCompactC2SPayload.TYPE)) ClientPlayNetworking.send(new FlightCompactC2SPayload(compact));
         };
-        LoreBookItem.setOpener(player -> Minecraft.getInstance().gui.setScreen(new LoreBookScreen()));
+        LoreBookItem.setOpener(_ -> Minecraft.getInstance().gui.setScreen(new LoreBookScreen()));
         RemoteAim.init();
         HealBeamEffects.init();
         ArmedPose.init();

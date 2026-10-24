@@ -89,9 +89,9 @@ import dev.amble.core.ringpowers.CorpsSynergy;
 import dev.amble.core.loyalty.RingLoyalty;
 import dev.amble.core.loyalty.RingSuspension;
 import dev.amble.core.team.LanternTeams;
+import dev.amble.verification.BetaVerification;
 import net.fabricmc.api.ModInitializer;
 
-import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
 
 import org.slf4j.Logger;
@@ -104,6 +104,8 @@ public class BrightestDay implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
+		BetaVerification.init();
+
 		BrightestDayConfig.load();
 		BrightestDayItems.init();
 		BrightestDayBlocks.init();
