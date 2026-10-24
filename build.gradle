@@ -38,6 +38,10 @@ fabricApi {
 	}
 }
 
+apply from: 'versioning.gradle'
+
+version = getPublicVersion()
+
 dependencies {
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
@@ -89,10 +93,6 @@ sourcesJar {
 
 base {
 	archivesName = "brightestday"
-}
-
-tasks.withType(AbstractArchiveTask).configureEach {
-	archiveVersion = "${project.release_stage}-${project.version}"
 }
 
 jar {
