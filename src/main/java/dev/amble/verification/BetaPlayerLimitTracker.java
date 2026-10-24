@@ -22,7 +22,7 @@ public class BetaPlayerLimitTracker {
         ServerLoginConnectionEvents.QUERY_START.register((_, _, sender, _)
                 -> sender.sendPacket(QUERY_ID, FriendlyByteBufs.empty()));
 
-        ServerLoginNetworking.registerGlobalReceiver(QUERY_ID, (server, handler, understood, buf, synchronizer, responseSender) -> {
+        ServerLoginNetworking.registerGlobalReceiver(QUERY_ID, (server, handler, understood, buf, _, responseSender) -> {
             if (!understood) {
                 handler.disconnect(KICK_MESSAGE);
                 return;
