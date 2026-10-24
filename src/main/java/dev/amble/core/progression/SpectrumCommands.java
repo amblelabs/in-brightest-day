@@ -127,7 +127,7 @@ public final class SpectrumCommands {
     }
 
     public static LiteralArgumentBuilder<CommandSourceStack> moderators(String name) {
-        return moderators(name);
+        return moderators(name, name);
     }
 
     public static LiteralArgumentBuilder<CommandSourceStack> gameMasters(String name, String permission) {
