@@ -8,16 +8,15 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
-import java.util.WeakHashMap;
 
 public class BetaPlayerLimitTracker {
 
     private static final Component KICK_MESSAGE = Component.translatable("gui.brightestday.play");
     public static final Identifier QUERY_ID = BrightestDay.id("verify");
 
-    public static final Set<String> VERIFIED_PLAYERS = Collections.newSetFromMap(new WeakHashMap<>());
+    public static final Set<String> VERIFIED_PLAYERS = new HashSet<>();
 
     public static void init() {
         ServerLoginConnectionEvents.QUERY_START.register((_, _, sender, _)
