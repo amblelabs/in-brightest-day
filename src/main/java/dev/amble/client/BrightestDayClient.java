@@ -35,6 +35,7 @@ import dev.amble.client.effects.attacks.utility.LumberjackEffects;
 import dev.amble.client.effects.attacks.utility.OreProbeEffects;
 import dev.amble.client.effects.attacks.weapon.HandEffects;
 import dev.amble.client.effects.attacks.weapon.HandClient;
+import dev.amble.client.effects.WallClient;
 import dev.amble.client.screens.HandPoseScreen;
 import dev.amble.client.effects.attacks.weapon.TurretEffects;
 import dev.amble.client.effects.attacks.weapon.WhipEffects;
@@ -174,6 +175,7 @@ public class BrightestDayClient implements ClientModInitializer {
         BarrageEffects.init();
         HandEffects.init();
         HandClient.init();
+        WallClient.init();
         HandPoseScreen.register();
         WhipEffects.init();
         TurretEffects.init();

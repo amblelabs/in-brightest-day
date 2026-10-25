@@ -206,6 +206,7 @@ public final class BlastEffects {
     private static void release(LocalPlayer player) {
         retractCharge();
         HandClient.beforeFire(player);
+        WallClient.beforeFire(player);
         boolean sustained = ArmedRingPower.selectedConstruct(player).map(construct -> construct.sustained(player)).orElse(false);
         ClientPlayNetworking.send(new FireConstructC2SPayload(ConstructClient.selectedSize(player)));
         if (sustained) {
