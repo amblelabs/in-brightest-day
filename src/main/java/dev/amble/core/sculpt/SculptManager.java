@@ -108,11 +108,11 @@ public final class SculptManager {
         if (session == null) return;
 
         if (commit && session.shape == SculptShape.CAGE) {
-            SculptGeometry.Cage cage = SculptGeometry.cage(session.ring);
+            SculptGeometry.Cage cage = SculptGeometry.cage(player.level(), session.ring);
             if (cage == null) {
                 player.sendOverlayMessage(Component.translatable("message.brightestday.sculpt_cage_too_small"));
             } else {
-                place(player, session, new LinkedHashSet<>(SculptGeometry.dome(cage)));
+                place(player, session, new LinkedHashSet<>(SculptGeometry.dome(player.level(), cage)));
                 Vec3 center = cage.center();
                 player.level().playSound(null, center.x, center.y, center.z, SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 1.2F, 0.8F);
             }

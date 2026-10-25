@@ -38,6 +38,8 @@ public final class SculptClient {
     private static double depth = Double.NaN;
     private static @Nullable Vec3 tubeStart;
     private static @Nullable Vec3 tubeEnd;
+    private static int cagePoints = -1;
+    private static List<BlockPos> cagePreview = List.of();
 
     public static void init() {
         ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> shape = SculptShape.FREEFORM);
@@ -80,6 +82,8 @@ public final class SculptClient {
                 && BlastEffects.isSustaining() && isSelected(player);
         if (!tracing) {
             RING.clear();
+            cagePoints = -1;
+            cagePreview = List.of();
             depth = Double.NaN;
             tubeStart = null;
             tubeEnd = null;
@@ -146,8 +150,14 @@ public final class SculptClient {
         for (Vec3 point : RING) ring.add(new ShieldEffects.Voxel(VoxelRenderer.snap(point), RING_HALF, tint));
         ShieldEffects.submit(context, camera, ring, 0.9F);
 
-        SculptGeometry.Cage cage = SculptGeometry.cage(RING);
-        if (cage != null) WallEffects.submitPreview(context, camera, SculptGeometry.dome(cage), color, DOME_PREVIEW_ALPHA);
+        Minecraft client = Minecraft.getInstance();
+        if (client.level == null) return;
+        if (cagePoints != RING.size()) {
+            cagePoints = RING.size();
+            SculptGeometry.Cage cage = SculptGeometry.cage(client.level, RING);
+            cagePreview = cage == null ? List.of() : SculptGeometry.dome(client.level, cage);
+        }
+        if (!cagePreview.isEmpty()) WallEffects.submitPreview(context, camera, cagePreview, color, DOME_PREVIEW_ALPHA);
     }
 
     private SculptClient() {}

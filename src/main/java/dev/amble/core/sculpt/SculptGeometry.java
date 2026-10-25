@@ -1,16 +1,20 @@
 package dev.amble.core.sculpt;
 
+import dev.amble.core.blocks.HardLightBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.CollisionContext;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -23,9 +27,14 @@ public final class SculptGeometry {
     private static final int MIN_CAGE_POINTS = 6;
     private static final double MIN_CAGE_RADIUS = 2.0;
     private static final double MAX_CAGE_RADIUS = 12.0;
+    private static final double MAX_CAGE_HEIGHT = 24.0;
+    private static final double CAGE_MARGIN = 1.0;
+    private static final double CAGE_HEADROOM = 2.0;
+    private static final double GROUND_SEARCH = 32.0;
+    private static final int CAGE_SKIRT = 8;
     private static final double TUBE_WALL = 1.4;
 
-    public record Cage(Vec3 center, double radius) {}
+    public record Cage(Vec3 center, double radiusX, double radiusZ, double height) {}
 
     public static @Nullable Vec3 trace(Level level, Entity viewer, Vec3 eye, Vec3 look, double depth) {
         BlockHitResult hit = level.clip(new ClipContext(eye, eye.add(look.scale(RANGE)), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, viewer));
@@ -123,43 +132,96 @@ public final class SculptGeometry {
         shell.removeAll(interior);
     }
 
-    public static @Nullable Cage cage(List<Vec3> ring) {
+    public static @Nullable Cage cage(Level level, List<Vec3> ring) {
         if (ring.size() < MIN_CAGE_POINTS) return null;
 
-        double x = 0.0;
-        double z = 0.0;
-        double y = Double.MAX_VALUE;
-        for (Vec3 point : ring) {
-            x += point.x;
-            z += point.z;
-            y = Math.min(y, point.y);
+        double minX = Double.MAX_VALUE, maxX = -Double.MAX_VALUE;
+        double minZ = Double.MAX_VALUE, maxZ = -Double.MAX_VALUE;
+        int[] grounds = new int[ring.size()];
+        for (int i = 0; i < ring.size(); i++) {
+            Vec3 point = ring.get(i);
+            minX = Math.min(minX, point.x);
+            maxX = Math.max(maxX, point.x);
+            minZ = Math.min(minZ, point.z);
+            maxZ = Math.max(maxZ, point.z);
+            grounds[i] = ground(level, point);
         }
-        x /= ring.size();
-        z /= ring.size();
+        Arrays.sort(grounds);
+        int base = grounds[grounds.length / 2];
 
-        double spread = 0.0;
-        for (Vec3 point : ring) spread += Math.sqrt((point.x - x) * (point.x - x) + (point.z - z) * (point.z - z));
-        double radius = Mth.clamp(spread / ring.size(), MIN_CAGE_RADIUS, MAX_CAGE_RADIUS);
-        return new Cage(new Vec3(Mth.floor(x) + 0.5, Mth.floor(y), Mth.floor(z) + 0.5), radius);
+        double radiusX = Mth.clamp((maxX - minX) / 2.0 + CAGE_MARGIN, MIN_CAGE_RADIUS, MAX_CAGE_RADIUS);
+        double radiusZ = Mth.clamp((maxZ - minZ) / 2.0 + CAGE_MARGIN, MIN_CAGE_RADIUS, MAX_CAGE_RADIUS);
+        Vec3 center = new Vec3(Mth.floor((minX + maxX) / 2.0) + 0.5, base, Mth.floor((minZ + maxZ) / 2.0) + 0.5);
+
+        double clearance = contentsTop(level, center, radiusX, radiusZ) - base + CAGE_HEADROOM;
+        double height = Mth.clamp(Math.max(Math.min(radiusX, radiusZ), clearance), MIN_CAGE_RADIUS, MAX_CAGE_HEIGHT);
+        return new Cage(center, radiusX, radiusZ, height);
     }
 
-    public static List<BlockPos> dome(Cage cage) {
-        Vec3 center = cage.center();
-        double radius = cage.radius();
-        int reach = Mth.ceil(radius) + 1;
-        BlockPos origin = BlockPos.containing(center);
+    private static int ground(Level level, Vec3 point) {
+        BlockHitResult hit = level.clip(new ClipContext(point, point.subtract(0.0, GROUND_SEARCH, 0.0), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, CollisionContext.empty()));
+        if (hit.getType() != HitResult.Type.BLOCK) return Mth.floor(point.y);
+        return Mth.floor(hit.getLocation().y + 1.0E-3);
+    }
+
+    private static double contentsTop(Level level, Vec3 center, double radiusX, double radiusZ) {
+        int base = Mth.floor(center.y);
+        int ceiling = base + (int) MAX_CAGE_HEIGHT;
+        double top = base;
+        BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+        int reachX = Mth.ceil(radiusX), reachZ = Mth.ceil(radiusZ);
+        for (int dx = -reachX; dx <= reachX; dx++) {
+            for (int dz = -reachZ; dz <= reachZ; dz++) {
+                if ((dx * dx) / (radiusX * radiusX) + (dz * dz) / (radiusZ * radiusZ) >= 1.0) continue;
+                int x = Mth.floor(center.x) + dx, z = Mth.floor(center.z) + dz;
+                for (int y = ceiling; y >= base; y--) {
+                    if (HardLightBlock.canReplace(level.getBlockState(pos.set(x, y, z)))) continue;
+                    top = Math.max(top, y + 1);
+                    break;
+                }
+            }
+        }
+        AABB footprint = new AABB(center.x - radiusX, base, center.z - radiusZ, center.x + radiusX, ceiling, center.z + radiusZ);
+        for (Entity entity : level.getEntities((Entity) null, footprint, entity -> !entity.isSpectator())) {
+            top = Math.max(top, entity.getBoundingBox().maxY);
+        }
+        return Math.min(top, ceiling);
+    }
+
+    private static boolean insideCage(Cage cage, int dx, int dy, int dz) {
+        if (dy < 0) return true;
+        double x = dx / cage.radiusX(), y = dy / cage.height(), z = dz / cage.radiusZ();
+        return x * x + y * y + z * z < 1.0;
+    }
+
+    public static List<BlockPos> dome(Level level, Cage cage) {
+        BlockPos origin = BlockPos.containing(cage.center());
+        int reachX = Mth.ceil(cage.radiusX()), reachZ = Mth.ceil(cage.radiusZ()), reachY = Mth.ceil(cage.height());
 
         List<BlockPos> cells = new ArrayList<>();
-        for (int dx = -reach; dx <= reach; dx++) {
-            for (int dy = 0; dy <= reach; dy++) {
-                for (int dz = -reach; dz <= reach; dz++) {
-                    double distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
-                    if (distance >= radius - 0.5 && distance < radius + 0.5) cells.add(origin.offset(dx, dy, dz));
+        for (int dx = -reachX; dx <= reachX; dx++) {
+            for (int dz = -reachZ; dz <= reachZ; dz++) {
+                for (int dy = 0; dy <= reachY; dy++) {
+                    if (!insideCage(cage, dx, dy, dz)) continue;
+                    boolean edge = !insideCage(cage, dx + 1, dy, dz) || !insideCage(cage, dx - 1, dy, dz)
+                            || !insideCage(cage, dx, dy, dz + 1) || !insideCage(cage, dx, dy, dz - 1) || !insideCage(cage, dx, dy + 1, dz);
+                    if (!edge) continue;
+                    BlockPos pos = origin.offset(dx, dy, dz);
+                    cells.add(pos);
+                    if (dy == 0) skirt(level, pos, cells);
                 }
             }
         }
         cells.sort(Comparator.comparingInt(BlockPos::getY));
         return cells;
+    }
+
+    private static void skirt(Level level, BlockPos rim, List<BlockPos> cells) {
+        for (int depth = 1; depth <= CAGE_SKIRT; depth++) {
+            BlockPos below = rim.below(depth);
+            if (!HardLightBlock.canReplace(level.getBlockState(below))) return;
+            cells.add(below);
+        }
     }
 
     private SculptGeometry() {}

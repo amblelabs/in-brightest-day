@@ -736,7 +736,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add(SculptShape.FLOOR.translationKey(), "Floor");
         builder.add("message.brightestday.sculpt_shape", "%s shape: %s");
         builder.add("message.brightestday.sculpt_limit", "Your construct is at its limit.");
-        builder.add("message.brightestday.sculpt_cage_too_small", "Circle an area to raise a cage.");
+        builder.add("message.brightestday.sculpt_cage_too_small", "Circle around what you want to cage.");
         builder.add("message.brightestday.sculpt_fading", "Your ring can't hold your constructs together!");
         builder.add("hud.brightestday.sculpt_width", "Width: %s");
         builder.add("hud.brightestday.sculpt_hint", "Sneak + Scroll: shape");
