@@ -51,7 +51,8 @@
     "client.PlayerModelArmedMixin",
     "client.RenderTargetMixin",
     "client.verification.JoinMultiplayerScreenMixin",
-    "client.verification.TitleScreenMixin"
+    "client.verification.TitleScreenMixin",
+    "client.verification.WorldOpenFlowsMixin"
   ],
   "injectors": {
     "defaultRequire": 1
