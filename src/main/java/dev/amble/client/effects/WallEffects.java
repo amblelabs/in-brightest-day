@@ -152,12 +152,12 @@ public final class WallEffects {
                 int drawn = settled ? wall.drawn[i] : VoxelRenderer.ALL_FACES;
                 if (drawn == 0) continue;
                 float half = settled ? 0.5F : CELL_HALF * scale;
-                cells.add(new ShieldEffects.Hard(Vec3.atCenterOf(pos), half, HardLightCracks.darken(tint, stage), faces, drawn));
-                if (stage > 0) cracks.add(new HardLightCracks.Crack(Vec3.atCenterOf(pos), half, drawn, stage, HardLightCracks.seed(pos)));
+                cells.add(new ShieldEffects.Hard(Vec3.atCenterOf(pos), half, tint, faces, drawn));
+                if (stage > 0) cracks.add(new HardLightCracks.Crack((float) (pos.getX() + 0.5 - camera.x), (float) (pos.getY() + 0.5 - camera.y), (float) (pos.getZ() + 0.5 - camera.z), half, drawn, stage));
             }
             ShieldEffects.submitHardLight(context, camera, cells, CELL_ALPHA, VoxelRenderer.PIXEL, ShieldEffects.HARD_LIGHT_FILL, ShieldEffects.opacityOf(client.level.getEntity(wall.casterId)));
         }
-        HardLightCracks.submit(context, camera, cracks, 1.0F);
+        HardLightCracks.submit(context, cracks);
     }
 
     private static void fuse() {

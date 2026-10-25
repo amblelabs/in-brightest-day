@@ -37,6 +37,7 @@ public final class ShaderOverlay {
     private static ProjectionType projectionType = ProjectionType.PERSPECTIVE;
     private static @Nullable StagedVertexBuffer buffer;
     private static boolean failed;
+    private static boolean inHand;
 
     public static void init() {
         LevelRenderEvents.START_MAIN.register(context -> {
@@ -48,7 +49,12 @@ public final class ShaderOverlay {
     }
 
     public static boolean active() {
-        return !failed && IrisCompat.shadersActive();
+        // first-person submits use the hand projection, which the level-camera replay can't reproduce
+        return !failed && !inHand && IrisCompat.shadersActive();
+    }
+
+    public static void inHand(boolean value) {
+        inHand = value;
     }
 
     public static void record(RenderType type, PoseStack.Pose pose, SubmitNodeCollector.CustomGeometryRenderer renderer) {
@@ -115,7 +121,16 @@ public final class ShaderOverlay {
         RenderSystem.setProjectionMatrix(projectionBuffer, projectionType);
         try (RenderPass pass = RenderSystem.getDevice().createCommandEncoder().createRenderPass(() -> "brightestday shader overlay",
                 target.getColorTextureView(), Optional.empty(), target.getDepthTextureView(), OptionalDouble.empty())) {
-            for (int i = 0; i < draws.size(); i++) prepared.get(i).drawFromBuffer(buffer.getExecuteInfo(draws.get(i)), pass);
+            for (int i = 0; i < draws.size(); i++) {
+                try {
+                    prepared.get(i).drawFromBuffer(buffer.getExecuteInfo(draws.get(i)), pass);
+                } catch (RuntimeException exception) {
+                    // drawFromBuffer pushes a debug group before anything can throw and only pops it on success;
+                    // left open, pass.close() throws before releasing the encoder and the next pass crashes the game
+                    pass.popDebugGroup();
+                    throw exception;
+                }
+            }
         } finally {
             RenderSystem.restoreProjectionMatrix();
             buffer.endDraw();

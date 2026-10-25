@@ -297,21 +297,22 @@ public final class ShieldEffects {
         float cy = (float) (center.y - camera.y);
         float cz = (float) (center.z - camera.z);
         if (FrostedGlass.ready()) context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FrostedGlass.GLASS,
-                (pose, buffer) -> drawShell(pose, buffer, cells, stages, cell, cx, cy, cz, step, rim, time, color, alpha, frost(opacity), true, false, false));
+                (pose, buffer) -> drawShell(pose, buffer, cells, stages, cell, cx, cy, cz, step, rim, time, color, alpha, frost(opacity), true, false));
         if (VisualQuality.glow()) context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.GLOW_UNSORTED,
-                (pose, buffer) -> drawShell(pose, buffer, cells, stages, cell, cx, cy, cz, step, rim * RIM_GLOW_WIDTH, time, color, GLOW_PASS * alpha, GLOW_FILL_STRENGTH * opacity, true, true, false));
+                (pose, buffer) -> drawShell(pose, buffer, cells, stages, cell, cx, cy, cz, step, rim * RIM_GLOW_WIDTH, time, color, GLOW_PASS * alpha, GLOW_FILL_STRENGTH * opacity, true, true));
         context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.glassUnsorted(),
-                (pose, buffer) -> drawShell(pose, buffer, cells, stages, cell, cx, cy, cz, step, rim, time, color, alpha, fill(GLASS_FILL_ALPHA, opacity), true, true, stages != null));
+                (pose, buffer) -> drawShell(pose, buffer, cells, stages, cell, cx, cy, cz, step, rim, time, color, alpha, fill(GLASS_FILL_ALPHA, opacity), true, true));
+        if (stages != null) HardLightCracks.submit(context, cracks(cells, stages, cx, cy, cz, step, time));
     }
 
     private static void drawShell(PoseStack.Pose pose, VertexConsumer buffer, List<ShellCell> cells, int @Nullable [] stages, float cell, float cx, float cy, float cz, float step, float rimWidth,
-                                  float time, int color, float alpha, float fillStrength, boolean fill, boolean rims, boolean etch) {
+                                  float time, int color, float alpha, float fillStrength, boolean fill, boolean rims) {
         if (!PROFILE_SHELLS) {
-            emitShell(pose, buffer, cells, stages, cell, cx, cy, cz, step, rimWidth, time, color, alpha, fillStrength, fill, rims, etch);
+            emitShell(pose, buffer, cells, stages, cell, cx, cy, cz, step, rimWidth, time, color, alpha, fillStrength, fill, rims);
             return;
         }
         long start = System.nanoTime();
-        int quads = emitShell(pose, buffer, cells, stages, cell, cx, cy, cz, step, rimWidth, time, color, alpha, fillStrength, fill, rims, etch);
+        int quads = emitShell(pose, buffer, cells, stages, cell, cx, cy, cz, step, rimWidth, time, color, alpha, fillStrength, fill, rims);
         profiledNanos += System.nanoTime() - start;
         profiledQuads += quads;
         if (++profiledPasses >= PROFILE_PASSES) {
@@ -323,7 +324,7 @@ public final class ShieldEffects {
     }
 
     private static int emitShell(PoseStack.Pose pose, VertexConsumer buffer, List<ShellCell> cells, int @Nullable [] stages, float cell, float cx, float cy, float cz, float step, float rimWidth,
-                                  float time, int color, float alpha, float fillStrength, boolean fill, boolean rims, boolean etch) {
+                                  float time, int color, float alpha, float fillStrength, boolean fill, boolean rims) {
         int fillAlpha = Math.round(Mth.clamp(fillStrength * alpha, 0.0F, 1.0F) * 255);
         int rimAlpha = Math.round(Mth.clamp(RIM_ALPHA * alpha, 0.0F, 1.0F) * 255);
         int rimColor = VoxelRenderer.toWhite(color, RIM_WHITE);
@@ -347,15 +348,26 @@ public final class ShieldEffects {
             float z = cz + shell.z() * spacing;
             float distance = Mth.sqrt(x * x + y * y + z * z);
             float ripple = 0.5F + 0.3F * Mth.sin(waveA * 1.6F + shell.ny() * 6.0F + shell.nx() * 4.0F) + 0.2F * Mth.sin(waveB * 1.3F + shell.nz() * 5.0F - shell.nx() * 3.0F);
-            int tint = HardLightCracks.darken(VoxelRenderer.toWhite(color, 0.05F + SHELL_RIPPLE_WHITE * ripple + 0.05F * Mth.sin(tintWave + (shell.x() + shell.y() + shell.z()) * tintStep)), stage);
+            int tint = VoxelRenderer.toWhite(color, 0.05F + SHELL_RIPPLE_WHITE * ripple + 0.05F * Mth.sin(tintWave + (shell.x() + shell.y() + shell.z()) * tintStep));
             int body = VoxelRenderer.nearFade(distance, ARGB.color(Math.round(Mth.clamp(fillAlpha * (1.0F - SHELL_RIPPLE_DENSITY + 2.0F * SHELL_RIPPLE_DENSITY * ripple), 0.0F, 255.0F)), tint));
             int rim = VoxelRenderer.nearFade(distance, ARGB.color(rimAlpha, rimColor));
             quads += VoxelRenderer.glassBox(pose, buffer, x, y, z, spacing * 0.5F, body, rim, rimWidth, rims ? shell.faces() : 0, drawn, fill, frost, frost ? VoxelRenderer.FRESNEL_FROST : VoxelRenderer.FRESNEL_GLASS);
-            if (etch && stage > 0) {
-                HardLightCracks.draw(pose, buffer, x, y, z, spacing * 0.5F, drawn & shell.outer(), stage, pack(shell.x(), shell.y(), shell.z()) * 0x9E3779B97F4A7C15L, HardLightCracks.lineColor(stage, alpha));
-            }
         }
         return quads;
+    }
+
+    private static List<HardLightCracks.Crack> cracks(List<ShellCell> cells, int[] stages, float cx, float cy, float cz, float step, float time) {
+        float spacing = step * (1.0F + SHELL_WARBLE * Mth.sin(time * 0.22F) + SHELL_WARBLE * 0.8F * Mth.sin(time * 0.31F));
+        List<HardLightCracks.Crack> cracks = new ArrayList<>();
+        for (int i = 0; i < cells.size(); i++) {
+            int stage = stages[i];
+            if (stage <= 0 || stage >= HardLightCracks.BROKEN) continue;
+            ShellCell shell = cells.get(i);
+            int drawn = shell.faces() & shell.outer();
+            if (drawn == 0) continue;
+            cracks.add(new HardLightCracks.Crack(cx + shell.x() * spacing, cy + shell.y() * spacing, cz + shell.z() * spacing, spacing * 0.5F, drawn, stage));
+        }
+        return cracks;
     }
 
     private static int[] stages(List<ShellCell> cells, Vec3 center, float radius) {

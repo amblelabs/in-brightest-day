@@ -39,6 +39,7 @@
 		"client.EntityGlowColorMixin",
 		"client.HudOverlayMixin",
 		"client.FirstPersonHandsAndItemsRendererMixin",
+		"client.GameRendererHandMixin",
 		"client.ItemModelResolverMixin",
 		"client.ItemStackLayerRenderStateMixin",
 		"client.LocalPlayerMixin",

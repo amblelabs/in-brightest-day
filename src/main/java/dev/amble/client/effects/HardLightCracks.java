@@ -2,15 +2,14 @@ package dev.amble.client.effects;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import dev.amble.client.flight.FlightRenderTypes;
 import dev.amble.core.networking.payloads.s2c.HardLightCracksS2CPayload;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
+import net.minecraft.client.resources.model.ModelBakery;
 import net.minecraft.core.BlockPos;
-import net.minecraft.util.ARGB;
+import net.minecraft.util.LightCoordsUtil;
 import net.minecraft.util.Mth;
-import net.minecraft.world.phys.Vec3;
 
 import java.util.HashMap;
 import java.util.List;
@@ -18,16 +17,13 @@ import java.util.Map;
 
 public final class HardLightCracks {
     public static final int BROKEN = HardLightCracksS2CPayload.BROKEN;
-    private static final float STAGES = 9.0F;
-    private static final float MAX_DARKEN = 0.6F;
-    private static final float LINE_WIDTH = 0.045F;
     private static final float LIFT = 0.004F;
-    private static final int CRACK_COLOR = 0x0A0A12;
 
     private static final Map<BlockPos, Integer> STAGE = new HashMap<>();
     private static int version;
 
-    public record Crack(Vec3 center, float half, int drawn, int stage, long seed) {}
+    // camera-relative cell centre, so walls and dome shells can share the submit
+    public record Crack(float x, float y, float z, float half, int drawn, int stage) {}
 
     public static void init() {
         ClientPlayNetworking.registerGlobalReceiver(HardLightCracksS2CPayload.TYPE, (payload, context) -> {
@@ -63,110 +59,49 @@ public final class HardLightCracks {
         return stage(pos) >= BROKEN;
     }
 
-    public static int darken(int color, int stage) {
-        if (stage <= 0) return color;
-        float amount = Math.min(stage, STAGES) / STAGES * MAX_DARKEN;
-        return ARGB.color(ARGB.alpha(color), ARGB.srgbLerp(amount, color, 0xFF000000));
-    }
-
-    public static long seed(BlockPos pos) {
-        return pos.asLong() * 0x9E3779B97F4A7C15L;
-    }
-
-    public static void submit(LevelRenderContext context, Vec3 camera, List<Crack> cracks, float alpha) {
+    public static void submit(LevelRenderContext context, List<Crack> cracks) {
         if (cracks.isEmpty()) return;
-        context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.glass(), (pose, buffer) -> {
-            for (Crack crack : cracks) {
-                float x = (float) (crack.center().x - camera.x);
-                float y = (float) (crack.center().y - camera.y);
-                float z = (float) (crack.center().z - camera.z);
-                draw(pose, buffer, x, y, z, crack.half(), crack.drawn(), crack.stage(), crack.seed(), lineColor(crack.stage(), alpha));
-            }
-        });
-    }
-
-    public static int lineColor(int stage, float alpha) {
-        float strength = Math.min(stage, STAGES) / STAGES;
-        return ARGB.color(Math.round(Mth.clamp((0.45F + 0.5F * strength) * alpha, 0.0F, 1.0F) * 255), CRACK_COLOR);
-    }
-
-    public static void draw(PoseStack.Pose pose, VertexConsumer buffer, float x, float y, float z, float half, int drawn, int stage, long seed, int color) {
-        int branches = 1 + stage / 2;
-        int steps = 2 + stage / 3;
-        float width = LINE_WIDTH * half * 2.0F;
-        for (int k = 0; k < 3; k++) {
-            int a = (k + 1) % 3;
-            int b = (k + 2) % 3;
-            float ck = k == 0 ? x : k == 1 ? y : z;
-            float ca = a == 0 ? x : a == 1 ? y : z;
-            float cb = b == 0 ? x : b == 1 ? y : z;
-            for (int s = -1; s <= 1; s += 2) {
-                if ((drawn & bit(k, s)) == 0) continue;
-                float plane = ck + s * (half + LIFT);
-                long random = seed ^ (k * 2L + (s > 0 ? 1 : 0)) * 0xBF58476D1CE4E5B9L;
-                random = next(random);
-                float originA = (unit(random) - 0.5F) * half;
-                random = next(random);
-                float originB = (unit(random) - 0.5F) * half;
-                for (int branch = 0; branch < branches; branch++) {
-                    random = next(random);
-                    float angle = unit(random) * Mth.TWO_PI;
-                    float pa = originA;
-                    float pb = originB;
-                    for (int step = 0; step < steps; step++) {
-                        random = next(random);
-                        angle += (unit(random) - 0.5F) * 1.4F;
-                        random = next(random);
-                        float length = half * (0.25F + 0.3F * unit(random));
-                        float na = Mth.clamp(pa + Mth.cos(angle) * length, -half, half);
-                        float nb = Mth.clamp(pb + Mth.sin(angle) * length, -half, half);
-                        segment(pose, buffer, k, plane, a, ca + pa, cb + pb, ca + na, cb + nb, width * (1.0F - step * 0.15F), color);
-                        if (Math.abs(na) >= half || Math.abs(nb) >= half) break;
-                        pa = na;
-                        pb = nb;
-                    }
+        for (int index = 0; index < ModelBakery.DESTROY_TYPES.size(); index++) {
+            int texture = index;
+            if (cracks.stream().noneMatch(crack -> texture(crack.stage()) == texture)) continue;
+            context.submitNodeCollector().submitCustomGeometry(context.poseStack(), ModelBakery.DESTROY_TYPES.get(index), (pose, buffer) -> {
+                for (Crack crack : cracks) {
+                    if (texture(crack.stage()) == texture) faces(pose, buffer, crack);
                 }
-            }
+            });
         }
     }
 
-    private static void segment(PoseStack.Pose pose, VertexConsumer buffer, int k, float plane, int a, float a0, float b0, float a1, float b1, float width, int color) {
-        float da = a1 - a0;
-        float db = b1 - b0;
-        float length = Mth.sqrt(da * da + db * db);
-        if (length < 1.0E-4F) return;
-        float oa = -db / length * width * 0.5F;
-        float ob = da / length * width * 0.5F;
-        vertex(pose, buffer, k, plane, a, a0 + oa, b0 + ob, color);
-        vertex(pose, buffer, k, plane, a, a1 + oa, b1 + ob, color);
-        vertex(pose, buffer, k, plane, a, a1 - oa, b1 - ob, color);
-        vertex(pose, buffer, k, plane, a, a0 - oa, b0 - ob, color);
+    // stages 1..BROKEN-1 spread across vanilla's destroy_stage_0..9
+    private static int texture(int stage) {
+        int last = ModelBakery.DESTROY_TYPES.size() - 1;
+        return Mth.clamp(Math.round((stage - 1) * (float) last / (BROKEN - 2)), 0, last);
     }
 
-    private static void vertex(PoseStack.Pose pose, VertexConsumer buffer, int k, float kv, int a, float av, float bv, int color) {
-        float x = k == 0 ? kv : a == 0 ? av : bv;
-        float y = k == 1 ? kv : a == 1 ? av : bv;
-        float z = k == 2 ? kv : a == 2 ? av : bv;
-        buffer.addVertex(pose, x, y, z).setColor(color);
+    private static void faces(PoseStack.Pose pose, VertexConsumer buffer, Crack crack) {
+        float h = crack.half() + LIFT;
+        float x = crack.x();
+        float y = crack.y();
+        float z = crack.z();
+        int drawn = crack.drawn();
+        if ((drawn & VoxelRenderer.UP) != 0) quad(pose, buffer, x - h, y + h, z - h, x - h, y + h, z + h, x + h, y + h, z + h, x + h, y + h, z - h);
+        if ((drawn & VoxelRenderer.DOWN) != 0) quad(pose, buffer, x - h, y - h, z + h, x - h, y - h, z - h, x + h, y - h, z - h, x + h, y - h, z + h);
+        if ((drawn & VoxelRenderer.NORTH) != 0) quad(pose, buffer, x + h, y + h, z - h, x + h, y - h, z - h, x - h, y - h, z - h, x - h, y + h, z - h);
+        if ((drawn & VoxelRenderer.SOUTH) != 0) quad(pose, buffer, x - h, y + h, z + h, x - h, y - h, z + h, x + h, y - h, z + h, x + h, y + h, z + h);
+        if ((drawn & VoxelRenderer.WEST) != 0) quad(pose, buffer, x - h, y + h, z - h, x - h, y - h, z - h, x - h, y - h, z + h, x - h, y + h, z + h);
+        if ((drawn & VoxelRenderer.EAST) != 0) quad(pose, buffer, x + h, y + h, z + h, x + h, y - h, z + h, x + h, y - h, z - h, x + h, y + h, z - h);
     }
 
-    private static int bit(int axis, int sign) {
-        return switch (axis) {
-            case 0 -> sign > 0 ? VoxelRenderer.EAST : VoxelRenderer.WEST;
-            case 1 -> sign > 0 ? VoxelRenderer.UP : VoxelRenderer.DOWN;
-            default -> sign > 0 ? VoxelRenderer.SOUTH : VoxelRenderer.NORTH;
-        };
+    private static void quad(PoseStack.Pose pose, VertexConsumer buffer, float x0, float y0, float z0, float x1, float y1, float z1,
+                             float x2, float y2, float z2, float x3, float y3, float z3) {
+        vertex(pose, buffer, x0, y0, z0, 0.0F, 0.0F);
+        vertex(pose, buffer, x1, y1, z1, 0.0F, 1.0F);
+        vertex(pose, buffer, x2, y2, z2, 1.0F, 1.0F);
+        vertex(pose, buffer, x3, y3, z3, 1.0F, 0.0F);
     }
 
-    private static long next(long state) {
-        long z = state + 0x9E3779B97F4A7C15L;
-        z = (z ^ (z >>> 30)) * 0xBF58476D1CE4E5B9L;
-        z = (z ^ (z >>> 27)) * 0x94D049BB133111EBL;
-        return z ^ (z >>> 31);
-    }
-
-    private static float unit(long value) {
-        return (value >>> 40) / (float) (1L << 24);
+    private static void vertex(PoseStack.Pose pose, VertexConsumer buffer, float x, float y, float z, float u, float v) {
+        buffer.addVertex(pose, x, y, z).setColor(-1).setUv(u, v).setLight(LightCoordsUtil.FULL_BRIGHT);
     }
 
     private HardLightCracks() {}
