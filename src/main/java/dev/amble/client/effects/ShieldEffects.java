@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import dev.amble.BrightestDay;
 import dev.amble.client.flight.FlightRenderTypes;
+import dev.amble.client.render.FrostedGlass;
 import dev.amble.core.networking.payloads.s2c.ShieldRemoveS2CPayload;
 import dev.amble.core.networking.payloads.s2c.ShieldSpawnS2CPayload;
 import dev.amble.core.shields.ShieldManager;
@@ -159,12 +160,19 @@ public final class ShieldEffects {
         }
     }
 
+    public static void submitFrost(LevelRenderContext context, Vec3 camera, List<Voxel> voxels, float alpha) {
+        if (!FrostedGlass.ready()) return;
+        context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FrostedGlass.GLASS,
+                (pose, buffer) -> draw(pose, buffer, camera, voxels, 1.0F, FrostedGlass.FROST_ALPHA * Math.min(alpha, 1.0F), false));
+    }
+
     public static void submitGlow(LevelRenderContext context, Vec3 camera, List<Voxel> voxels, float glowScale, float glowAlpha) {
         context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.GLOW,
                 (pose, buffer) -> draw(pose, buffer, camera, voxels, glowScale, glowAlpha, false));
     }
 
     public static void submit(LevelRenderContext context, Vec3 camera, List<Voxel> voxels, float glowScale, float glowAlpha, float glassAlpha) {
+        submitFrost(context, camera, voxels, glassAlpha);
         context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.GLOW,
                 (pose, buffer) -> draw(pose, buffer, camera, voxels, glowScale, glowAlpha, false));
         context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.glass(),
@@ -172,6 +180,7 @@ public final class ShieldEffects {
     }
 
     public static void submit(LevelRenderContext context, Vec3 camera, List<Voxel> voxels, float alpha) {
+        submitFrost(context, camera, voxels, alpha);
         if (VisualQuality.glow()) context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.GLOW,
                 (pose, buffer) -> draw(pose, buffer, camera, voxels, GLOW_SCALE, GLOW_ALPHA * alpha, false));
         context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.glass(),
@@ -196,6 +205,8 @@ public final class ShieldEffects {
     }
 
     public static void submitGlassOriented(LevelRenderContext context, Vec3 camera, List<Oriented> cubes, float alpha, float rimWidth, float fillAlpha) {
+        if (FrostedGlass.ready()) context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FrostedGlass.GLASS,
+                (pose, buffer) -> drawGlass(pose, buffer, camera, cubes, alpha, 0.0F, FrostedGlass.FROST_ALPHA, true));
         if (VisualQuality.glow()) context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.GLOW,
                 (pose, buffer) -> drawGlass(pose, buffer, camera, cubes, GLOW_PASS * alpha, rimWidth * RIM_GLOW_WIDTH, GLOW_FILL_STRENGTH, true));
         context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.glass(),
@@ -209,7 +220,8 @@ public final class ShieldEffects {
             Vec3 center = cube.center().subtract(camera);
             int body = VoxelRenderer.nearFade(center, ARGB.color(fillAlpha, cube.color()));
             int rim = VoxelRenderer.nearFade(center, ARGB.color(rimAlpha, VoxelRenderer.toWhite(cube.color(), RIM_WHITE)));
-            VoxelRenderer.glass(pose, buffer, center, cube.ax(), cube.ay(), cube.az(), body, rim, rimWidth, cube.faces(), fill);
+            boolean frost = fill && rimWidth <= 0.0F;
+            VoxelRenderer.glass(pose, buffer, center, cube.ax(), cube.ay(), cube.az(), body, rim, rimWidth, cube.faces(), fill, frost, frost ? VoxelRenderer.FRESNEL_FROST : VoxelRenderer.FRESNEL_GLASS);
         }
     }
 
@@ -221,6 +233,8 @@ public final class ShieldEffects {
         float cx = (float) (center.x - camera.x);
         float cy = (float) (center.y - camera.y);
         float cz = (float) (center.z - camera.z);
+        if (FrostedGlass.ready()) context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FrostedGlass.GLASS,
+                (pose, buffer) -> drawShell(pose, buffer, cells, cell, cx, cy, cz, step, rim, time, color, alpha, FrostedGlass.FROST_ALPHA, true, false));
         if (VisualQuality.glow()) context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.GLOW_UNSORTED,
                 (pose, buffer) -> drawShell(pose, buffer, cells, cell, cx, cy, cz, step, rim * RIM_GLOW_WIDTH, time, color, GLOW_PASS * alpha, GLOW_FILL_STRENGTH, true, true));
         context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.glassUnsorted(),

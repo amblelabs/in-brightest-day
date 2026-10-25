@@ -17,6 +17,8 @@ import dev.amble.client.effects.BlastEffects;
 import dev.amble.client.effects.ConstructClient;
 import dev.amble.client.effects.ElementAura;
 import dev.amble.client.compat.IrisCompat;
+import dev.amble.client.render.FrostedGlass;
+import dev.amble.client.render.ShaderOverlay;
 import dev.amble.client.compat.ReplaySnapshot;
 import dev.amble.client.config.BrightestDayClientConfig;
 import dev.amble.client.effects.AbilityClient;
@@ -190,6 +192,8 @@ public class BrightestDayClient implements ClientModInitializer {
         LightOrbEffects.init();
         ReplaySnapshot.init();
         IrisCompat.init();
+        FrostedGlass.init();
+        ShaderOverlay.init();
         LanternButtons.init();
         OfficialServerButton.init();
         RingChargeHud.init();

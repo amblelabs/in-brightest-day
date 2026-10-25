@@ -926,6 +926,8 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("brightestday.client.effectsQuality.desc", "Scales how many particles and voxels ring effects draw. Lower it on weaker computers; raise it for denser effects. Below 0.5 the extra glow layer on shields is skipped.");
         builder.add("brightestday.client.maxFlightFov", "Max Flight FOV");
         builder.add("brightestday.client.maxFlightFov.desc", "The widest your field of view can stretch while flying fast, in degrees.");
+        builder.add("brightestday.client.frostedConstructs", "Frosted Construct Glass");
+        builder.add("brightestday.client.frostedConstructs.desc", "Blurs whatever is behind hard-light constructs like frosted glass. Turns itself off while a shader pack is active.");
         builder.add("brightestday.server.synergy", "Corps Synergy");
         builder.add("brightestday.server.synergyLinkRadius", "Hope/Will Range");
         builder.add("brightestday.server.synergyLinkRadius.desc", "How close Blue and Green Lanterns must be to empower each other.");

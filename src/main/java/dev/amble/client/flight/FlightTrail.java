@@ -7,6 +7,7 @@ import dev.amble.core.ringpowers.CorpsColors;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import dev.amble.client.effects.VoxelRenderer;
+import dev.amble.client.render.FrostedGlass;
 import dev.amble.core.ringpowers.impl.FlightRingPower;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
@@ -166,6 +167,11 @@ public final class FlightTrail {
                     for (Voxel voxel : voxels) {
                         int tint = VoxelRenderer.toWhite(color, 1.0F - voxel.life());
                         VoxelRenderer.cube(pose, buffer, voxel.center(), voxel.half() * GLOW_SCALE, VoxelRenderer.nearFade(voxel.center(), ARGB.color(Math.round(GLOW_ALPHA * voxel.life() * 255), tint)), false);
+                    }
+                });
+                if (FrostedGlass.ready()) context.submitNodeCollector().submitCustomGeometry(poseStack, FrostedGlass.GLASS, (pose, buffer) -> {
+                    for (Voxel voxel : voxels) {
+                        VoxelRenderer.cube(pose, buffer, voxel.center(), voxel.half(), VoxelRenderer.nearFade(voxel.center(), ARGB.color(Math.round(FrostedGlass.FROST_ALPHA * voxel.life() * 255), color)), false);
                     }
                 });
                 context.submitNodeCollector().submitCustomGeometry(poseStack, FlightRenderTypes.glass(), (pose, buffer) -> {

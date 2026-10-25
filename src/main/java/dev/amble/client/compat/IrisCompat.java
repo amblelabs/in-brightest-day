@@ -4,9 +4,11 @@ import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import dev.amble.BrightestDay;
 import dev.amble.client.effects.attacks.utility.OreProbeRenderTypes;
 import dev.amble.client.flight.FlightRenderTypes;
+import dev.amble.client.render.FrostedGlass;
 import net.fabricmc.loader.api.FabricLoader;
 import org.jspecify.annotations.Nullable;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 public final class IrisCompat {
@@ -23,6 +25,7 @@ public final class IrisCompat {
             Object basic = Enum.valueOf(program, "BASIC");
             for (RenderPipeline pipeline : FlightRenderTypes.pipelines()) assign.invoke(instance, pipeline, basic);
             for (RenderPipeline pipeline : OreProbeRenderTypes.pipelines()) assign.invoke(instance, pipeline, basic);
+            for (RenderPipeline pipeline : FrostedGlass.pipelines()) assign.invoke(instance, pipeline, basic);
         } catch (ReflectiveOperationException | RuntimeException exception) {
             BrightestDay.LOGGER.warn("Couldn't register construct render pipelines with Iris; constructs may be invisible with shaders", exception);
         }
@@ -41,6 +44,22 @@ public final class IrisCompat {
             }
             return shaderPackInUse != null && (boolean) shaderPackInUse.invoke(api);
         } catch (ReflectiveOperationException | RuntimeException exception) {
+            return false;
+        }
+    }
+
+    private static @Nullable Field bypass;
+    private static boolean bypassMissing;
+
+    public static boolean bypass(boolean value) {
+        if (bypassMissing || !FabricLoader.getInstance().isModLoaded(IRIS)) return false;
+        try {
+            if (bypass == null) bypass = Class.forName("net.irisshaders.iris.vertices.ImmediateState").getField("bypass");
+            boolean previous = bypass.getBoolean(null);
+            bypass.setBoolean(null, value);
+            return previous;
+        } catch (ReflectiveOperationException | RuntimeException exception) {
+            bypassMissing = true;
             return false;
         }
     }
