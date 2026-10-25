@@ -1334,5 +1334,9 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
 
         builder.add("key.category.brightestday.main", "In Brightest Day");
         builder.add("key.brightestday.cycle_construct", "Construct Wheel (hold)");
+
+        builder.add("gui.brightestday.beta.play.tooltip", "You're not a beta tester!");
+        builder.add("gui.brightestday.beta.play", "Authorize to play In Brightest Day Beta");
+        builder.add("gui.brightestday.beta.browser", "Check your browser!");
     }
 }

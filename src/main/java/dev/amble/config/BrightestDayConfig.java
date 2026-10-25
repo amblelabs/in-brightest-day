@@ -478,6 +478,10 @@ public class BrightestDayConfig extends Config {
     public int meteorNight = 3;
     @ValidatedInt.Restrict(min = 1, max = 365)
     public int meteorIntervalDays = 12;
+
+    public ConfigGroup server = new ConfigGroup("server");
+    @ConfigGroup.Pop public boolean verifiedOnly;
+
     public static BrightestDayConfig get() {
         return instance;
     }
