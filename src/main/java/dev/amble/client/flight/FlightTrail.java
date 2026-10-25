@@ -33,8 +33,7 @@ public final class FlightTrail {
     private static final float PIXEL = VoxelRenderer.PIXEL;
 
     private static final float HIP_HEIGHT = 0.75F;
-    private static final float LEG_LENGTH = 0.75F;
-    private static final float FOOT_SPACING = 0.125F;
+    private static final float TORSO_HALF = 0.35F;
 
     private static final float VOXEL_SIZE = 3.0F * PIXEL;
     private static final float VOXEL_SPACING = 2.0F * PIXEL;
@@ -62,7 +61,7 @@ public final class FlightTrail {
     private record Voxel(Vec3 center, float half, float life) {}
 
     private static final class Trail {
-        final List<ArrayDeque<Point>> feet = List.of(new ArrayDeque<>(), new ArrayDeque<>());
+        final List<ArrayDeque<Point>> feet = List.of(new ArrayDeque<>());
         int color;
         boolean emitting;
         Vec3 direction = new Vec3(0.0, 0.0, 1.0);
@@ -111,7 +110,7 @@ public final class FlightTrail {
                 points.clear();
                 points.addAll(aged);
                 if (emit) {
-                    Vec3 position = foot(player, 1.0F, footSide(foot));
+                    Vec3 position = torso(player, 1.0F);
                     Point newest = points.peekFirst();
                     double gap = newest == null ? 0.0 : newest.pos().distanceTo(position);
                     if (gap > MAX_POINT_JUMP) points.clear();
@@ -151,7 +150,7 @@ public final class FlightTrail {
                 List<Vec3> positions = new ArrayList<>();
                 List<Float> lives = new ArrayList<>();
                 if (trail.emitting) {
-                    positions.add(foot(player, partialTicks, footSide(foot)));
+                    positions.add(torso(player, partialTicks));
                     lives.add(1.0F);
                 }
                 for (Point point : trail.feet.get(foot)) {
@@ -276,21 +275,15 @@ public final class FlightTrail {
         return !player.isRemoved() && player.level() == client.level;
     }
 
-    private static float footSide(int foot) {
-        return foot == 0 ? 1.0F : -1.0F;
-    }
-
-    private static Vec3 foot(Player player, float partialTicks, float side) {
+    private static Vec3 torso(Player player, float partialTicks) {
         float yaw = Mth.rotLerp(partialTicks, player.yBodyRotO, player.yBodyRot) * Mth.DEG_TO_RAD;
         float pitch = FlightAnimator.bodyPitch(player, partialTicks) * Mth.DEG_TO_RAD;
         Vec3 facing = new Vec3(-Mth.sin(yaw), 0.0, Mth.cos(yaw));
-        Vec3 right = new Vec3(-Mth.cos(yaw), 0.0, -Mth.sin(yaw));
         Vec3 down = new Vec3(0.0, -Mth.cos(pitch), 0.0).add(facing.scale(-Mth.sin(pitch)));
         return player.getPosition(partialTicks)
                 .add(FlightAnimator.worldDiveOffset(player, partialTicks))
                 .add(0.0, HIP_HEIGHT, 0.0)
-                .add(down.scale(LEG_LENGTH))
-                .add(right.scale(side * FOOT_SPACING));
+                .add(down.scale(-TORSO_HALF));
     }
 
     private FlightTrail() {}
