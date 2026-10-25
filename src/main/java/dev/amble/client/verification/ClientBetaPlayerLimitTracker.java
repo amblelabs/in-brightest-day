@@ -15,7 +15,7 @@ public class ClientBetaPlayerLimitTracker {
         ClientLoginConnectionEvents.QUERY_START.register((_, _) -> {
             ClientLoginNetworking.registerReceiver(BetaPlayerLimitTracker.QUERY_ID, (_, _, _, _) -> {
                 FriendlyByteBuf resp = FriendlyByteBufs.create();
-                resp.writeBoolean(BetaVerification.isBetaLocked());
+                resp.writeBoolean(!BetaVerification.isBetaLocked());
                 return CompletableFuture.completedFuture(resp);
             });
         });
