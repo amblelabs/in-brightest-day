@@ -7,7 +7,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.world.phys.Vec3;
 
-public record ShieldSpawnS2CPayload(int id, int entityId, Vec3 center, float radius, int color, int duration, int age) implements CustomPacketPayload {
+public record ShieldSpawnS2CPayload(int id, int entityId, Vec3 center, float radius, int color, int duration, int age, int casterId) implements CustomPacketPayload {
 
     public static final int NO_ENTITY = -1;
 
@@ -23,6 +23,7 @@ public record ShieldSpawnS2CPayload(int id, int entityId, Vec3 center, float rad
                     ByteBufCodecs.INT, ShieldSpawnS2CPayload::color,
                     ByteBufCodecs.VAR_INT, ShieldSpawnS2CPayload::duration,
                     ByteBufCodecs.VAR_INT, ShieldSpawnS2CPayload::age,
+                    ByteBufCodecs.INT, ShieldSpawnS2CPayload::casterId,
                     ShieldSpawnS2CPayload::new
             );
 

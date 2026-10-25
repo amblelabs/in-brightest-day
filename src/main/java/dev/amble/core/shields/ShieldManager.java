@@ -269,7 +269,7 @@ public final class ShieldManager {
         for (ServerPlayer player : tracking) {
             if (shield.watchers.add(player)) {
                 int entityId = shield.target != null ? shield.target.getId() : ShieldSpawnS2CPayload.NO_ENTITY;
-                ServerPlayNetworking.send(player, new ShieldSpawnS2CPayload(shield.id, entityId, shield.center(), shield.target != null ? shield.scale : shield.radius, shield.color, shield.duration, shield.age));
+                ServerPlayNetworking.send(player, new ShieldSpawnS2CPayload(shield.id, entityId, shield.center(), shield.target != null ? shield.scale : shield.radius, shield.color, shield.duration, shield.age, casterId(shield)));
             }
         }
 
@@ -280,6 +280,11 @@ public final class ShieldManager {
         });
     }
 
+
+    private static int casterId(Shield shield) {
+        ServerPlayer caster = shield.level.getServer().getPlayerList().getPlayer(shield.caster);
+        return caster == null ? ShieldSpawnS2CPayload.NO_ENTITY : caster.getId();
+    }
 
     public static long latestCreatedAt(UUID caster) {
         return SHIELDS.stream().filter(shield -> shield.caster.equals(caster)).mapToLong(shield -> shield.createdAt).max().orElse(Long.MIN_VALUE);

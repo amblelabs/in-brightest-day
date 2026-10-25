@@ -146,7 +146,7 @@ public final class WallEffects {
                 float half = settled ? 0.5F : CELL_HALF * scale;
                 cells.add(new ShieldEffects.Hard(Vec3.atCenterOf(pos), half, tint, faces, drawn));
             }
-            ShieldEffects.submitHardLight(context, camera, cells, CELL_ALPHA, VoxelRenderer.PIXEL, ShieldEffects.HARD_LIGHT_FILL);
+            ShieldEffects.submitHardLight(context, camera, cells, CELL_ALPHA, VoxelRenderer.PIXEL, ShieldEffects.HARD_LIGHT_FILL, ShieldEffects.opacityOf(client.level.getEntity(wall.casterId)));
         }
     }
 
@@ -193,7 +193,7 @@ public final class WallEffects {
             int drawn = level == null ? faces : faces & ~buried(level, pos);
             if (drawn != 0) voxels.add(new ShieldEffects.Hard(Vec3.atCenterOf(pos), 0.5F, opaque, faces, drawn));
         }
-        ShieldEffects.submitHardLight(context, camera, voxels, alpha, VoxelRenderer.PIXEL, ShieldEffects.HARD_LIGHT_FILL);
+        ShieldEffects.submitHardLight(context, camera, voxels, alpha, VoxelRenderer.PIXEL, ShieldEffects.HARD_LIGHT_FILL, ShieldEffects.opacityOf(Minecraft.getInstance().player));
     }
 
     private static int buried(ClientLevel level, BlockPos pos) {

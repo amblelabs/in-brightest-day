@@ -19,6 +19,8 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import dev.amble.core.BrightestDayAttachments;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
@@ -66,6 +68,8 @@ public final class ShieldEffects {
     private static final float GLOW_FILL = 0.18F;
     private static final float GLOW_PASS = RIM_GLOW_ALPHA / RIM_ALPHA;
     private static final float GLOW_FILL_STRENGTH = GLOW_FILL / GLOW_PASS;
+    private static final float MAX_FROST = 0.95F;
+    private static final float MAX_FILL = 0.9F;
 
     private static final Map<Integer, ClientShield> SHIELDS = new HashMap<>();
     private static final Map<Long, List<ShellCell>> SHELLS = new HashMap<>();
@@ -77,6 +81,7 @@ public final class ShieldEffects {
         final int color;
         final int duration;
         final @Nullable ClientLevel level;
+        final int casterId;
         int age;
         int fade = -1;
 
@@ -87,6 +92,7 @@ public final class ShieldEffects {
             this.color = ARGB.opaque(payload.color());
             this.duration = payload.duration();
             this.age = payload.age();
+            this.casterId = payload.casterId();
             this.level = Minecraft.getInstance().level;
         }
     }
@@ -116,7 +122,7 @@ public final class ShieldEffects {
 
     public static void snapshot(Consumer<CustomPacketPayload> out) {
         SHIELDS.forEach((id, shield) -> {
-            if (shield.fade < 0) out.accept(new ShieldSpawnS2CPayload(id, shield.entityId, shield.center, shield.radius, shield.color, shield.duration, shield.age));
+            if (shield.fade < 0) out.accept(new ShieldSpawnS2CPayload(id, shield.entityId, shield.center, shield.radius, shield.color, shield.duration, shield.age, shield.casterId));
         });
     }
 
@@ -158,18 +164,34 @@ public final class ShieldEffects {
             if (shield.fade >= 0) scale *= 1.0F - Mth.clamp((shield.fade + partialTicks) / FADE_TICKS, 0.0F, 1.0F);
             if (scale <= 0.01F) continue;
 
-            submitShell(context, camera, center, radius * scale, radius, time, shield.color, 1.0F);
+            submitShell(context, camera, center, radius * scale, radius, time, shield.color, 1.0F, opacityOf(client.level.getEntity(shield.casterId)));
         }
     }
 
     public static void submitHardLight(LevelRenderContext context, Vec3 camera, List<Hard> cells, float alpha, float rimWidth, float fillStrength) {
+        submitHardLight(context, camera, cells, alpha, rimWidth, fillStrength, 1.0F);
+    }
+
+    public static void submitHardLight(LevelRenderContext context, Vec3 camera, List<Hard> cells, float alpha, float rimWidth, float fillStrength, float opacity) {
         if (cells.isEmpty()) return;
         if (FrostedGlass.ready()) context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FrostedGlass.GLASS,
-                (pose, buffer) -> drawHard(pose, buffer, camera, cells, alpha, 0.0F, FrostedGlass.FROST_ALPHA, true, false));
+                (pose, buffer) -> drawHard(pose, buffer, camera, cells, alpha, 0.0F, frost(opacity), true, false));
         if (VisualQuality.glow()) context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.GLOW,
-                (pose, buffer) -> drawHard(pose, buffer, camera, cells, GLOW_PASS * alpha, rimWidth * RIM_GLOW_WIDTH, GLOW_FILL_STRENGTH, true, true));
+                (pose, buffer) -> drawHard(pose, buffer, camera, cells, GLOW_PASS * alpha, rimWidth * RIM_GLOW_WIDTH, GLOW_FILL_STRENGTH * opacity, true, true));
         context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.glass(),
-                (pose, buffer) -> drawHard(pose, buffer, camera, cells, alpha, rimWidth, fillStrength, true, true));
+                (pose, buffer) -> drawHard(pose, buffer, camera, cells, alpha, rimWidth, fill(fillStrength, opacity), true, true));
+    }
+
+    private static float frost(float opacity) {
+        return Math.min(FrostedGlass.FROST_ALPHA * opacity, MAX_FROST);
+    }
+
+    private static float fill(float strength, float opacity) {
+        return Math.min(strength * opacity, MAX_FILL);
+    }
+
+    public static float opacityOf(@Nullable Entity entity) {
+        return entity instanceof Player player ? BrightestDayAttachments.getColorTweak(player).opacityScale() : 1.0F;
     }
 
     private static void drawHard(PoseStack.Pose pose, VertexConsumer buffer, Vec3 camera, List<Hard> cells, float alpha, float rimWidth, float fillStrength, boolean fill, boolean rims) {
@@ -232,12 +254,16 @@ public final class ShieldEffects {
     }
 
     public static void submitGlassOriented(LevelRenderContext context, Vec3 camera, List<Oriented> cubes, float alpha, float rimWidth, float fillAlpha) {
+        submitGlassOriented(context, camera, cubes, alpha, rimWidth, fillAlpha, 1.0F);
+    }
+
+    public static void submitGlassOriented(LevelRenderContext context, Vec3 camera, List<Oriented> cubes, float alpha, float rimWidth, float fillAlpha, float opacity) {
         if (FrostedGlass.ready()) context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FrostedGlass.GLASS,
-                (pose, buffer) -> drawGlass(pose, buffer, camera, cubes, alpha, 0.0F, FrostedGlass.FROST_ALPHA, true));
+                (pose, buffer) -> drawGlass(pose, buffer, camera, cubes, alpha, 0.0F, frost(opacity), true));
         if (VisualQuality.glow()) context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.GLOW,
-                (pose, buffer) -> drawGlass(pose, buffer, camera, cubes, GLOW_PASS * alpha, rimWidth * RIM_GLOW_WIDTH, GLOW_FILL_STRENGTH, true));
+                (pose, buffer) -> drawGlass(pose, buffer, camera, cubes, GLOW_PASS * alpha, rimWidth * RIM_GLOW_WIDTH, GLOW_FILL_STRENGTH * opacity, true));
         context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.glass(),
-                (pose, buffer) -> drawGlass(pose, buffer, camera, cubes, alpha, rimWidth, fillAlpha, true));
+                (pose, buffer) -> drawGlass(pose, buffer, camera, cubes, alpha, rimWidth, fill(fillAlpha, opacity), true));
     }
 
     private static void drawGlass(PoseStack.Pose pose, VertexConsumer buffer, Vec3 camera, List<Oriented> cubes, float alpha, float rimWidth, float fillStrength, boolean fill) {
@@ -253,6 +279,10 @@ public final class ShieldEffects {
     }
 
     public static void submitShell(LevelRenderContext context, Vec3 camera, Vec3 center, float radius, float layoutRadius, float time, int color, float alpha) {
+        submitShell(context, camera, center, radius, layoutRadius, time, color, alpha, 1.0F);
+    }
+
+    public static void submitShell(LevelRenderContext context, Vec3 camera, Vec3 center, float radius, float layoutRadius, float time, int color, float alpha, float opacity) {
         float cell = shellCell(layoutRadius);
         List<ShellCell> cells = shellCells(layoutRadius, cell);
         float step = cell * radius / layoutRadius;
@@ -261,11 +291,11 @@ public final class ShieldEffects {
         float cy = (float) (center.y - camera.y);
         float cz = (float) (center.z - camera.z);
         if (FrostedGlass.ready()) context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FrostedGlass.GLASS,
-                (pose, buffer) -> drawShell(pose, buffer, cells, cell, cx, cy, cz, step, rim, time, color, alpha, FrostedGlass.FROST_ALPHA, true, false));
+                (pose, buffer) -> drawShell(pose, buffer, cells, cell, cx, cy, cz, step, rim, time, color, alpha, frost(opacity), true, false));
         if (VisualQuality.glow()) context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.GLOW_UNSORTED,
-                (pose, buffer) -> drawShell(pose, buffer, cells, cell, cx, cy, cz, step, rim * RIM_GLOW_WIDTH, time, color, GLOW_PASS * alpha, GLOW_FILL_STRENGTH, true, true));
+                (pose, buffer) -> drawShell(pose, buffer, cells, cell, cx, cy, cz, step, rim * RIM_GLOW_WIDTH, time, color, GLOW_PASS * alpha, GLOW_FILL_STRENGTH * opacity, true, true));
         context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.glassUnsorted(),
-                (pose, buffer) -> drawShell(pose, buffer, cells, cell, cx, cy, cz, step, rim, time, color, alpha, GLASS_FILL_ALPHA, true, true));
+                (pose, buffer) -> drawShell(pose, buffer, cells, cell, cx, cy, cz, step, rim, time, color, alpha, fill(GLASS_FILL_ALPHA, opacity), true, true));
     }
 
     private static void drawShell(PoseStack.Pose pose, VertexConsumer buffer, List<ShellCell> cells, float cell, float cx, float cy, float cz, float step, float rimWidth,
@@ -315,6 +345,7 @@ public final class ShieldEffects {
         }
         return quads;
     }
+
 
     private static float shellCell(float layoutRadius) {
         float cell = Math.max(SHELL_MIN_CELL, layoutRadius * SHELL_CELL_PER_RADIUS) / Mth.sqrt(VisualQuality.level());

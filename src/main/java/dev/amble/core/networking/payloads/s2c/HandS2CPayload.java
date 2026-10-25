@@ -9,7 +9,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.world.phys.Vec3;
 
 public record HandS2CPayload(Vec3 origin, Vec3 direction, Vec3 up, float reach, int color, int windup, int travel, boolean impact, float scale,
-                             HandPose pose) implements CustomPacketPayload {
+                             HandPose pose, int casterId) implements CustomPacketPayload {
 
     public static final Type<HandS2CPayload> TYPE = new Type<>(BrightestDay.id("hand"));
 
@@ -24,6 +24,7 @@ public record HandS2CPayload(Vec3 origin, Vec3 direction, Vec3 up, float reach, 
             ByteBufCodecs.BOOL, HandS2CPayload::impact,
             ByteBufCodecs.FLOAT, HandS2CPayload::scale,
             HandPose.STREAM_CODEC, HandS2CPayload::pose,
+            ByteBufCodecs.INT, HandS2CPayload::casterId,
             HandS2CPayload::new
     );
 

@@ -589,6 +589,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("brightestday.server.teamMaxSize.desc", "The most lanterns that can share one team.");
         builder.add("gui.brightestday.brightness", "Brightness: %s");
         builder.add("gui.brightestday.saturation", "Saturation: %s");
+        builder.add("gui.brightestday.opacity", "Opacity: %s");
         builder.add("gui.brightestday.aura", "Aura");
         builder.add("gui.brightestday.trail.on", "Flight Trail: On");
         builder.add("gui.brightestday.trail.off", "Flight Trail: Off");

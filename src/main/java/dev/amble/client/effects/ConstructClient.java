@@ -118,7 +118,7 @@ public final class ConstructClient {
             BulwarkEffects.preview(context, camera, player, size, color, partialTicks, PREVIEW_ALPHA);
         } else if (construct.get() instanceof AreaShieldConstruct) {
             Vec3 target = player.pick(AreaShieldConstruct.RANGE, partialTicks, false).getLocation();
-            ShieldEffects.submitShell(context, camera, target, size, size, time, color, PREVIEW_ALPHA);
+            ShieldEffects.submitShell(context, camera, target, size, size, time, color, PREVIEW_ALPHA, ShieldEffects.opacityOf(player));
         }
     }
 

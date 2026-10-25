@@ -83,11 +83,13 @@ public final class HandEffects {
         final float size;
         final HandPose pose;
         final long seed;
+        final int casterId;
         final @Nullable ClientLevel level;
         int age;
 
         Hand(HandS2CPayload payload, @Nullable ClientLevel level, long seed) {
             this.origin = payload.origin();
+            this.casterId = payload.casterId();
             this.direction = payload.direction().normalize();
             Vec3 side = this.direction.cross(payload.up());
             if (side.lengthSqr() < 1.0E-4) side = this.direction.cross(new Vec3(1.0, 0.0, 0.0));
@@ -161,7 +163,7 @@ public final class HandEffects {
             float scale = grow * hand.size;
             if (fade > 0.01F) {
                 Vec3 center = hand.origin.add(hand.direction.scale(hand.distance(time)));
-                ShieldEffects.submitGlassOriented(context, camera, voxels(hand, hand.shape(time), center, scale * (0.6F + 0.4F * fade), time, 0.0F), fade, rim(scale));
+                ShieldEffects.submitGlassOriented(context, camera, voxels(hand, hand.shape(time), center, scale * (0.6F + 0.4F * fade), time, 0.0F), fade, rim(scale), ShieldEffects.GLASS_FILL, ShieldEffects.opacityOf(client.level.getEntity(hand.casterId)));
 
                 boolean moving = time > hand.windup && time < hand.arrival();
                 if (moving) {
@@ -169,7 +171,7 @@ public final class HandEffects {
                         float lag = hand.distance(time) - hand.distance(time - ghost * GHOST_SPACING);
                         if (lag < 0.2F) continue;
                         Vec3 trail = center.subtract(hand.direction.scale(lag));
-                        ShieldEffects.submitGlassOriented(context, camera, voxels(hand, hand.shape(time), trail, scale, time, 0.3F + 0.15F * ghost), 0.45F / ghost, rim(scale));
+                        ShieldEffects.submitGlassOriented(context, camera, voxels(hand, hand.shape(time), trail, scale, time, 0.3F + 0.15F * ghost), 0.45F / ghost, rim(scale), ShieldEffects.GLASS_FILL, ShieldEffects.opacityOf(client.level.getEntity(hand.casterId)));
                     }
                 }
             }
