@@ -13,7 +13,7 @@ import java.util.Set;
 
 public class BetaPlayerLimitTracker {
 
-    private static final Component KICK_MESSAGE = Component.translatable("gui.brightestday.play");
+    private static final Component KICK_MESSAGE = Component.translatable("gui.brightestday.beta.play");
     public static final Identifier QUERY_ID = BrightestDay.id("verify");
 
     public static final Set<String> VERIFIED_PLAYERS = new HashSet<>();
