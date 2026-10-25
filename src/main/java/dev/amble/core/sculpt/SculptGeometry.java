@@ -1,6 +1,5 @@
 package dev.amble.core.sculpt;
 
-import dev.amble.core.BrightestDayBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
@@ -17,7 +16,7 @@ import java.util.List;
 import java.util.Set;
 
 public final class SculptGeometry {
-    public static final double RANGE = 24.0;
+    public static final double RANGE = 48.0;
     public static final double STEP = 0.5;
     private static final double DEFAULT_DEPTH = 6.0;
     private static final double MIN_DEPTH = 2.0;
@@ -31,7 +30,6 @@ public final class SculptGeometry {
     public static @Nullable Vec3 trace(Level level, Entity viewer, Vec3 eye, Vec3 look, double depth) {
         BlockHitResult hit = level.clip(new ClipContext(eye, eye.add(look.scale(RANGE)), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, viewer));
         if (hit.getType() == HitResult.Type.BLOCK) {
-            if (level.getBlockState(hit.getBlockPos()).is(BrightestDayBlocks.HARD_LIGHT)) return null;
             return hit.getLocation().add(hit.getDirection().getUnitVec3().scale(0.5));
         }
         return eye.add(look.scale(Double.isNaN(depth) ? DEFAULT_DEPTH : depth));
@@ -51,6 +49,23 @@ public final class SculptGeometry {
         for (double u = -half + STEP * 0.5; u < half; u += STEP) {
             out.add(BlockPos.containing(point.x + right.x * u, y + 0.5, point.z + right.z * u));
         }
+    }
+
+    public static void patch(Vec3 point, int y, int width, Set<BlockPos> out) {
+        int low = -(width - 1) / 2;
+        for (int dx = low; dx < low + width; dx++) {
+            for (int dz = low; dz < low + width; dz++) {
+                out.add(BlockPos.containing(point.x + dx, y + 0.5, point.z + dz));
+            }
+        }
+    }
+
+    public static @Nullable Vec3 onPlane(Vec3 eye, Vec3 look, int y) {
+        double plane = y + 0.5;
+        if (Math.abs(look.y) < 1.0E-4) return null;
+        double t = (plane - eye.y) / look.y;
+        if (t <= 0.0 || t > RANGE) return null;
+        return eye.add(look.scale(t));
     }
 
     public static int tubeHeight(int width) {

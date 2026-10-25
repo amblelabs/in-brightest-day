@@ -131,7 +131,8 @@ public final class PowerWheel {
             SculptShape.FREEFORM, Items.FEATHER,
             SculptShape.STAIRS, Items.OAK_STAIRS,
             SculptShape.TUBE, Items.HOPPER,
-            SculptShape.CAGE, Items.IRON_BARS
+            SculptShape.CAGE, Items.IRON_BARS,
+            SculptShape.FLOOR, Items.SMOOTH_STONE_SLAB
     );
     private static final List<Group> GROUPS = List.of(
             new Group("construct_group.brightestday.attacks", Items.BLAZE_ROD, List.of("blast", "swarm_missiles", "piercing_lance", "chain_bolt", "boomerang_disc", "rapid_barrage", "nova_burst", "ground_slam", "plasma_burst", "crystal_prison", "gravity_ball", "gravity_repulsor")),

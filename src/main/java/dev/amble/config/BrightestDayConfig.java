@@ -72,9 +72,9 @@ public class BrightestDayConfig extends Config {
     @ValidatedInt.Restrict(min = 0, max = 20)
     public int sculptBlockCost = 1;
     @ValidatedInt.Restrict(min = 1, max = 65536, type = ValidatedNumber.WidgetType.TEXTBOX)
-    public int sculptMaxBlocks = 4096;
+    public int sculptMaxBlocks = 16384;
     @ValidatedInt.Restrict(min = 1, max = 262144, type = ValidatedNumber.WidgetType.TEXTBOX)
-    public int sculptMaxTotalBlocks = 16384;
+    public int sculptMaxTotalBlocks = 65536;
     @ValidatedInt.Restrict(min = 1, max = 65536, type = ValidatedNumber.WidgetType.TEXTBOX)
     @ConfigGroup.Pop
     public int sculptBlocksPerUpkeep = 128;

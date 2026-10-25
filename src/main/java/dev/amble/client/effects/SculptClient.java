@@ -126,7 +126,8 @@ public final class SculptClient {
 
                 float partialTicks = client.getDeltaTracker().getGameTimeDeltaPartialTick(false);
                 Set<BlockPos> cells = new LinkedHashSet<>();
-                SculptGeometry.ribbon(point, Mth.floor(point.y), SculptGeometry.flatDirection(player.getViewYRot(partialTicks)), width, cells);
+                if (shape == SculptShape.FLOOR) SculptGeometry.patch(point, Mth.floor(point.y), width, cells);
+                else SculptGeometry.ribbon(point, Mth.floor(point.y), SculptGeometry.flatDirection(player.getViewYRot(partialTicks)), width, cells);
                 WallEffects.submitPreview(context, camera, cells, color, PREVIEW_ALPHA);
             }
         }
