@@ -5,24 +5,29 @@ import com.mojang.renderpearl.api.pipeline.RenderPipeline;
 import dev.amble.BrightestDay;
 import dev.amble.client.effects.attacks.utility.OreProbeRenderTypes;
 import dev.amble.client.flight.FlightRenderTypes;
+import dev.amble.client.render.FrostedGlass;
 import net.fabricmc.loader.api.FabricLoader;
 import org.jspecify.annotations.Nullable;
 
-import java.lang.reflect.Field;
 import java.lang.invoke.*;
 import java.lang.reflect.Method;
 import java.util.function.BooleanSupplier;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public final class IrisCompat {
 
-    private static final Supplier<Class<?>> IRIS_API = Suppliers.memoize(() -> getIrisClass("IrisApi"));
+    private static final Supplier<Class<?>> IRIS_API = Suppliers.memoize(() -> getIrisApiClass("IrisApi"));
     private static final String IRIS = "iris";
+
+    private static <T> Class<? extends T> getIrisApiClass(String name) {
+        return getIrisClass("api.v0." + name);
+    }
 
     @SuppressWarnings("unchecked")
     private static <T> Class<? extends T> getIrisClass(String name) {
         try {
-            return (Class<? extends T>) Class.forName("net.irisshaders.iris.api.v0." + name);
+            return (Class<? extends T>) Class.forName("net.irisshaders.iris." + name);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
@@ -36,13 +41,13 @@ public final class IrisCompat {
             Class<?> apiClass = IRIS_API.get();
             api = apiClass.getMethod("getInstance").invoke(null);
 
-            Class<? extends Enum> program = getIrisClass("IrisProgram");
+            Class<? extends Enum> program = getIrisApiClass("IrisProgram");
             Method assign = apiClass.getMethod("assignPipeline", RenderPipeline.class, program);
 
             Enum<?> basic = Enum.valueOf(program, "BASIC");
             for (RenderPipeline pipeline : FlightRenderTypes.pipelines()) assign.invoke(api, pipeline, basic);
             for (RenderPipeline pipeline : OreProbeRenderTypes.pipelines()) assign.invoke(api, pipeline, basic);
-            for (RenderPipeline pipeline : FrostedGlass.pipelines()) assign.invoke(instance, pipeline, basic);
+            for (RenderPipeline pipeline : FrostedGlass.pipelines()) assign.invoke(api, pipeline, basic);
 
             MethodHandles.Lookup baseLookup = MethodHandles.lookup();
             MethodHandles.Lookup privateLookup = MethodHandles.privateLookupIn(apiClass, baseLookup);
@@ -61,6 +66,8 @@ public final class IrisCompat {
 
             Predicate<Object> shaderPackInUsePredicate = (Predicate<Object>) callSite.getTarget().invokeExact();
             shaderPackInUse = () -> shaderPackInUsePredicate.test(api);
+
+            bypass = privateLookup.findStaticVarHandle(getIrisClass("vertices.ImmediateState"), "bypass", boolean.class);
         } catch (Throwable exception) {
             BrightestDay.LOGGER.warn("Couldn't register construct render pipelines with Iris; constructs may be invisible with shaders", exception);
         }
@@ -74,20 +81,11 @@ public final class IrisCompat {
         return shaderPackInUse != null && shaderPackInUse.getAsBoolean();
     }
 
-    private static @Nullable Field bypass;
-    private static boolean bypassMissing;
+    private static @Nullable VarHandle bypass;
 
+    // TODO(rewrite): should use API directly
     public static boolean bypass(boolean value) {
-        if (bypassMissing || !FabricLoader.getInstance().isModLoaded(IRIS)) return false;
-        try {
-            if (bypass == null) bypass = Class.forName("net.irisshaders.iris.vertices.ImmediateState").getField("bypass");
-            boolean previous = bypass.getBoolean(null);
-            bypass.setBoolean(null, value);
-            return previous;
-        } catch (ReflectiveOperationException | RuntimeException exception) {
-            bypassMissing = true;
-            return false;
-        }
+        return bypass != null && (boolean) bypass.getAndSet(value);
     }
 
     private IrisCompat() {}
