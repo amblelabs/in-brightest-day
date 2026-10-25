@@ -627,6 +627,7 @@ public final class FlightAnimator {
         Motion motion = MOTIONS.get(player);
         if (motion == null) return 0.0F;
         float bank = Mth.lerp(partialTicks, motion.oRoll, motion.roll) * CAMERA_ROLL_SCALE * Mth.lerp(partialTicks, motion.oFlight, motion.flight);
+        if (!Minecraft.getInstance().options.getCameraType().isFirstPerson()) return bank;
         return bank + Mth.lerp(partialTicks, motion.oSpin, motion.spin);
     }
 
