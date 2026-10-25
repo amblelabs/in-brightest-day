@@ -67,6 +67,7 @@ public final class HandEffects {
     }
 
     private static final Map<HandPose, List<Cell>> SHAPES = new ConcurrentHashMap<>();
+    private static final int SHAPE_CACHE = 256;
     private static final List<Hand> HANDS = new ArrayList<>();
 
     private static final class Hand {
@@ -262,7 +263,12 @@ public final class HandEffects {
     }
 
     public static List<Cell> shape(HandPose pose) {
-        return SHAPES.computeIfAbsent(pose, HandEffects::build);
+        List<Cell> cached = SHAPES.get(pose);
+        if (cached != null) return cached;
+        if (SHAPES.size() >= SHAPE_CACHE) SHAPES.clear();
+        List<Cell> built = build(pose);
+        SHAPES.put(pose, built);
+        return built;
     }
 
     private static List<Cell> build(HandPose pose) {

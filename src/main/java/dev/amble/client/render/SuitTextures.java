@@ -21,6 +21,8 @@ import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -52,6 +54,8 @@ final class SuitTextures {
     private static final Map<String, Optional<int[]>> SUITS = new HashMap<>();
     private static final Map<Identifier, Optional<Skin>> SKINS = new HashMap<>();
     private static final Map<Integer, float[]> THRESHOLDS = new HashMap<>();
+    private static final Deque<Integer> FREE_SLOTS = new ArrayDeque<>();
+    private static int nextSlot;
     private static float @Nullable [] maskThresholds;
 
     static @Nullable Entry update(int id, PlayerSkin playerSkin, LanternCorps corps, String style, HumanoidArm ringArm, int maskOffset, MaskLayer maskLayer, float maskProgress, float progress, int color,
@@ -76,7 +80,7 @@ final class SuitTextures {
             entry = null;
         }
         if (entry == null) {
-            entry = new Entry(id, skin.size);
+            entry = new Entry(claimSlot(), skin.size);
             ENTRIES.put(id, entry);
         }
         if (!key.equals(entry.key)) {
@@ -85,6 +89,11 @@ final class SuitTextures {
                     eyes, key.eyeStep / (float) STEPS, eyeColor, key.flashStep / (float) STEPS);
         }
         return entry;
+    }
+
+    private static int claimSlot() {
+        Integer slot = FREE_SLOTS.pollFirst();
+        return slot != null ? slot : nextSlot++;
     }
 
     static void release(int id) {
@@ -96,6 +105,8 @@ final class SuitTextures {
     static void clear() {
         ENTRIES.values().forEach(Entry::close);
         ENTRIES.clear();
+        FREE_SLOTS.clear();
+        nextSlot = 0;
         SUITS.clear();
         SKINS.clear();
         SuitStyles.clear();
@@ -366,16 +377,18 @@ final class SuitTextures {
         final Identifier bodyId;
         final Identifier glowId;
         final Identifier flareId;
+        final int slot;
         final int size;
         final DynamicTexture body;
         final DynamicTexture glow;
         final DynamicTexture flare;
         @Nullable Key key;
 
-        private Entry(int id, int size) {
-            this.bodyId = BrightestDay.id("suit/" + id);
-            this.glowId = BrightestDay.id("suit_glow/" + id);
-            this.flareId = BrightestDay.id("eye_flare/" + id);
+        private Entry(int slot, int size) {
+            this.slot = slot;
+            this.bodyId = BrightestDay.id("suit/" + slot);
+            this.glowId = BrightestDay.id("suit_glow/" + slot);
+            this.flareId = BrightestDay.id("eye_flare/" + slot);
             this.size = size;
             this.body = new DynamicTexture(this.bodyId::toString, size, size, true);
             this.glow = new DynamicTexture(this.glowId::toString, size, size, true);
@@ -392,6 +405,7 @@ final class SuitTextures {
             textures.release(this.glowId);
             textures.release(this.flareId);
             EyeFlareRenderTypes.forget(this.flareId);
+            FREE_SLOTS.addLast(this.slot);
         }
     }
 
