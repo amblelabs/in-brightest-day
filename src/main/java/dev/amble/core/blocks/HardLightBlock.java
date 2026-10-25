@@ -9,6 +9,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.ScheduledTickAccess;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.BaseFireBlock;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.SimpleWaterloggedBlock;
@@ -30,7 +31,12 @@ public class HardLightBlock extends Block implements SimpleWaterloggedBlock {
     }
 
     public static boolean canReplace(BlockState state) {
-        return state.isAir() || state.is(Blocks.WATER) || state.is(Blocks.BUBBLE_COLUMN);
+        return state.isAir() || state.is(Blocks.WATER) || state.is(Blocks.BUBBLE_COLUMN) || cover(state);
+    }
+
+    public static boolean cover(BlockState state) {
+        return state.canBeReplaced() && state.getFluidState().isEmpty() && !state.hasBlockEntity()
+                && !state.hasProperty(BlockStateProperties.DOUBLE_BLOCK_HALF) && !(state.getBlock() instanceof BaseFireBlock);
     }
 
     public static BlockState stateFor(Block block, BlockState replaced) {

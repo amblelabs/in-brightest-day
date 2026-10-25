@@ -99,6 +99,8 @@ public final class ShieldEffects {
 
     private record ShellCell(int x, int y, int z, int faces, int outer, float nx, float ny, float nz) {}
 
+    public record Hard(Vec3 center, float half, int color, int faces, int drawn) {}
+
     public record Oriented(Vec3 center, Vec3 ax, Vec3 ay, Vec3 az, int color, int faces) {}
 
     public static void init() {
@@ -157,6 +159,31 @@ public final class ShieldEffects {
             if (scale <= 0.01F) continue;
 
             submitShell(context, camera, center, radius * scale, radius, time, shield.color, 1.0F);
+        }
+    }
+
+    public static void submitHardLight(LevelRenderContext context, Vec3 camera, List<Hard> cells, float alpha, float rimWidth, float fillStrength) {
+        if (cells.isEmpty()) return;
+        if (FrostedGlass.ready()) context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FrostedGlass.GLASS,
+                (pose, buffer) -> drawHard(pose, buffer, camera, cells, alpha, 0.0F, FrostedGlass.FROST_ALPHA, true, false));
+        if (VisualQuality.glow()) context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.GLOW,
+                (pose, buffer) -> drawHard(pose, buffer, camera, cells, GLOW_PASS * alpha, rimWidth * RIM_GLOW_WIDTH, GLOW_FILL_STRENGTH, true, true));
+        context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.glass(),
+                (pose, buffer) -> drawHard(pose, buffer, camera, cells, alpha, rimWidth, fillStrength, true, true));
+    }
+
+    private static void drawHard(PoseStack.Pose pose, VertexConsumer buffer, Vec3 camera, List<Hard> cells, float alpha, float rimWidth, float fillStrength, boolean fill, boolean rims) {
+        int fillAlpha = Math.round(Mth.clamp(fillStrength * alpha, 0.0F, 1.0F) * 255);
+        int rimAlpha = Math.round(Mth.clamp(RIM_ALPHA * alpha, 0.0F, 1.0F) * 255);
+        for (Hard cell : cells) {
+            float x = (float) (cell.center().x - camera.x);
+            float y = (float) (cell.center().y - camera.y);
+            float z = (float) (cell.center().z - camera.z);
+            float distance = Mth.sqrt(x * x + y * y + z * z);
+            int body = VoxelRenderer.nearFade(distance, ARGB.color(fillAlpha, cell.color()));
+            int rim = VoxelRenderer.nearFade(distance, ARGB.color(rimAlpha, VoxelRenderer.toWhite(cell.color(), RIM_WHITE)));
+            boolean frost = fill && !rims;
+            VoxelRenderer.glassBox(pose, buffer, x, y, z, cell.half(), body, rim, rimWidth, rims ? cell.faces() : 0, cell.drawn(), fill, frost, frost ? VoxelRenderer.FRESNEL_FROST : VoxelRenderer.FRESNEL_GLASS);
         }
     }
 

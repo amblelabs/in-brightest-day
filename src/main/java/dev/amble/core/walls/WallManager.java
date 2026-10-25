@@ -16,6 +16,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jspecify.annotations.Nullable;
 
@@ -42,6 +43,7 @@ public final class WallManager {
         final int id;
         final ServerLevel level;
         final List<BlockPos> cells;
+        final Map<BlockPos, BlockState> covered;
         final UUID caster;
         final int casterId;
         final int color;
@@ -50,10 +52,11 @@ public final class WallManager {
         final Set<ServerPlayer> watchers = Collections.newSetFromMap(new WeakHashMap<>());
         int age;
 
-        Wall(int id, ServerLevel level, List<BlockPos> cells, ServerPlayer caster, int color, boolean sustained) {
+        Wall(int id, ServerLevel level, List<BlockPos> cells, Map<BlockPos, BlockState> covered, ServerPlayer caster, int color, boolean sustained) {
             this.id = id;
             this.level = level;
             this.cells = cells;
+            this.covered = covered;
             this.caster = caster.getUUID();
             this.casterId = caster.getId();
             this.color = color;
@@ -78,15 +81,18 @@ public final class WallManager {
 
     private static @Nullable Wall place(ServerLevel level, List<BlockPos> candidates, int color, ServerPlayer caster, boolean sustained) {
         List<BlockPos> placed = new ArrayList<>();
+        Map<BlockPos, BlockState> covered = new HashMap<>();
         for (BlockPos pos : candidates) {
             BlockState replaced = level.getBlockState(pos);
             if (!HardLightBlock.canReplace(replaced) || !level.mayInteract(caster, pos)) continue;
-            level.setBlock(pos, HardLightBlock.stateFor(BrightestDayBlocks.HARD_LIGHT, replaced), 3);
-            placed.add(pos.immutable());
+            BlockPos cell = pos.immutable();
+            if (HardLightBlock.cover(replaced)) covered.put(cell, replaced);
+            level.setBlock(cell, HardLightBlock.stateFor(BrightestDayBlocks.HARD_LIGHT, replaced), Block.UPDATE_ALL);
+            placed.add(cell);
         }
         if (placed.isEmpty()) return null;
 
-        Wall wall = new Wall(nextId++, level, placed, caster, color, sustained);
+        Wall wall = new Wall(nextId++, level, placed, covered, caster, color, sustained);
         WALLS.add(wall);
         OWNED.computeIfAbsent(level, key -> new HashSet<>()).addAll(placed);
         syncWatchers(wall);
@@ -157,7 +163,10 @@ public final class WallManager {
         Set<BlockPos> owned = OWNED.get(wall.level);
         if (owned != null) wall.cells.forEach(owned::remove);
         for (BlockPos pos : wall.cells) {
-            if (wall.level.getBlockState(pos).is(BrightestDayBlocks.HARD_LIGHT)) wall.level.removeBlock(pos, false);
+            if (!wall.level.getBlockState(pos).is(BrightestDayBlocks.HARD_LIGHT)) continue;
+            BlockState original = wall.covered.get(pos);
+            if (original != null && original.canSurvive(wall.level, pos)) wall.level.setBlock(pos, original, Block.UPDATE_ALL);
+            else wall.level.removeBlock(pos, false);
         }
         for (ServerPlayer player : wall.watchers) {
             if (!player.hasDisconnected()) ServerPlayNetworking.send(player, new WallRemoveS2CPayload(wall.id));
