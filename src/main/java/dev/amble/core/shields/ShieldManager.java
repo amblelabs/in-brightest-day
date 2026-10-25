@@ -13,6 +13,9 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
+import dev.amble.core.items.PowerRingItem;
+import dev.amble.core.walls.WallManager;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -40,6 +43,8 @@ import java.util.WeakHashMap;
 public final class ShieldManager {
     public static final int ENTITY_SHIELD_TICKS = 200;
     public static final int AREA_SHIELD_TICKS = 300;
+    public static final int NO_EXPIRY = -1;
+    private static final int AREA_DRAIN_PER_SECOND = 3;
     public static final int EXPAND_TICKS = 8;
     private static final float ENTITY_SHIELD_STRENGTH = 20.0F;
     private static final float ENTITY_SHIELD_PADDING = 0.35F;
@@ -64,6 +69,7 @@ public final class ShieldManager {
         final Set<ServerPlayer> watchers = Collections.newSetFromMap(new WeakHashMap<>());
         float strength;
         int age;
+        int barrier = -1;
 
         Shield(int id, ServerLevel level, @Nullable Entity target, Vec3 center, float radius, float scale, UUID caster, int color, int duration, float strength) {
             this.id = id;
@@ -132,17 +138,19 @@ public final class ShieldManager {
     }
 
     public static void shieldArea(ServerLevel level, Vec3 center, float radius, int color, ServerPlayer caster) {
-        Shield shield = new Shield(nextId++, level, null, center, radius, 1.0F, caster.getUUID(), color, AREA_SHIELD_TICKS, 0.0F);
+        Shield shield = new Shield(nextId++, level, null, center, radius, 1.0F, caster.getUUID(), color, NO_EXPIRY, 0.0F);
+        shield.barrier = WallManager.raiseHidden(level, shellBlocks(center, radius), color, caster);
         SHIELDS.add(shield);
         syncWatchers(shield);
     }
 
     private static void tick(MinecraftServer server) {
+        if (server.getTickCount() % 20 == 0) drainAreas(server);
         Iterator<Shield> iterator = SHIELDS.iterator();
         while (iterator.hasNext()) {
             Shield shield = iterator.next();
             boolean targetGone = shield.target != null && (shield.target.isRemoved() || !shield.target.isAlive());
-            if (++shield.age >= shield.duration || targetGone) {
+            if (++shield.age >= shield.duration && shield.duration != NO_EXPIRY || targetGone) {
                 iterator.remove();
                 forget(shield);
                 continue;
@@ -150,6 +158,40 @@ public final class ShieldManager {
             syncWatchers(shield);
             barrier(shield);
         }
+    }
+
+    private static void drainAreas(MinecraftServer server) {
+        List<UUID> broke = new ArrayList<>();
+        for (Shield shield : SHIELDS) {
+            if (shield.target != null || shield.duration != NO_EXPIRY) continue;
+            ServerPlayer caster = server.getPlayerList().getPlayer(shield.caster);
+            if (caster == null || caster.hasInfiniteMaterials()) continue;
+            if (!PowerRingItem.drainWorn(caster, AREA_DRAIN_PER_SECOND)) broke.add(shield.caster);
+        }
+        broke.forEach(ShieldManager::dismissAll);
+    }
+
+    private static List<BlockPos> shellBlocks(Vec3 center, float radius) {
+        List<BlockPos> cells = new ArrayList<>();
+        double limit = radius * radius;
+        BlockPos origin = BlockPos.containing(center);
+        int reach = Mth.ceil(radius) + 1;
+        for (int x = -reach; x <= reach; x++) {
+            for (int y = -reach; y <= reach; y++) {
+                for (int z = -reach; z <= reach; z++) {
+                    BlockPos pos = origin.offset(x, y, z);
+                    if (!within(pos, center, limit)) continue;
+                    if (within(pos.above(), center, limit) && within(pos.below(), center, limit) && within(pos.north(), center, limit)
+                            && within(pos.south(), center, limit) && within(pos.east(), center, limit) && within(pos.west(), center, limit)) continue;
+                    cells.add(pos);
+                }
+            }
+        }
+        return cells;
+    }
+
+    private static boolean within(BlockPos pos, Vec3 center, double limit) {
+        return Vec3.atCenterOf(pos).distanceToSqr(center) <= limit;
     }
 
     private static void barrier(Shield shield) {
@@ -238,6 +280,7 @@ public final class ShieldManager {
         });
     }
 
+
     public static long latestCreatedAt(UUID caster) {
         return SHIELDS.stream().filter(shield -> shield.caster.equals(caster)).mapToLong(shield -> shield.createdAt).max().orElse(Long.MIN_VALUE);
     }
@@ -271,6 +314,10 @@ public final class ShieldManager {
     }
 
     private static void forget(Shield shield) {
+        if (shield.barrier >= 0) {
+            WallManager.remove(shield.barrier, false);
+            shield.barrier = -1;
+        }
         for (ServerPlayer player : shield.watchers) {
             if (!player.hasDisconnected()) ServerPlayNetworking.send(player, new ShieldRemoveS2CPayload(shield.id));
         }

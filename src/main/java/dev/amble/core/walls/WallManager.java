@@ -17,6 +17,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jspecify.annotations.Nullable;
 
@@ -48,6 +50,7 @@ public final class WallManager {
         final int casterId;
         final int color;
         final boolean sustained;
+        boolean hidden;
         final long createdAt;
         final Set<ServerPlayer> watchers = Collections.newSetFromMap(new WeakHashMap<>());
         int age;
@@ -74,12 +77,25 @@ public final class WallManager {
         return place(level, candidates, color, caster, false) != null;
     }
 
+    public static int raiseHidden(ServerLevel level, List<BlockPos> candidates, int color, ServerPlayer caster) {
+        List<BlockPos> clear = new ArrayList<>();
+        for (BlockPos pos : candidates) {
+            if (level.getEntities((Entity) null, new AABB(pos), entity -> !entity.isSpectator()).isEmpty()) clear.add(pos);
+        }
+        Wall wall = place(level, clear, color, caster, true, true);
+        return wall == null ? -1 : wall.id;
+    }
+
     public static int raiseSustained(ServerLevel level, List<BlockPos> candidates, int color, ServerPlayer caster) {
         Wall wall = place(level, candidates, color, caster, true);
         return wall == null ? -1 : wall.id;
     }
 
     private static @Nullable Wall place(ServerLevel level, List<BlockPos> candidates, int color, ServerPlayer caster, boolean sustained) {
+        return place(level, candidates, color, caster, sustained, false);
+    }
+
+    private static @Nullable Wall place(ServerLevel level, List<BlockPos> candidates, int color, ServerPlayer caster, boolean sustained, boolean hidden) {
         List<BlockPos> placed = new ArrayList<>();
         Map<BlockPos, BlockState> covered = new HashMap<>();
         for (BlockPos pos : candidates) {
@@ -93,6 +109,7 @@ public final class WallManager {
         if (placed.isEmpty()) return null;
 
         Wall wall = new Wall(nextId++, level, placed, covered, caster, color, sustained);
+        wall.hidden = hidden;
         WALLS.add(wall);
         OWNED.computeIfAbsent(level, key -> new HashSet<>()).addAll(placed);
         syncWatchers(wall);
@@ -179,6 +196,7 @@ public final class WallManager {
     }
 
     private static void syncWatchers(Wall wall) {
+        if (wall.hidden) return;
         Set<ServerPlayer> tracking = new HashSet<>(PlayerLookup.tracking(wall.level, wall.cells.getFirst()));
         for (ServerPlayer player : tracking) {
             if (wall.watchers.add(player)) {

@@ -130,7 +130,7 @@ public final class ShieldEffects {
                 continue;
             }
             shield.age++;
-            if (shield.fade < 0 && shield.age > shield.duration + 20) shield.fade = 0;
+            if (shield.fade < 0 && shield.duration >= 0 && shield.age > shield.duration + 20) shield.fade = 0;
             if (shield.fade >= 0 && ++shield.fade > FADE_TICKS) iterator.remove();
         }
     }
