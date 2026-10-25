@@ -38,6 +38,7 @@ import dev.amble.core.poses.Poses;
 import dev.amble.core.visuals.Insignia;
 import dev.amble.core.ringpowers.constructs.ConstructTools;
 import dev.amble.core.ringpowers.constructs.ConstructDismissal;
+import dev.amble.core.walls.HardLightDamage;
 import dev.amble.core.walls.WallManager;
 import dev.amble.core.sculpt.SculptManager;
 import dev.amble.core.ringpowers.RingJumpstart;
@@ -134,6 +135,7 @@ public class BrightestDay implements ModInitializer {
 		ConstructTools.init();
 		ConstructDismissal.init();
 		WallManager.init();
+		HardLightDamage.init();
 		SculptManager.init();
 		RingJumpstart.init();
 		AcidManager.init();

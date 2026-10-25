@@ -59,6 +59,7 @@ import dev.amble.client.effects.PoseAnimations;
 import dev.amble.client.effects.InsigniaEffects;
 import dev.amble.client.poses.PoseLibrary;
 import dev.amble.client.effects.CompassEffects;
+import dev.amble.client.effects.HardLightCracks;
 import dev.amble.client.effects.WallEffects;
 import dev.amble.client.effects.BatteryEffects;
 import dev.amble.client.effects.LanternChargeAnimations;
@@ -134,6 +135,7 @@ public class BrightestDayClient implements ClientModInitializer {
         BlastEffects.init();
         ShieldEffects.init();
         WallEffects.init();
+        HardLightCracks.init();
         BatteryEffects.init();
         SanctuaryEffects.init();
         BloodHuntClient.init();

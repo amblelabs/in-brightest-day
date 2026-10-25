@@ -36,6 +36,7 @@ public final class WallEffects {
 
     private static final Map<Integer, ClientWall> WALLS = new HashMap<>();
     private static boolean fusionDirty;
+    private static int crackVersion;
     private static final int TERRAIN_REFRESH = 20;
 
     private static final class ClientWall {
@@ -121,7 +122,12 @@ public final class WallEffects {
         if (client.level == null) return;
         float partialTicks = client.getDeltaTracker().getGameTimeDeltaPartialTick(false);
         Vec3 camera = context.levelState().cameraRenderState.pos;
+        if (crackVersion != HardLightCracks.version()) {
+            crackVersion = HardLightCracks.version();
+            fusionDirty = true;
+        }
         if (fusionDirty) fuse();
+        List<HardLightCracks.Crack> cracks = new ArrayList<>();
 
         for (ClientWall wall : WALLS.values()) {
             float time = wall.age + partialTicks;
@@ -139,22 +145,30 @@ public final class WallEffects {
                 if (scale <= 0.01F) continue;
 
                 BlockPos pos = wall.cells.get(i);
+                int stage = HardLightCracks.stage(pos);
+                if (stage >= HardLightCracks.BROKEN) continue;
                 int tint = VoxelRenderer.toWhite(color, 0.08F + 0.1F * Mth.sin(time * 0.1F + (pos.getX() + pos.getY() + pos.getZ()) * 0.45F));
                 int faces = settled ? wall.faces[i] : VoxelRenderer.ALL_FACES;
                 int drawn = settled ? wall.drawn[i] : VoxelRenderer.ALL_FACES;
                 if (drawn == 0) continue;
                 float half = settled ? 0.5F : CELL_HALF * scale;
-                cells.add(new ShieldEffects.Hard(Vec3.atCenterOf(pos), half, tint, faces, drawn));
+                cells.add(new ShieldEffects.Hard(Vec3.atCenterOf(pos), half, HardLightCracks.darken(tint, stage), faces, drawn));
+                if (stage > 0) cracks.add(new HardLightCracks.Crack(Vec3.atCenterOf(pos), half, drawn, stage, HardLightCracks.seed(pos)));
             }
             ShieldEffects.submitHardLight(context, camera, cells, CELL_ALPHA, VoxelRenderer.PIXEL, ShieldEffects.HARD_LIGHT_FILL, ShieldEffects.opacityOf(client.level.getEntity(wall.casterId)));
         }
+        HardLightCracks.submit(context, camera, cracks, 1.0F);
     }
 
     private static void fuse() {
         fusionDirty = false;
         Map<Integer, Set<BlockPos>> byCaster = new HashMap<>();
         for (ClientWall wall : WALLS.values()) {
-            if (wall.settled) byCaster.computeIfAbsent(wall.casterId, id -> new HashSet<>()).addAll(wall.members);
+            if (!wall.settled) continue;
+            Set<BlockPos> fused = byCaster.computeIfAbsent(wall.casterId, id -> new HashSet<>());
+            for (BlockPos pos : wall.members) {
+                if (!HardLightCracks.broken(pos)) fused.add(pos);
+            }
         }
         ClientLevel level = Minecraft.getInstance().level;
         for (ClientWall wall : WALLS.values()) {
@@ -168,6 +182,8 @@ public final class WallEffects {
             int[] drawn = new int[faces.length];
             for (int i = 0; i < faces.length; i++) {
                 BlockPos pos = wall.cells.get(i);
+                int stage = HardLightCracks.stage(pos);
+                if (stage >= HardLightCracks.BROKEN) continue;
                 faces[i] = openFaces(fused, pos);
                 drawn[i] = level == null ? faces[i] : faces[i] & ~buried(level, pos);
             }

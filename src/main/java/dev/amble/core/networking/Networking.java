@@ -107,6 +107,7 @@ import dev.amble.core.networking.payloads.s2c.CompassS2CPayload;
 import dev.amble.core.networking.payloads.s2c.TurretBoltS2CPayload;
 import dev.amble.core.networking.payloads.s2c.TurretS2CPayload;
 import dev.amble.core.networking.payloads.s2c.WallRemoveS2CPayload;
+import dev.amble.core.networking.payloads.s2c.HardLightCracksS2CPayload;
 import dev.amble.core.networking.payloads.s2c.WallSpawnS2CPayload;
 import dev.amble.core.networking.payloads.s2c.WhipS2CPayload;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
@@ -157,6 +158,7 @@ public class Networking {
         PayloadTypeRegistry.clientboundPlay().register(ScanS2CPayload.TYPE, ScanS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(WallSpawnS2CPayload.TYPE, WallSpawnS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(WallRemoveS2CPayload.TYPE, WallRemoveS2CPayload.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(HardLightCracksS2CPayload.TYPE, HardLightCracksS2CPayload.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(ScanStartS2CPayload.TYPE, ScanStartS2CPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(ScanC2SPayload.TYPE, ScanC2SPayload.CODEC);
         PayloadTypeRegistry.serverboundPlay().register(ForgeC2SPayload.TYPE, ForgeC2SPayload.CODEC);

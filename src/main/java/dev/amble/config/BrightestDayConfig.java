@@ -68,6 +68,19 @@ public class BrightestDayConfig extends Config {
     @ConfigGroup.Pop
     public int wallDrainPerSecond = 1;
 
+    public ConfigGroup hardLight = new ConfigGroup("hardLight");
+    @ValidatedFloat.Restrict(min = 1.0F, max = 1000.0F)
+    public float hardLightHealth = 60.0F;
+    @ValidatedFloat.Restrict(min = 0.0F, max = 100.0F)
+    public float hardLightExplosionDamage = 12.0F;
+    @ValidatedInt.Restrict(min = 0, max = 1200)
+    public int hardLightMendDelay = 100;
+    @ValidatedFloat.Restrict(min = 0.0F, max = 1000.0F)
+    public float hardLightMendPerSecond = 10.0F;
+    @ValidatedFloat.Restrict(min = 0.05F, max = 1.0F)
+    @ConfigGroup.Pop
+    public float domeShatterFraction = 0.35F;
+
     public ConfigGroup sculpt = new ConfigGroup("sculpt");
     @ValidatedInt.Restrict(min = 0, max = 20)
     public int sculptBlockCost = 1;

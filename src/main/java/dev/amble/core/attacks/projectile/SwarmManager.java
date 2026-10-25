@@ -1,5 +1,6 @@
 package dev.amble.core.attacks.projectile;
 
+import dev.amble.core.walls.HardLightDamage;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.networking.payloads.s2c.SwarmS2CPayload;
 import dev.amble.core.team.RingTargets;
@@ -177,6 +178,7 @@ public final class SwarmManager {
 
         dart.position = to;
         boolean spent = dart.target == null && dart.position.distanceTo(volley.origin) > config.swarmRange;
+        if (blockHit.getType() == HitResult.Type.BLOCK) HardLightDamage.hit(level, blockHit, config.swarmDamage, owner);
         if (blockHit.getType() == HitResult.Type.BLOCK || spent || volley.age >= MAX_AGE) {
             pop(level, dart.position);
             return true;

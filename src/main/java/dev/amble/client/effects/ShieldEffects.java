@@ -15,6 +15,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.util.ARGB;
 import net.minecraft.util.Mth;
@@ -164,7 +165,7 @@ public final class ShieldEffects {
             if (shield.fade >= 0) scale *= 1.0F - Mth.clamp((shield.fade + partialTicks) / FADE_TICKS, 0.0F, 1.0F);
             if (scale <= 0.01F) continue;
 
-            submitShell(context, camera, center, radius * scale, radius, time, shield.color, 1.0F, opacityOf(client.level.getEntity(shield.casterId)));
+            submitShell(context, camera, center, radius * scale, radius, time, shield.color, 1.0F, opacityOf(client.level.getEntity(shield.casterId)), shield.entityId == ShieldSpawnS2CPayload.NO_ENTITY);
         }
     }
 
@@ -283,29 +284,34 @@ public final class ShieldEffects {
     }
 
     public static void submitShell(LevelRenderContext context, Vec3 camera, Vec3 center, float radius, float layoutRadius, float time, int color, float alpha, float opacity) {
+        submitShell(context, camera, center, radius, layoutRadius, time, color, alpha, opacity, false);
+    }
+
+    public static void submitShell(LevelRenderContext context, Vec3 camera, Vec3 center, float radius, float layoutRadius, float time, int color, float alpha, float opacity, boolean breakable) {
         float cell = shellCell(layoutRadius);
         List<ShellCell> cells = shellCells(layoutRadius, cell);
+        int @Nullable [] stages = breakable && HardLightCracks.any() ? stages(cells, center, layoutRadius) : null;
         float step = cell * radius / layoutRadius;
         float rim = step * SHELL_RIM;
         float cx = (float) (center.x - camera.x);
         float cy = (float) (center.y - camera.y);
         float cz = (float) (center.z - camera.z);
         if (FrostedGlass.ready()) context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FrostedGlass.GLASS,
-                (pose, buffer) -> drawShell(pose, buffer, cells, cell, cx, cy, cz, step, rim, time, color, alpha, frost(opacity), true, false));
+                (pose, buffer) -> drawShell(pose, buffer, cells, stages, cell, cx, cy, cz, step, rim, time, color, alpha, frost(opacity), true, false, false));
         if (VisualQuality.glow()) context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.GLOW_UNSORTED,
-                (pose, buffer) -> drawShell(pose, buffer, cells, cell, cx, cy, cz, step, rim * RIM_GLOW_WIDTH, time, color, GLOW_PASS * alpha, GLOW_FILL_STRENGTH * opacity, true, true));
+                (pose, buffer) -> drawShell(pose, buffer, cells, stages, cell, cx, cy, cz, step, rim * RIM_GLOW_WIDTH, time, color, GLOW_PASS * alpha, GLOW_FILL_STRENGTH * opacity, true, true, false));
         context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.glassUnsorted(),
-                (pose, buffer) -> drawShell(pose, buffer, cells, cell, cx, cy, cz, step, rim, time, color, alpha, fill(GLASS_FILL_ALPHA, opacity), true, true));
+                (pose, buffer) -> drawShell(pose, buffer, cells, stages, cell, cx, cy, cz, step, rim, time, color, alpha, fill(GLASS_FILL_ALPHA, opacity), true, true, stages != null));
     }
 
-    private static void drawShell(PoseStack.Pose pose, VertexConsumer buffer, List<ShellCell> cells, float cell, float cx, float cy, float cz, float step, float rimWidth,
-                                  float time, int color, float alpha, float fillStrength, boolean fill, boolean rims) {
+    private static void drawShell(PoseStack.Pose pose, VertexConsumer buffer, List<ShellCell> cells, int @Nullable [] stages, float cell, float cx, float cy, float cz, float step, float rimWidth,
+                                  float time, int color, float alpha, float fillStrength, boolean fill, boolean rims, boolean etch) {
         if (!PROFILE_SHELLS) {
-            emitShell(pose, buffer, cells, cell, cx, cy, cz, step, rimWidth, time, color, alpha, fillStrength, fill, rims);
+            emitShell(pose, buffer, cells, stages, cell, cx, cy, cz, step, rimWidth, time, color, alpha, fillStrength, fill, rims, etch);
             return;
         }
         long start = System.nanoTime();
-        int quads = emitShell(pose, buffer, cells, cell, cx, cy, cz, step, rimWidth, time, color, alpha, fillStrength, fill, rims);
+        int quads = emitShell(pose, buffer, cells, stages, cell, cx, cy, cz, step, rimWidth, time, color, alpha, fillStrength, fill, rims, etch);
         profiledNanos += System.nanoTime() - start;
         profiledQuads += quads;
         if (++profiledPasses >= PROFILE_PASSES) {
@@ -316,8 +322,8 @@ public final class ShieldEffects {
         }
     }
 
-    private static int emitShell(PoseStack.Pose pose, VertexConsumer buffer, List<ShellCell> cells, float cell, float cx, float cy, float cz, float step, float rimWidth,
-                                  float time, int color, float alpha, float fillStrength, boolean fill, boolean rims) {
+    private static int emitShell(PoseStack.Pose pose, VertexConsumer buffer, List<ShellCell> cells, int @Nullable [] stages, float cell, float cx, float cy, float cz, float step, float rimWidth,
+                                  float time, int color, float alpha, float fillStrength, boolean fill, boolean rims, boolean etch) {
         int fillAlpha = Math.round(Mth.clamp(fillStrength * alpha, 0.0F, 1.0F) * 255);
         int rimAlpha = Math.round(Mth.clamp(RIM_ALPHA * alpha, 0.0F, 1.0F) * 255);
         int rimColor = VoxelRenderer.toWhite(color, RIM_WHITE);
@@ -328,7 +334,10 @@ public final class ShieldEffects {
         float breath = 1.0F + SHELL_WARBLE * Mth.sin(waveA) + SHELL_WARBLE * 0.8F * Mth.sin(waveB);
         boolean frost = fill && !rims;
         int quads = 0;
-        for (ShellCell shell : cells) {
+        for (int i = 0; i < cells.size(); i++) {
+            ShellCell shell = cells.get(i);
+            int stage = stages == null ? 0 : stages[i];
+            if (stage >= HardLightCracks.BROKEN) continue;
             int drawn = fill ? shell.faces() : shell.faces() & shell.outer();
             if (drawn == 0) continue;
             float warble = breath;
@@ -338,14 +347,28 @@ public final class ShieldEffects {
             float z = cz + shell.z() * spacing;
             float distance = Mth.sqrt(x * x + y * y + z * z);
             float ripple = 0.5F + 0.3F * Mth.sin(waveA * 1.6F + shell.ny() * 6.0F + shell.nx() * 4.0F) + 0.2F * Mth.sin(waveB * 1.3F + shell.nz() * 5.0F - shell.nx() * 3.0F);
-            int tint = VoxelRenderer.toWhite(color, 0.05F + SHELL_RIPPLE_WHITE * ripple + 0.05F * Mth.sin(tintWave + (shell.x() + shell.y() + shell.z()) * tintStep));
+            int tint = HardLightCracks.darken(VoxelRenderer.toWhite(color, 0.05F + SHELL_RIPPLE_WHITE * ripple + 0.05F * Mth.sin(tintWave + (shell.x() + shell.y() + shell.z()) * tintStep)), stage);
             int body = VoxelRenderer.nearFade(distance, ARGB.color(Math.round(Mth.clamp(fillAlpha * (1.0F - SHELL_RIPPLE_DENSITY + 2.0F * SHELL_RIPPLE_DENSITY * ripple), 0.0F, 255.0F)), tint));
             int rim = VoxelRenderer.nearFade(distance, ARGB.color(rimAlpha, rimColor));
             quads += VoxelRenderer.glassBox(pose, buffer, x, y, z, spacing * 0.5F, body, rim, rimWidth, rims ? shell.faces() : 0, drawn, fill, frost, frost ? VoxelRenderer.FRESNEL_FROST : VoxelRenderer.FRESNEL_GLASS);
+            if (etch && stage > 0) {
+                HardLightCracks.draw(pose, buffer, x, y, z, spacing * 0.5F, drawn & shell.outer(), stage, pack(shell.x(), shell.y(), shell.z()) * 0x9E3779B97F4A7C15L, HardLightCracks.lineColor(stage, alpha));
+            }
         }
         return quads;
     }
 
+    private static int[] stages(List<ShellCell> cells, Vec3 center, float radius) {
+        int[] stages = new int[cells.size()];
+        double depth = Math.max(radius - 0.5, 0.0);
+        BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+        for (int i = 0; i < stages.length; i++) {
+            ShellCell shell = cells.get(i);
+            pos.set(Mth.floor(center.x + shell.nx() * depth), Mth.floor(center.y + shell.ny() * depth), Mth.floor(center.z + shell.nz() * depth));
+            stages[i] = HardLightCracks.stage(pos);
+        }
+        return stages;
+    }
 
     private static float shellCell(float layoutRadius) {
         float cell = Math.max(SHELL_MIN_CELL, layoutRadius * SHELL_CELL_PER_RADIUS) / Mth.sqrt(VisualQuality.level());

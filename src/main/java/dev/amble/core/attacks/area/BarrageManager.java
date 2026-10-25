@@ -1,5 +1,6 @@
 package dev.amble.core.attacks.area;
 
+import dev.amble.core.walls.HardLightDamage;
 import dev.amble.core.mannequin.Mannequins;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.team.RingDamage;
@@ -118,6 +119,8 @@ public final class BarrageManager {
             target.push(direction.scale(PUSH));
             target.needsSync = true;
             level.playSound(null, end.x, end.y, end.z, SoundEvents.AMETHYST_BLOCK_HIT, SoundSource.PLAYERS, 0.8F, 1.6F + random.nextFloat() * 0.3F);
+        } else if (hit) {
+            HardLightDamage.hit(level, blockHit, config.barrageDamage, player);
         }
 
         level.playSound(null, player.getX(), player.getEyeY(), player.getZ(), SoundEvents.AMETHYST_CLUSTER_HIT, SoundSource.PLAYERS, 0.7F, 1.7F + random.nextFloat() * 0.3F);

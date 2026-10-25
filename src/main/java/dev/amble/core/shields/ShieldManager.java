@@ -1,5 +1,6 @@
 package dev.amble.core.shields;
 
+import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.mannequin.Mannequins;
 import dev.amble.core.progression.Milestone;
 import dev.amble.core.progression.Trigger;
@@ -51,6 +52,7 @@ public final class ShieldManager {
     private static final float ENTITY_SHIELD_SCALE = 1.15F;
     private static final double DEFLECT_DAMPING = 0.6;
     private static final double BARRIER_PUSH = 0.45;
+    private static final double BREACH_REACH = 1.5;
 
     private static final List<Shield> SHIELDS = new ArrayList<>();
     private static int nextId;
@@ -155,6 +157,11 @@ public final class ShieldManager {
                 forget(shield);
                 continue;
             }
+            if (shattered(shield)) {
+                iterator.remove();
+                dismissed(shield);
+                continue;
+            }
             syncWatchers(shield);
             barrier(shield);
         }
@@ -208,8 +215,8 @@ public final class ShieldManager {
 
             if (entity instanceof Projectile projectile) {
                 if (shield.target != null && projectile.getOwner() == shield.target) continue;
-                if (distance <= radius + 0.3 && previousDistance > radius - 0.3) deflect(projectile, center);
-            } else if (shield.target == null && entity instanceof LivingEntity && previousDistance >= radius && distance < radius) {
+                if (distance <= radius + 0.3 && previousDistance > radius - 0.3 && !breached(shield, center, position)) deflect(projectile, center);
+            } else if (shield.target == null && entity instanceof LivingEntity && previousDistance >= radius && distance < radius && !breached(shield, center, position)) {
                 Vec3 outward = position.subtract(center);
                 outward = outward.lengthSqr() < 1.0E-4 ? new Vec3(0.0, 1.0, 0.0) : outward.normalize();
                 entity.setDeltaMovement(outward.scale(BARRIER_PUSH));
@@ -218,6 +225,18 @@ public final class ShieldManager {
         }
     }
 
+
+    private static boolean breached(Shield shield, Vec3 center, Vec3 position) {
+        if (shield.barrier < 0) return false;
+        Vec3 outward = position.subtract(center);
+        if (outward.lengthSqr() < 1.0E-4) return false;
+        Vec3 crossing = center.add(outward.normalize().scale(shield.radius - 0.5));
+        return WallManager.breached(shield.barrier, crossing, BREACH_REACH);
+    }
+
+    private static boolean shattered(Shield shield) {
+        return shield.barrier >= 0 && shield.age % 10 == 0 && WallManager.brokenFraction(shield.barrier) >= BrightestDayConfig.get().domeShatterFraction;
+    }
     private static void deflect(Projectile projectile, Vec3 center) {
         Vec3 velocity = projectile.getDeltaMovement();
         Vec3 normal = projectile.position().subtract(center);
@@ -270,6 +289,7 @@ public final class ShieldManager {
             if (shield.watchers.add(player)) {
                 int entityId = shield.target != null ? shield.target.getId() : ShieldSpawnS2CPayload.NO_ENTITY;
                 ServerPlayNetworking.send(player, new ShieldSpawnS2CPayload(shield.id, entityId, shield.center(), shield.target != null ? shield.scale : shield.radius, shield.color, shield.duration, shield.age, casterId(shield)));
+                if (shield.barrier >= 0) WallManager.sendCracks(shield.barrier, player);
             }
         }
 
@@ -279,7 +299,6 @@ public final class ShieldManager {
             return gone;
         });
     }
-
 
     private static int casterId(Shield shield) {
         ServerPlayer caster = shield.level.getServer().getPlayerList().getPlayer(shield.caster);

@@ -1251,6 +1251,17 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("brightestday.server.healBeamDrainPerSecond.desc", "Ring charge drained per second while the healing beam is active.");
         builder.add("brightestday.server.wallDrainPerSecond", "Wall Upkeep");
         builder.add("brightestday.server.wallDrainPerSecond.desc", "Ring charge each standing wall drains from its maker per second. Walls stand until dismissed or the ring runs dry.");
+        builder.add("brightestday.server.hardLight", "Hard Light Damage");
+        builder.add("brightestday.server.hardLightHealth", "Block Toughness");
+        builder.add("brightestday.server.hardLightHealth.desc", "Damage a single hard light block soaks up from enemy beams, blasts and projectiles before it shatters.");
+        builder.add("brightestday.server.hardLightExplosionDamage", "Explosion Damage");
+        builder.add("brightestday.server.hardLightExplosionDamage.desc", "Damage per point of explosion power dealt to hard light at the centre of a blast, fading toward its edge.");
+        builder.add("brightestday.server.hardLightMendDelay", "Mend Delay");
+        builder.add("brightestday.server.hardLightMendDelay.desc", "Ticks a cracked block must go untouched before its cracks start to fade.");
+        builder.add("brightestday.server.hardLightMendPerSecond", "Mend Rate");
+        builder.add("brightestday.server.hardLightMendPerSecond.desc", "Damage a cracked block recovers each second once it starts mending. Shattered blocks stay broken.");
+        builder.add("brightestday.server.domeShatterFraction", "Dome Shatter Point");
+        builder.add("brightestday.server.domeShatterFraction.desc", "Fraction of a Dome Shield's shell that must be broken through before the whole dome collapses.");
         builder.add("brightestday.server.sculptBlockCost", "Block Cost");
         builder.add("brightestday.server.sculptBlockCost.desc", "Ring charge spent for each block placed while sculpting.");
         builder.add("brightestday.server.sculptMaxBlocks", "Max Blocks per Sculpture");
