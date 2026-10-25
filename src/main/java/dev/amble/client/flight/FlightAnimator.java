@@ -8,6 +8,9 @@ import com.zigythebird.playeranimcore.animation.layered.modifier.AdjustmentModif
 import com.zigythebird.playeranimcore.math.Vec3f;
 import dev.amble.core.ringpowers.impl.FlightRingPower;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import dev.amble.core.networking.payloads.c2s.LandingC2SPayload;
+import dev.amble.core.networking.payloads.s2c.LandingS2CPayload;
 import net.fabricmc.fabric.api.client.rendering.v1.FabricRenderState;
 import net.fabricmc.fabric.api.client.rendering.v1.RenderStateDataKey;
 import net.minecraft.client.Minecraft;
@@ -139,6 +142,9 @@ public final class FlightAnimator {
 
     public static void init() {
         ClientTickEvents.END_CLIENT_TICK.register(FlightAnimator::tick);
+        ClientPlayNetworking.registerGlobalReceiver(LandingS2CPayload.TYPE, (payload, context) -> {
+            if (context.client().level != null && context.client().level.getEntity(payload.playerId()) instanceof Player player) remoteLand(player, payload.pose(), payload.strength());
+        });
     }
 
     private static void tick(Minecraft client) {
@@ -163,7 +169,7 @@ public final class FlightAnimator {
 
         motion.landingTicks = airborne ? 0 : motion.landingTicks + 1;
         double drop = motion.peakY - player.getY();
-        boolean landed = player.onGround() && drop >= LAND_MIN_DROP && (motion.phase == Phase.FALL && motion.descent >= FALL_LAND_SPEED
+        boolean landed = player == client.player && player.onGround() && drop >= LAND_MIN_DROP && (motion.phase == Phase.FALL && motion.descent >= FALL_LAND_SPEED
                 || (motion.phase == Phase.HOVER || motion.phase == Phase.FLIGHT) && motion.descent >= DIVE_LAND_SPEED);
         motion.peakY = player.onGround() ? player.getY() : Math.max(motion.peakY, player.getY());
         if (landed) motion.impact = motion.descent;
@@ -339,23 +345,40 @@ public final class FlightAnimator {
         Motion motion = MOTIONS.computeIfAbsent(player, key -> new Motion());
         motion.peakY = player.getY();
         motion.descent = 0.0F;
-        land(player, controller, motion, false);
+        play(controller, motion, (int) Long.remainderUnsigned(roll(player) >>> 16, FlightAnimations.HERO_LANDINGS.size()));
+    }
+
+    public static void remoteLand(Player player, int pose, float strength) {
+        PlayerAnimationController controller = FlightAnimations.controller(player);
+        if (controller == null) return;
+        Motion motion = MOTIONS.computeIfAbsent(player, key -> new Motion());
+        motion.peakY = player.getY();
+        motion.descent = 0.0F;
+        play(controller, motion, pose);
+        impact(player, strength);
+    }
+
+    private static long roll(Player player) {
+        return scramble(player.getUUID().getLeastSignificantBits() ^ player.blockPosition().asLong() * 31L ^ player.level().getGameTime() / 10L);
     }
 
     private static void land(Player player, PlayerAnimationController controller, Motion motion) {
-        land(player, controller, motion, true);
+        long roll = roll(player);
+        int pose = Long.remainderUnsigned(roll, FACE_PLANT_ODDS) == 0 ? -1 : (int) Long.remainderUnsigned(roll >>> 16, FlightAnimations.HERO_LANDINGS.size());
+        float strength = Mth.clamp((motion.impact - FALL_LAND_SPEED) / (FULL_IMPACT - FALL_LAND_SPEED), 0.0F, 1.0F);
+        play(controller, motion, pose);
+        impact(player, strength);
+        if (ClientPlayNetworking.canSend(LandingC2SPayload.TYPE)) ClientPlayNetworking.send(new LandingC2SPayload(pose, strength));
     }
 
-    private static void land(Player player, PlayerAnimationController controller, Motion motion, boolean natural) {
-        long roll = scramble(player.getUUID().getLeastSignificantBits() ^ player.blockPosition().asLong() * 31L ^ player.level().getGameTime() / 10L);
-        boolean facePlant = natural && Long.remainderUnsigned(roll, FACE_PLANT_ODDS) == 0;
-        Identifier pose = facePlant ? FlightAnimations.FACE_PLANT : FlightAnimations.HERO_LANDINGS.get((int) Long.remainderUnsigned(roll >>> 16, FlightAnimations.HERO_LANDINGS.size()));
-        FlightAnimations.land(controller, pose);
+    private static void play(PlayerAnimationController controller, Motion motion, int pose) {
+        boolean facePlant = pose < 0;
+        Identifier id = facePlant ? FlightAnimations.FACE_PLANT : FlightAnimations.HERO_LANDINGS.get(Mth.clamp(pose, 0, FlightAnimations.HERO_LANDINGS.size() - 1));
+        FlightAnimations.land(controller, id);
         FlightAnimations.setSpeed(controller, 1.0F);
         motion.phase = Phase.LAND;
         motion.landTicks = 0;
         motion.landHold = facePlant ? FACE_PLANT_HOLD : LAND_HOLD;
-        if (natural) impact(player, Mth.clamp((motion.impact - FALL_LAND_SPEED) / (FULL_IMPACT - FALL_LAND_SPEED), 0.0F, 1.0F));
     }
 
     private static void impact(Player player, float strength) {
