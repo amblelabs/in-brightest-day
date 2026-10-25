@@ -589,6 +589,7 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("brightestday.server.teamMaxSize.desc", "The most lanterns that can share one team.");
         builder.add("gui.brightestday.brightness", "Brightness: %s");
         builder.add("gui.brightestday.saturation", "Saturation: %s");
+        builder.add("gui.brightestday.opacity", "Opacity: %s");
         builder.add("gui.brightestday.aura", "Aura");
         builder.add("gui.brightestday.trail.on", "Flight Trail: On");
         builder.add("gui.brightestday.trail.off", "Flight Trail: Off");
@@ -733,9 +734,10 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add(SculptShape.STAIRS.translationKey(), "Stairs");
         builder.add(SculptShape.TUBE.translationKey(), "Tube");
         builder.add(SculptShape.CAGE.translationKey(), "Cage");
+        builder.add(SculptShape.FLOOR.translationKey(), "Floor");
         builder.add("message.brightestday.sculpt_shape", "%s shape: %s");
         builder.add("message.brightestday.sculpt_limit", "Your construct is at its limit.");
-        builder.add("message.brightestday.sculpt_cage_too_small", "Circle an area to raise a cage.");
+        builder.add("message.brightestday.sculpt_cage_too_small", "Circle around what you want to cage.");
         builder.add("message.brightestday.sculpt_fading", "Your ring can't hold your constructs together!");
         builder.add("hud.brightestday.sculpt_width", "Width: %s");
         builder.add("hud.brightestday.sculpt_hint", "Sneak + Scroll: shape");
@@ -926,6 +928,8 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("brightestday.client.effectsQuality.desc", "Scales how many particles and voxels ring effects draw. Lower it on weaker computers; raise it for denser effects. Below 0.5 the extra glow layer on shields is skipped.");
         builder.add("brightestday.client.maxFlightFov", "Max Flight FOV");
         builder.add("brightestday.client.maxFlightFov.desc", "The widest your field of view can stretch while flying fast, in degrees.");
+        builder.add("brightestday.client.frostedConstructs", "Frosted Construct Glass");
+        builder.add("brightestday.client.frostedConstructs.desc", "Blurs whatever is behind hard-light constructs like frosted glass. Turns itself off while a shader pack is active.");
         builder.add("brightestday.server.synergy", "Corps Synergy");
         builder.add("brightestday.server.synergyLinkRadius", "Hope/Will Range");
         builder.add("brightestday.server.synergyLinkRadius.desc", "How close Blue and Green Lanterns must be to empower each other.");
@@ -1247,6 +1251,17 @@ public class BrightestDayLanguageProvider extends FabricLanguageProvider {
         builder.add("brightestday.server.healBeamDrainPerSecond.desc", "Ring charge drained per second while the healing beam is active.");
         builder.add("brightestday.server.wallDrainPerSecond", "Wall Upkeep");
         builder.add("brightestday.server.wallDrainPerSecond.desc", "Ring charge each standing wall drains from its maker per second. Walls stand until dismissed or the ring runs dry.");
+        builder.add("brightestday.server.hardLight", "Hard Light Damage");
+        builder.add("brightestday.server.hardLightHealth", "Block Toughness");
+        builder.add("brightestday.server.hardLightHealth.desc", "Damage a single hard light block soaks up from enemy beams, blasts and projectiles before it shatters.");
+        builder.add("brightestday.server.hardLightExplosionDamage", "Explosion Damage");
+        builder.add("brightestday.server.hardLightExplosionDamage.desc", "Damage per point of explosion power dealt to hard light at the centre of a blast, fading toward its edge.");
+        builder.add("brightestday.server.hardLightMendDelay", "Mend Delay");
+        builder.add("brightestday.server.hardLightMendDelay.desc", "Ticks a cracked block must go untouched before its cracks start to fade.");
+        builder.add("brightestday.server.hardLightMendPerSecond", "Mend Rate");
+        builder.add("brightestday.server.hardLightMendPerSecond.desc", "Damage a cracked block recovers each second once it starts mending. Shattered blocks stay broken.");
+        builder.add("brightestday.server.domeShatterFraction", "Dome Shatter Point");
+        builder.add("brightestday.server.domeShatterFraction.desc", "Fraction of a Dome Shield's shell that must be broken through before the whole dome collapses.");
         builder.add("brightestday.server.sculptBlockCost", "Block Cost");
         builder.add("brightestday.server.sculptBlockCost.desc", "Ring charge spent for each block placed while sculpting.");
         builder.add("brightestday.server.sculptMaxBlocks", "Max Blocks per Sculpture");

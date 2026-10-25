@@ -20,6 +20,9 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.HitResult;
+import dev.amble.core.walls.HardLightDamage;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
@@ -76,7 +79,15 @@ public final class BeamManager {
 
             ConstructRingPower.Aim aim = ConstructRingPower.aim(player, range());
             Entity target = aim.entity();
-            if (target == null || !RingTargets.isHittable(target)) continue;
+            if (target == null) {
+                if (beam.age % DAMAGE_INTERVAL == 0) {
+                    ServerLevel level = player.level();
+                    HitResult block = level.clip(new ClipContext(aim.eye(), aim.eye().add(aim.look().scale(range())), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
+                    HardLightDamage.hit(level, block, BrightestDayConfig.get().beamDamage, player);
+                }
+                continue;
+            }
+            if (!RingTargets.isHittable(target)) continue;
 
             ServerLevel level = player.level();
             if (beam.age % DAMAGE_INTERVAL == 0) {

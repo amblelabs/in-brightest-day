@@ -8,10 +8,10 @@ import dev.amble.client.flight.FlightRenderTypes;
 import net.fabricmc.loader.api.FabricLoader;
 import org.jspecify.annotations.Nullable;
 
+import java.lang.reflect.Field;
 import java.lang.invoke.*;
 import java.lang.reflect.Method;
 import java.util.function.BooleanSupplier;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public final class IrisCompat {
@@ -42,6 +42,7 @@ public final class IrisCompat {
             Enum<?> basic = Enum.valueOf(program, "BASIC");
             for (RenderPipeline pipeline : FlightRenderTypes.pipelines()) assign.invoke(api, pipeline, basic);
             for (RenderPipeline pipeline : OreProbeRenderTypes.pipelines()) assign.invoke(api, pipeline, basic);
+            for (RenderPipeline pipeline : FrostedGlass.pipelines()) assign.invoke(instance, pipeline, basic);
 
             MethodHandles.Lookup baseLookup = MethodHandles.lookup();
             MethodHandles.Lookup privateLookup = MethodHandles.privateLookupIn(apiClass, baseLookup);
@@ -71,6 +72,22 @@ public final class IrisCompat {
     // TODO(rewrite): should use API directly
     public static boolean shadersActive() {
         return shaderPackInUse != null && shaderPackInUse.getAsBoolean();
+    }
+
+    private static @Nullable Field bypass;
+    private static boolean bypassMissing;
+
+    public static boolean bypass(boolean value) {
+        if (bypassMissing || !FabricLoader.getInstance().isModLoaded(IRIS)) return false;
+        try {
+            if (bypass == null) bypass = Class.forName("net.irisshaders.iris.vertices.ImmediateState").getField("bypass");
+            boolean previous = bypass.getBoolean(null);
+            bypass.setBoolean(null, value);
+            return previous;
+        } catch (ReflectiveOperationException | RuntimeException exception) {
+            bypassMissing = true;
+            return false;
+        }
     }
 
     private IrisCompat() {}

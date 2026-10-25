@@ -1,5 +1,6 @@
 package dev.amble.core.ringpowers.constructs;
 
+import dev.amble.core.walls.HardLightDamage;
 import dev.amble.BrightestDay;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.attacks.projectile.ProjectileTargeting;
@@ -43,6 +44,7 @@ public class PiercingLanceConstruct extends ConstructRingPower {
         Vec3 end = eye.add(look.scale(config.lanceRange));
         HitResult blockHit = level.clip(new ClipContext(eye, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player));
         if (blockHit.getType() != HitResult.Type.MISS) end = blockHit.getLocation();
+        HardLightDamage.hit(level, blockHit, config.lanceDamage, player);
 
         List<Vec3> hits = new ArrayList<>();
         for (Entity entity : ProjectileTargeting.along(player, eye, end, HIT_PADDING, Set.of())) {

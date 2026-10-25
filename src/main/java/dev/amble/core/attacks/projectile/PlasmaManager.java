@@ -1,5 +1,6 @@
 package dev.amble.core.attacks.projectile;
 
+import dev.amble.core.walls.HardLightDamage;
 import dev.amble.core.mannequin.Mannequins;
 import dev.amble.core.progression.Milestone;
 import dev.amble.core.progression.Trigger;
@@ -146,6 +147,7 @@ public final class PlasmaManager {
             }
         }
 
+        HardLightDamage.burst(level, impact, radius, damage, orb.owner);
         if (BrightestDayConfig.get().blastBreaksBlocks) ignite(level, impact, radius);
 
         level.sendParticles(new DustParticleOptions(orb.color, 4.0F), impact.x, impact.y, impact.z, 60, radius * 0.4, radius * 0.4, radius * 0.4, 0.0);

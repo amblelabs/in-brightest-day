@@ -107,8 +107,10 @@ public final class ConstructClient {
         int size = size(construct.get());
 
         if (construct.get() instanceof WallConstruct) {
-            Vec3 base = player.pick(WallConstruct.RANGE, partialTicks, false).getLocation();
-            WallEffects.submitPreview(context, camera, WallGeometry.cells(base, player.getViewYRot(partialTicks), size), color, PREVIEW_ALPHA);
+            Vec3 from = WallClient.start();
+            Vec3 here = WallClient.anchor(player, partialTicks);
+            if (from == null) from = here;
+            if (from != null) WallEffects.submitPreview(context, camera, WallGeometry.line(from, WallClient.end(from, here == null ? from : here), size), color, PREVIEW_ALPHA);
         } else if (construct.get() instanceof GravityBallConstruct) {
             Vec3 hit = player.pick(GravityBallConstruct.RANGE, partialTicks, false).getLocation();
             GravityBallEffects.preview(context, camera, GravityBallConstruct.target(hit, player.getEyePosition(partialTicks)), size, color, time, PREVIEW_ALPHA);
@@ -116,7 +118,7 @@ public final class ConstructClient {
             BulwarkEffects.preview(context, camera, player, size, color, partialTicks, PREVIEW_ALPHA);
         } else if (construct.get() instanceof AreaShieldConstruct) {
             Vec3 target = player.pick(AreaShieldConstruct.RANGE, partialTicks, false).getLocation();
-            ShieldEffects.submitShell(context, camera, target, size, size, time, color, PREVIEW_ALPHA);
+            ShieldEffects.submitShell(context, camera, target, size, size, time, color, PREVIEW_ALPHA, ShieldEffects.opacityOf(player));
         }
     }
 

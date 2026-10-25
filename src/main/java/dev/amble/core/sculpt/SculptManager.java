@@ -64,6 +64,7 @@ public final class SculptManager {
         double depth = Double.NaN;
         @Nullable Vec3 stairAnchor;
         int stairY;
+        int floorY = Integer.MIN_VALUE;
         boolean full;
 
         Session(SculptShape shape, int width, int color, Vec3 direction) {
@@ -107,11 +108,11 @@ public final class SculptManager {
         if (session == null) return;
 
         if (commit && session.shape == SculptShape.CAGE) {
-            SculptGeometry.Cage cage = SculptGeometry.cage(session.ring);
+            SculptGeometry.Cage cage = SculptGeometry.cage(player.level(), session.ring);
             if (cage == null) {
                 player.sendOverlayMessage(Component.translatable("message.brightestday.sculpt_cage_too_small"));
             } else {
-                place(player, session, new LinkedHashSet<>(SculptGeometry.dome(cage)));
+                place(player, session, new LinkedHashSet<>(SculptGeometry.dome(player.level(), cage)));
                 Vec3 center = cage.center();
                 player.level().playSound(null, center.x, center.y, center.z, SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 1.2F, 0.8F);
             }
@@ -158,7 +159,9 @@ public final class SculptManager {
     private static void draw(ServerPlayer player, Session session) {
         ServerLevel level = player.level();
         Vec3 eye = player.getEyePosition();
-        Vec3 point = SculptGeometry.trace(level, player, eye, player.getLookAngle(), session.depth);
+        Vec3 point = session.shape == SculptShape.FLOOR && session.floorY != Integer.MIN_VALUE
+                ? SculptGeometry.onPlane(eye, player.getLookAngle(), session.floorY)
+                : SculptGeometry.trace(level, player, eye, player.getLookAngle(), session.depth);
         if (point == null) return;
         if (Double.isNaN(session.depth)) session.depth = SculptGeometry.lockDepth(eye, point);
 
@@ -201,6 +204,10 @@ public final class SculptManager {
                     session.stairAnchor = point;
                 }
                 SculptGeometry.ribbon(point, session.stairY, session.direction, session.width, cells);
+            }
+            case FLOOR -> {
+                if (session.floorY == Integer.MIN_VALUE) session.floorY = Mth.floor(point.y);
+                SculptGeometry.patch(point, session.floorY, session.width, cells);
             }
             case TUBE, CAGE -> {}
         }

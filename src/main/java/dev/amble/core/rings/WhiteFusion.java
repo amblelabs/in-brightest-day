@@ -58,11 +58,13 @@ public final class WhiteFusion {
     private static final double ORBIT = 0.9;
     private static final int BASE_MINUTES = 5;
     private static final int BONUS_MINUTES = 25;
-    private static final long MINUTE_MILLIS = 60_000L;
+    private static final long MINUTE_TICKS = 1200L;
+    private static final long LEGACY_THRESHOLD = 10_000_000_000L;
+    private static final long MILLIS_PER_TICK = 50L;
     private static final long NOTICE_COOLDOWN = 100L;
     private static final int UPKEEP_FLOOR = 500;
-    private static final long SECOND_MILLIS = 1000L;
-    private static final long COLLAPSE_EXTRA_MILLIS = 2000L;
+    private static final long SECOND_TICKS = 20L;
+    private static final long COLLAPSE_EXTRA_TICKS = 40L;
     private static final List<Emotion> POSITIVE = List.of(Emotion.WILL, Emotion.HOPE, Emotion.COMPASSION, Emotion.LOVE);
     private static final Map<UUID, Boolean> UPKEPT = new HashMap<>();
 
@@ -324,7 +326,7 @@ public final class WhiteFusion {
 
         int minutes = minutes(fuser);
         UUID id = UUID.randomUUID();
-        long expires = System.currentTimeMillis() + minutes * MINUTE_MILLIS;
+        long expires = server.overworld().getGameTime() + minutes * MINUTE_TICKS;
         Map<UUID, Fused> fusions = new HashMap<>(server.overworld().getAttachedOrElse(FUSIONS, Map.of()));
         fusions.put(id, new Fused(expires, List.copyOf(returns)));
         server.overworld().setAttached(FUSIONS, Map.copyOf(fusions));
@@ -351,13 +353,32 @@ public final class WhiteFusion {
         if (fusions.isEmpty()) return;
         Map<UUID, Fused> updated = new HashMap<>(fusions);
         boolean changed = false;
+        long now = server.overworld().getGameTime();
+        Set<UUID> carried = new HashSet<>();
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            carry(BrightestDayAttachments.getRing(player), carried);
+            for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) carry(player.getInventory().getItem(slot), carried);
+        }
+        for (Map.Entry<UUID, Fused> entry : updated.entrySet()) {
+            Fused fused = entry.getValue();
+            if (fused.expires() > LEGACY_THRESHOLD) {
+                long remaining = Math.max(0L, fused.expires() - System.currentTimeMillis()) / MILLIS_PER_TICK;
+                fused = new Fused(now + remaining, fused.returns());
+                entry.setValue(fused);
+                changed = true;
+            }
+            if (!carried.contains(entry.getKey())) {
+                entry.setValue(new Fused(fused.expires() + SECOND_TICKS, fused.returns()));
+                changed = true;
+            }
+        }
         for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             BrightestDayComponents.FusedWhite data = BrightestDayAttachments.getRing(player).get(BrightestDayComponents.FUSED_WHITE);
             Fused fused = data == null ? null : updated.get(data.id());
             if (fused == null) continue;
             float positivity = positivity(player);
             boolean upkept = positivity >= UPKEEP_FLOOR;
-            long shift = upkept ? SECOND_MILLIS : positivity < Emotion.GATE ? -COLLAPSE_EXTRA_MILLIS : 0L;
+            long shift = upkept ? SECOND_TICKS : positivity < Emotion.GATE ? -COLLAPSE_EXTRA_TICKS : 0L;
             if (shift != 0L) {
                 updated.put(data.id(), new Fused(fused.expires() + shift, fused.returns()));
                 changed = true;
@@ -371,10 +392,15 @@ public final class WhiteFusion {
         if (changed) server.overworld().setAttached(FUSIONS, Map.copyOf(updated));
     }
 
+    private static void carry(ItemStack stack, Set<UUID> carried) {
+        BrightestDayComponents.FusedWhite data = stack.get(BrightestDayComponents.FUSED_WHITE);
+        if (data != null) carried.add(data.id());
+    }
+
     private static void expire(MinecraftServer server) {
         Map<UUID, Fused> fusions = server.overworld().getAttachedOrElse(FUSIONS, Map.of());
         if (fusions.isEmpty()) return;
-        long now = System.currentTimeMillis();
+        long now = server.overworld().getGameTime();
         Map<UUID, Fused> remaining = new HashMap<>(fusions);
         boolean changed = false;
         for (Map.Entry<UUID, Fused> entry : fusions.entrySet()) {

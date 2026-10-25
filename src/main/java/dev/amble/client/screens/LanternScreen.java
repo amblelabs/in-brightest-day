@@ -53,6 +53,7 @@ public class LanternScreen extends AbstractContainerScreen<LanternMenu> {
 
     private @Nullable ColorTweakSlider brightness;
     private @Nullable ColorTweakSlider saturation;
+    private @Nullable ColorTweakSlider opacity;
     private @Nullable AuraToggle aura;
     private @Nullable MaskHeightSlider maskHeight;
     private MaskLayer maskLayer = MaskLayer.AUTO;
@@ -127,9 +128,18 @@ public class LanternScreen extends AbstractContainerScreen<LanternMenu> {
         this.brightness = this.addRenderableWidget(new ColorTweakSlider(
                 this.leftPos + SLIDER_X, this.topPos + BRIGHTNESS_Y, SLIDER_WIDTH, SLIDER_HEIGHT,
                 "gui.brightestday.brightness", tweak.brightness(), -1.0F, 1.0F, value -> this.updateTweak()));
+        int half = (SLIDER_WIDTH - LAYER_GAP) / 2;
         this.saturation = this.addRenderableWidget(new ColorTweakSlider(
-                this.leftPos + SLIDER_X, this.topPos + SATURATION_Y, SLIDER_WIDTH, SLIDER_HEIGHT,
+                this.leftPos + SLIDER_X, this.topPos + SATURATION_Y, half, SLIDER_HEIGHT,
                 "gui.brightestday.saturation", tweak.saturation(), ColorTweak.MIN_SATURATION, 1.0F, value -> this.updateTweak()));
+        this.opacity = this.addRenderableWidget(new ColorTweakSlider(
+                this.leftPos + SLIDER_X + SLIDER_WIDTH - half, this.topPos + SATURATION_Y, half, SLIDER_HEIGHT,
+                "gui.brightestday.opacity", tweak.opacity(), ColorTweak.MIN_OPACITY, ColorTweak.MAX_OPACITY, value -> this.updateTweak()) {
+            @Override
+            protected void updateMessage() {
+                this.setMessage(Component.translatable("gui.brightestday.opacity", Math.round(this.tweak() * 100.0F) + "%"));
+            }
+        });
 
         this.aura = this.addRenderableWidget(new AuraToggle(
                 this.leftPos + IMAGE_WIDTH - AURA_MARGIN - AuraToggle.width(this.font), this.topPos + AURA_Y,
@@ -161,11 +171,11 @@ public class LanternScreen extends AbstractContainerScreen<LanternMenu> {
     }
 
     private void updateTweak() {
-        if (this.brightness == null || this.saturation == null || this.aura == null || this.maskHeight == null) return;
+        if (this.brightness == null || this.saturation == null || this.opacity == null || this.aura == null || this.maskHeight == null) return;
 
         ColorTweak current = BrightestDayAttachments.getColorTweak(this.minecraft.player);
         ColorTweak tweak = new ColorTweak(this.brightness.tweak(), this.saturation.tweak(), this.aura.mode() != AuraToggle.Mode.OFF, this.aura.mode() != AuraToggle.Mode.ALWAYS, current.suit(),
-                current.mask(), this.maskHeight.offset(), this.maskLayer, current.style(), current.trail());
+                current.mask(), this.maskHeight.offset(), this.maskLayer, current.style(), current.trail(), this.opacity.tweak());
         if (tweak.equals(current)) return;
 
         BrightestDayAttachments.setColorTweak(this.minecraft.player, tweak);

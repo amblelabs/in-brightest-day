@@ -132,7 +132,7 @@ public final class HandManager {
         level.playSound(null, origin.x, origin.y, origin.z, SoundEvents.PLAYER_ATTACK_STRONG, SoundSource.PLAYERS, 1.0F, 0.6F);
         level.playSound(null, origin.x, origin.y, origin.z, SoundEvents.BREEZE_SHOOT, SoundSource.PLAYERS, 0.8F, 0.7F);
 
-        HandS2CPayload payload = new HandS2CPayload(origin, direction, up, (float) reach, color, WINDUP_TICKS, TRAVEL_TICKS, impact, scale, pose);
+        HandS2CPayload payload = new HandS2CPayload(origin, direction, up, (float) reach, color, WINDUP_TICKS, TRAVEL_TICKS, impact, scale, pose, player.getId());
         ServerPlayNetworking.send(player, payload);
         for (ServerPlayer watcher : PlayerLookup.tracking(player)) {
             if (watcher != player) ServerPlayNetworking.send(watcher, payload);
