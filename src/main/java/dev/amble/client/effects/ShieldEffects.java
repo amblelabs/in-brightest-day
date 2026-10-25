@@ -2,6 +2,7 @@ package dev.amble.client.effects;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import dev.amble.BrightestDay;
 import dev.amble.client.flight.FlightRenderTypes;
 import dev.amble.core.networking.payloads.s2c.ShieldRemoveS2CPayload;
 import dev.amble.core.networking.payloads.s2c.ShieldSpawnS2CPayload;
@@ -39,20 +40,31 @@ public final class ShieldEffects {
     private static final float GLASS_ALPHA = 0.35F;
     private static final float GLOW_ALPHA = 0.22F;
     private static final float GLOW_SCALE = 1.8F;
-    private static final float GLASS_FILL_ALPHA = 0.34F;
-    public static final float HARD_LIGHT_FILL = 0.22F;
+    private static final float GLASS_FILL_ALPHA = 0.62F;
+    public static final float GLASS_FILL = GLASS_FILL_ALPHA;
+    public static final float HARD_LIGHT_FILL = 0.5F;
     private static final float SHELL_MIN_CELL = 0.25F;
     private static final float SHELL_CELL_PER_RADIUS = 0.05F;
     private static final float SHELL_AREA = 4.0F * Mth.PI * 1.3F;
     private static final float SHELL_MAX_CELLS = 9000.0F;
     private static final float SHELL_RIM = 0.12F;
     private static final float SHELL_WARBLE = 0.03F;
+    private static final float SHELL_RIPPLE_WHITE = 0.28F;
+    private static final float SHELL_RIPPLE_DENSITY = 0.2F;
     private static final int SHELL_CACHE = 32;
     private static final int SHELL_BIAS = 1 << 20;
-    private static final float RIM_ALPHA = 0.85F;
-    private static final float RIM_GLOW_ALPHA = 0.3F;
-    private static final float RIM_GLOW_WIDTH = 2.5F;
-    private static final float RIM_WHITE = 0.65F;
+    private static final boolean PROFILE_SHELLS = Boolean.getBoolean("brightestday.profileShells");
+    private static final int PROFILE_PASSES = 240;
+    private static long profiledNanos;
+    private static long profiledQuads;
+    private static int profiledPasses;
+    private static final float RIM_ALPHA = 0.55F;
+    private static final float RIM_GLOW_ALPHA = 0.12F;
+    private static final float RIM_GLOW_WIDTH = 1.6F;
+    private static final float RIM_WHITE = 0.4F;
+    private static final float GLOW_FILL = 0.18F;
+    private static final float GLOW_PASS = RIM_GLOW_ALPHA / RIM_ALPHA;
+    private static final float GLOW_FILL_STRENGTH = GLOW_FILL / GLOW_PASS;
 
     private static final Map<Integer, ClientShield> SHIELDS = new HashMap<>();
     private static final Map<Long, List<ShellCell>> SHELLS = new HashMap<>();
@@ -84,7 +96,7 @@ public final class ShieldEffects {
         }
     }
 
-    private record ShellCell(int x, int y, int z, int faces) {}
+    private record ShellCell(int x, int y, int z, int faces, int outer, float nx, float ny, float nz) {}
 
     public record Oriented(Vec3 center, Vec3 ax, Vec3 ay, Vec3 az, int color, int faces) {}
 
@@ -185,14 +197,14 @@ public final class ShieldEffects {
 
     public static void submitGlassOriented(LevelRenderContext context, Vec3 camera, List<Oriented> cubes, float alpha, float rimWidth, float fillAlpha) {
         if (VisualQuality.glow()) context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.GLOW,
-                (pose, buffer) -> drawGlass(pose, buffer, camera, cubes, RIM_GLOW_ALPHA * alpha, rimWidth * RIM_GLOW_WIDTH, fillAlpha, false));
+                (pose, buffer) -> drawGlass(pose, buffer, camera, cubes, GLOW_PASS * alpha, rimWidth * RIM_GLOW_WIDTH, GLOW_FILL_STRENGTH, true));
         context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.glass(),
                 (pose, buffer) -> drawGlass(pose, buffer, camera, cubes, alpha, rimWidth, fillAlpha, true));
     }
 
     private static void drawGlass(PoseStack.Pose pose, VertexConsumer buffer, Vec3 camera, List<Oriented> cubes, float alpha, float rimWidth, float fillStrength, boolean fill) {
         int fillAlpha = Math.round(Mth.clamp(fillStrength * alpha, 0.0F, 1.0F) * 255);
-        int rimAlpha = Math.round(Mth.clamp((fill ? RIM_ALPHA : 1.0F) * alpha, 0.0F, 1.0F) * 255);
+        int rimAlpha = Math.round(Mth.clamp(RIM_ALPHA * alpha, 0.0F, 1.0F) * 255);
         for (Oriented cube : cubes) {
             Vec3 center = cube.center().subtract(camera);
             int body = VoxelRenderer.nearFade(center, ARGB.color(fillAlpha, cube.color()));
@@ -203,26 +215,64 @@ public final class ShieldEffects {
 
     public static void submitShell(LevelRenderContext context, Vec3 camera, Vec3 center, float radius, float layoutRadius, float time, int color, float alpha) {
         float cell = shellCell(layoutRadius);
-        submitGlass(context, camera, shell(center, radius, layoutRadius, time, color), alpha, cell * radius / layoutRadius * SHELL_RIM);
-    }
-
-    public static List<Voxel> shell(Vec3 center, float radius, float layoutRadius, float time, int color) {
-        float cell = shellCell(layoutRadius);
         List<ShellCell> cells = shellCells(layoutRadius, cell);
         float step = cell * radius / layoutRadius;
-        float half = step * 0.5F;
-        List<Voxel> voxels = new ArrayList<>(cells.size());
-        for (ShellCell shell : cells) {
-            Vec3 offset = new Vec3(shell.x(), shell.y(), shell.z());
-            Vec3 direction = offset.normalize();
-            float warble = 1.0F
-                    + SHELL_WARBLE * Mth.sin(time * 0.22F + (float) direction.y * 5.0F + (float) direction.x * 3.0F)
-                    + SHELL_WARBLE * 0.8F * Mth.sin(time * 0.31F + (float) direction.z * 4.0F - (float) direction.x * 2.0F);
-            Vec3 point = center.add(offset.scale(step * warble));
-            int tint = VoxelRenderer.toWhite(color, 0.08F + 0.1F * Mth.sin(time * 0.1F + (shell.x() + shell.y() + shell.z()) * cell * 0.45F));
-            voxels.add(new Voxel(point, half * warble, tint, shell.faces()));
+        float rim = step * SHELL_RIM;
+        float cx = (float) (center.x - camera.x);
+        float cy = (float) (center.y - camera.y);
+        float cz = (float) (center.z - camera.z);
+        if (VisualQuality.glow()) context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.GLOW_UNSORTED,
+                (pose, buffer) -> drawShell(pose, buffer, cells, cell, cx, cy, cz, step, rim * RIM_GLOW_WIDTH, time, color, GLOW_PASS * alpha, GLOW_FILL_STRENGTH, true, true));
+        context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.glassUnsorted(),
+                (pose, buffer) -> drawShell(pose, buffer, cells, cell, cx, cy, cz, step, rim, time, color, alpha, GLASS_FILL_ALPHA, true, true));
+    }
+
+    private static void drawShell(PoseStack.Pose pose, VertexConsumer buffer, List<ShellCell> cells, float cell, float cx, float cy, float cz, float step, float rimWidth,
+                                  float time, int color, float alpha, float fillStrength, boolean fill, boolean rims) {
+        if (!PROFILE_SHELLS) {
+            emitShell(pose, buffer, cells, cell, cx, cy, cz, step, rimWidth, time, color, alpha, fillStrength, fill, rims);
+            return;
         }
-        return voxels;
+        long start = System.nanoTime();
+        int quads = emitShell(pose, buffer, cells, cell, cx, cy, cz, step, rimWidth, time, color, alpha, fillStrength, fill, rims);
+        profiledNanos += System.nanoTime() - start;
+        profiledQuads += quads;
+        if (++profiledPasses >= PROFILE_PASSES) {
+            BrightestDay.LOGGER.info("Dome shells: {} quads and {} us per pass over {} passes", profiledQuads / profiledPasses, profiledNanos / 1000 / profiledPasses, profiledPasses);
+            profiledNanos = 0L;
+            profiledQuads = 0L;
+            profiledPasses = 0;
+        }
+    }
+
+    private static int emitShell(PoseStack.Pose pose, VertexConsumer buffer, List<ShellCell> cells, float cell, float cx, float cy, float cz, float step, float rimWidth,
+                                  float time, int color, float alpha, float fillStrength, boolean fill, boolean rims) {
+        int fillAlpha = Math.round(Mth.clamp(fillStrength * alpha, 0.0F, 1.0F) * 255);
+        int rimAlpha = Math.round(Mth.clamp(RIM_ALPHA * alpha, 0.0F, 1.0F) * 255);
+        int rimColor = VoxelRenderer.toWhite(color, RIM_WHITE);
+        float waveA = time * 0.22F;
+        float waveB = time * 0.31F;
+        float tintWave = time * 0.1F;
+        float tintStep = cell * 0.45F;
+        float breath = 1.0F + SHELL_WARBLE * Mth.sin(waveA) + SHELL_WARBLE * 0.8F * Mth.sin(waveB);
+        boolean frost = fill && !rims;
+        int quads = 0;
+        for (ShellCell shell : cells) {
+            int drawn = fill ? shell.faces() : shell.faces() & shell.outer();
+            if (drawn == 0) continue;
+            float warble = breath;
+            float spacing = step * warble;
+            float x = cx + shell.x() * spacing;
+            float y = cy + shell.y() * spacing;
+            float z = cz + shell.z() * spacing;
+            float distance = Mth.sqrt(x * x + y * y + z * z);
+            float ripple = 0.5F + 0.3F * Mth.sin(waveA * 1.6F + shell.ny() * 6.0F + shell.nx() * 4.0F) + 0.2F * Mth.sin(waveB * 1.3F + shell.nz() * 5.0F - shell.nx() * 3.0F);
+            int tint = VoxelRenderer.toWhite(color, 0.05F + SHELL_RIPPLE_WHITE * ripple + 0.05F * Mth.sin(tintWave + (shell.x() + shell.y() + shell.z()) * tintStep));
+            int body = VoxelRenderer.nearFade(distance, ARGB.color(Math.round(Mth.clamp(fillAlpha * (1.0F - SHELL_RIPPLE_DENSITY + 2.0F * SHELL_RIPPLE_DENSITY * ripple), 0.0F, 255.0F)), tint));
+            int rim = VoxelRenderer.nearFade(distance, ARGB.color(rimAlpha, rimColor));
+            quads += VoxelRenderer.glassBox(pose, buffer, x, y, z, spacing * 0.5F, body, rim, rimWidth, rims ? shell.faces() : 0, drawn, fill, frost, frost ? VoxelRenderer.FRESNEL_FROST : VoxelRenderer.FRESNEL_GLASS);
+        }
+        return quads;
     }
 
     private static float shellCell(float layoutRadius) {
@@ -264,7 +314,12 @@ public final class ShieldEffects {
             if (!members.contains(pack(x, y, z + 1))) faces |= VoxelRenderer.SOUTH;
             if (!members.contains(pack(x - 1, y, z))) faces |= VoxelRenderer.WEST;
             if (!members.contains(pack(x + 1, y, z))) faces |= VoxelRenderer.EAST;
-            cells.add(new ShellCell(x, y, z, faces));
+            float length = Mth.sqrt(x * x + y * y + z * z);
+            float inverse = length > 0.0F ? 1.0F / length : 0.0F;
+            int outer = (x > 0 ? VoxelRenderer.EAST : x < 0 ? VoxelRenderer.WEST : 0)
+                    | (y > 0 ? VoxelRenderer.UP : y < 0 ? VoxelRenderer.DOWN : 0)
+                    | (z > 0 ? VoxelRenderer.SOUTH : z < 0 ? VoxelRenderer.NORTH : 0);
+            cells.add(new ShellCell(x, y, z, faces, outer, x * inverse, y * inverse, z * inverse));
         }
         SHELLS.put(key, cells);
         return cells;

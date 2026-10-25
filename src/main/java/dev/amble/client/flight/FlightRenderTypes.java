@@ -49,6 +49,20 @@ public final class FlightRenderTypes {
             RenderSetup.builder(GLASS_PIPELINE).setOitPipelines(RenderPipelines.OIT_DEBUG_QUADS).sortOnUpload().createRenderSetup()
     );
 
+    public static final RenderType GLOW_UNSORTED = RenderType.create(
+            "brightestday_flight_glow_unsorted",
+            RenderSetup.builder(GLOW_PIPELINE).setOitPipelines(OIT_GLOW).createRenderSetup()
+    );
+
+    private static final RenderType GLASS_UNSORTED = RenderType.create(
+            "brightestday_construct_glass_unsorted",
+            RenderSetup.builder(GLASS_PIPELINE).setOitPipelines(RenderPipelines.OIT_DEBUG_QUADS).createRenderSetup()
+    );
+
+    public static RenderType glassUnsorted() {
+        return GLASS_UNSORTED;
+    }
+
     public static RenderType glass() {
         return GLASS;
     }
