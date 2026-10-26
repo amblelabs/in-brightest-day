@@ -24,17 +24,24 @@ import java.util.Map;
 
 public final class BulwarkEffects {
     private static final float CELL = VoxelRenderer.PIXEL * 3.0F;
-    private static final float HALF = CELL * 0.46F;
+    private static final float THICKNESS = CELL * 0.46F;
+    // a touch of overlap along the arc hides the seams curvature opens on the outer face
+    private static final float SEAM_OVERLAP = 1.04F;
+    private static final float RIM = 0.12F;
     private static final int RAISE_TICKS = 4;
     private static final float SHIMMER_SPEED = 0.12F;
 
-    private record Raised(int size, int color, int age) {
+    private record Raised(int size, int color, int age, byte[] stages) {
         Raised older() {
-            return new Raised(this.size, this.color, this.age + 1);
+            return new Raised(this.size, this.color, this.age + 1, this.stages);
+        }
+
+        int stage(int cell) {
+            return cell < this.stages.length ? this.stages[cell] : 0;
         }
     }
 
-    private record Cell(double fraction, double height, float glow) {}
+    private record Cell(int column, int row, double fraction, double height, float glow) {}
 
     private record Layout(@Nullable LanternCorps corps, int columns, int rows) {}
 
@@ -49,7 +56,7 @@ public final class BulwarkEffects {
                 return;
             }
             Raised previous = RAISED.get(payload.playerId());
-            RAISED.put(payload.playerId(), new Raised(payload.size(), ARGB.opaque(payload.color()), previous == null ? 0 : previous.age()));
+            RAISED.put(payload.playerId(), new Raised(payload.size(), ARGB.opaque(payload.color()), previous == null ? 0 : previous.age(), payload.stages()));
         });
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> RAISED.clear());
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
@@ -80,35 +87,95 @@ public final class BulwarkEffects {
             float rise = Mth.clamp((raised.age() + partialTicks) / RAISE_TICKS, 0.0F, 1.0F);
             BulwarkArc arc = arc(player, raised.size(), partialTicks);
             LanternCorps corps = PowerRingItem.getWornCorps(player).orElse(null);
-            ShieldEffects.submit(context, camera, voxels(arc, corps, raised.color(), player.tickCount + partialTicks, rise), 1.0F);
+            submit(context, camera, arc, corps, raised.color(), player.tickCount + partialTicks, rise, raised, 1.0F, ShieldEffects.opacityOf(player));
         }
     }
 
     public static void preview(LevelRenderContext context, Vec3 camera, Player player, int size, int color, float partialTicks, float alpha) {
         BulwarkArc arc = arc(player, size, partialTicks);
         LanternCorps corps = PowerRingItem.getWornCorps(player).orElse(null);
-        ShieldEffects.submit(context, camera, voxels(arc, corps, color, player.tickCount + partialTicks, 1.0F), alpha);
+        submit(context, camera, arc, corps, color, player.tickCount + partialTicks, 1.0F, null, alpha, ShieldEffects.opacityOf(player));
     }
 
     private static BulwarkArc arc(Player player, int size, float partialTicks) {
         return BulwarkArc.of(player, player.getPosition(partialTicks), Mth.rotLerp(partialTicks, player.yRotO, player.getYRot()), size);
     }
 
-    private static List<ShieldEffects.Voxel> voxels(BulwarkArc arc, @Nullable LanternCorps corps, int color, float time, float rise) {
+    // fused like the dome: cells are arc-aligned slabs that drop the faces they share, so rims only trace the outline and holes
+    private static void submit(LevelRenderContext context, Vec3 camera, BulwarkArc arc, @Nullable LanternCorps corps, int color, float time, float rise,
+                               @Nullable Raised raised, float alpha, float opacity) {
         int columns = Math.max(3, Mth.ceil(arc.arcLength() / CELL));
         int rows = Math.max(3, Mth.ceil((arc.top() - arc.bottom()) / CELL));
         List<Cell> cells = LAYOUTS.computeIfAbsent(new Layout(corps, columns, rows), BulwarkEffects::layout);
 
+        int[] damageCell = new int[cells.size()];
+        boolean[] present = new boolean[columns * rows];
+        for (int k = 0; k < cells.size(); k++) {
+            Cell cell = cells.get(k);
+            damageCell[k] = raised == null ? 0 : BulwarkArc.damageCell(raised.size(), cell.fraction(), cell.height());
+            boolean broken = raised != null && raised.stage(damageCell[k]) >= HardLightCracks.BROKEN;
+            present[cell.row() * columns + cell.column()] = cell.height() <= rise && !broken;
+        }
+
+        double halfAlong = arc.radius() * arc.halfAngle() / (columns - 1) * SEAM_OVERLAP;
+        double halfUp = (arc.top() - arc.bottom()) / (rows - 1) * 0.5;
+        Vec3 up = new Vec3(0.0, halfUp, 0.0);
+        float rimWidth = (float) (Math.min(halfAlong, halfUp) * 2.0 * RIM);
         int dim = ARGB.srgbLerp(0.55F, 0xFF000000, color);
         int bright = VoxelRenderer.toWhite(color, 0.35F);
-        List<ShieldEffects.Voxel> voxels = new ArrayList<>(cells.size());
-        for (Cell cell : cells) {
-            if (cell.height() > rise) continue;
+        int damageColumns = raised == null ? 1 : BulwarkArc.damageColumns(raised.size());
+
+        List<ShieldEffects.Oriented> cubes = new ArrayList<>(cells.size());
+        List<HardLightCracks.Panel> panels = new ArrayList<>();
+        for (int k = 0; k < cells.size(); k++) {
+            Cell cell = cells.get(k);
+            int i = cell.column();
+            int j = cell.row();
+            if (!present[j * columns + i]) continue;
+            int faces = VoxelRenderer.ALL_FACES;
+            if (i > 0 && present[j * columns + i - 1]) faces &= ~VoxelRenderer.WEST;
+            if (i < columns - 1 && present[j * columns + i + 1]) faces &= ~VoxelRenderer.EAST;
+            if (j > 0 && present[(j - 1) * columns + i]) faces &= ~VoxelRenderer.DOWN;
+            if (j < rows - 1 && present[(j + 1) * columns + i]) faces &= ~VoxelRenderer.UP;
+
+            double angle = cell.fraction() * arc.halfAngle();
+            Vec3 outward = BulwarkArc.forward(arc.yaw(), angle);
+            Vec3 along = BulwarkArc.forward(arc.yaw(), angle + Math.PI * 0.5).scale(halfAlong);
+            // ax, ay, az must be right-handed, so the radial axis points inward
+            Vec3 depth = outward.scale(-THICKNESS);
+            Vec3 center = arc.point(cell.fraction(), cell.height());
+
             float shimmer = 0.85F + 0.15F * Mth.sin(time * SHIMMER_SPEED + (float) cell.fraction() * 6.0F + (float) cell.height() * 4.0F);
             int tint = ARGB.srgbLerp(Mth.clamp(cell.glow() * shimmer, 0.0F, 1.0F), dim, bright);
-            voxels.add(new ShieldEffects.Voxel(arc.point(cell.fraction(), cell.height()), HALF, tint));
+            cubes.add(new ShieldEffects.Oriented(center, along, up, depth, tint, faces));
+
+            int stage = raised == null ? 0 : raised.stage(damageCell[k]);
+            if (stage > 0 && stage < HardLightCracks.BROKEN) panels.addAll(cracks(arc, cell, center.subtract(camera), along, up, outward, columns, rows, damageColumns, stage));
         }
-        return voxels;
+
+        ShieldEffects.submitGlassOriented(context, camera, cubes, alpha, rimWidth, ShieldEffects.GLASS_FILL, opacity);
+        HardLightCracks.submitPanels(context, panels);
+    }
+
+    // both broad faces of a cell, with uvs that stretch one crack texture across the whole damage cell it belongs to
+    private static List<HardLightCracks.Panel> cracks(BulwarkArc arc, Cell cell, Vec3 center, Vec3 along, Vec3 up, Vec3 outward, int columns, int rows, int damageColumns, int stage) {
+        double du = 1.0 / (columns - 1);
+        double dv = 1.0 / (rows - 1);
+        double across = (cell.fraction() + 1.0) * 0.5;
+        float u0 = cellUv(across, across - du * 0.5, damageColumns);
+        float u1 = cellUv(across, across + du * 0.5, damageColumns);
+        float v1 = cellUv(cell.height(), cell.height() - dv * 0.5, BulwarkArc.DAMAGE_ROWS);
+        float v0 = cellUv(cell.height(), cell.height() + dv * 0.5, BulwarkArc.DAMAGE_ROWS);
+        Vec3 skin = outward.scale(THICKNESS);
+        return List.of(
+                new HardLightCracks.Panel(center.add(skin), along, up, outward, u0, v0, u1, v1, stage),
+                new HardLightCracks.Panel(center.subtract(skin), along, up, outward.scale(-1.0), u0, v0, u1, v1, stage));
+    }
+
+    // position of corner within the damage cell that owns centre, so a cell straddling a boundary doesn't wrap its texture
+    private static float cellUv(double centre, double corner, int cells) {
+        double index = Mth.clamp(Math.floor(Mth.clamp(centre, 0.0, 1.0) * cells), 0, cells - 1);
+        return (float) Mth.clamp(corner * cells - index, 0.0, 1.0);
     }
 
     private static List<Cell> layout(Layout layout) {
@@ -120,7 +187,7 @@ public final class BulwarkEffects {
             for (int j = 0; j < rows; j++) {
                 double v = rows == 1 ? 0.0 : j / (double) (rows - 1);
                 float glow = glow(layout.corps(), t, v, i, j, columns, rows);
-                if (glow >= 0.0F) cells.add(new Cell(t, v, glow));
+                if (glow >= 0.0F) cells.add(new Cell(i, j, t, v, glow));
             }
         }
         return List.copyOf(cells);

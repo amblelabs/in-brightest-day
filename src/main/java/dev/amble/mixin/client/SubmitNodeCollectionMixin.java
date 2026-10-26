@@ -57,6 +57,7 @@ public abstract class SubmitNodeCollectionMixin implements ConstructPhase.Holder
     @WrapOperation(method = "submitCustomGeometry", at = @At(value = "INVOKE",
             target = "Lnet/minecraft/client/renderer/feature/phase/SimpleFeatureRenderPhase;submit(Lnet/minecraft/client/renderer/feature/submit/SubmitNode;)V", ordinal = 1))
     private void brightestday$constructsLast(SimpleFeatureRenderPhase phase, SubmitNode node, Operation<Void> original, @Local(argsOnly = true) RenderType type) {
-        original.call(FrostedGlass.afterWater(type) ? this.brightestday$constructs : phase, node);
+        // the hand frame runs through renderAllFeatures, which only executes vanilla's phases
+        original.call(FrostedGlass.afterWater(type) && !ShaderOverlay.inHand() ? this.brightestday$constructs : phase, node);
     }
 }

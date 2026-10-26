@@ -6,7 +6,8 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 
-public record BulwarkS2CPayload(int playerId, boolean active, int size, int color) implements CustomPacketPayload {
+// stages holds one crack stage per BulwarkArc damage cell, row-major; HardLightCracksS2CPayload.BROKEN marks a hole
+public record BulwarkS2CPayload(int playerId, boolean active, int size, int color, byte[] stages) implements CustomPacketPayload {
 
     public static final Type<BulwarkS2CPayload> TYPE =
             new Type<>(BrightestDay.id("bulwark"));
@@ -17,6 +18,7 @@ public record BulwarkS2CPayload(int playerId, boolean active, int size, int colo
                     ByteBufCodecs.BOOL, BulwarkS2CPayload::active,
                     ByteBufCodecs.VAR_INT, BulwarkS2CPayload::size,
                     ByteBufCodecs.INT, BulwarkS2CPayload::color,
+                    ByteBufCodecs.BYTE_ARRAY, BulwarkS2CPayload::stages,
                     BulwarkS2CPayload::new
             );
 

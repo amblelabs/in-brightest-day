@@ -57,6 +57,10 @@ public final class ShaderOverlay {
         inHand = value;
     }
 
+    public static boolean inHand() {
+        return inHand;
+    }
+
     public static void record(RenderType type, PoseStack.Pose pose, SubmitNodeCollector.CustomGeometryRenderer renderer) {
         ENTRIES.add(new Entry(type, pose, renderer));
     }
