@@ -11,7 +11,6 @@
     "ConstructFurnaceMixin",
     "ConstructItemStackMixin",
     "EntityMixin",
-    "ExampleMixin",
     "GlideLivingEntityMixin",
     "ItemEntityMixin",
     "LivingEntityMixin",
