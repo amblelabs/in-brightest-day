@@ -20,6 +20,12 @@ public abstract class ServerGamePacketListenerImplMixin {
     @Shadow
     public ServerPlayer player;
 
+    @Shadow
+    private int lastSupportedBlocksSend;
+
+    @Shadow
+    private int tickCount;
+
     // prevents "moved too quickly!"
     @ModifyVariable(method = "handlePlayerPositionChange", at = @At(value = "STORE"), name = "metersPerTick")
     public float modifyMetersPerTick(float metersPerTick) {
@@ -35,8 +41,10 @@ public abstract class ServerGamePacketListenerImplMixin {
     // prevents "Player X standing on air - force-sending blocks below"
     @Inject(method = "forceSendPlayerSupportBlocks", at = @At("HEAD"), cancellable = true)
     public void forceSendPlayerSupportBlocks(CallbackInfo ci) {
-        if (FlightRingPower.isFlying(player))
+        if (FlightRingPower.canFly(player) && (FlightRingPower.isFlying(player) || player.isFallFlying())) {
+            this.lastSupportedBlocksSend = this.tickCount;
             ci.cancel();
+        }
     }
 
     @Inject(method = "getMaximumFlyingTicks", at = @At("HEAD"), cancellable = true)
