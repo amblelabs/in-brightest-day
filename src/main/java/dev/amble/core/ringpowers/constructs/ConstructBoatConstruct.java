@@ -12,12 +12,12 @@ public class ConstructBoatConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int useCost() {
+    public int baseCost() {
         return BrightestDayConfig.get().boatCost;
     }
 
     @Override
-    public int cooldownTicks() {
+    public int cooldownTicks(int size) {
         return 10;
     }
 

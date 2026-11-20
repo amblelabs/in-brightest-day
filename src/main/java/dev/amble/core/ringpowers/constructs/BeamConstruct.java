@@ -1,7 +1,6 @@
 package dev.amble.core.ringpowers.constructs;
 
 import dev.amble.BrightestDay;
-import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.beams.BeamManager;
 import net.minecraft.server.level.ServerPlayer;
 
@@ -13,12 +12,12 @@ public class BeamConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int useCost() {
+    public int baseCost() {
         return USE_COST;
     }
 
     @Override
-    public int cooldownTicks() {
+    public int cooldownTicks(int size) {
         return 12;
     }
 

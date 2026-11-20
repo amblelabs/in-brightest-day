@@ -15,7 +15,7 @@ public class SculptConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int useCost() {
+    public int baseCost() {
         return USE_COST;
     }
 
@@ -26,7 +26,7 @@ public class SculptConstruct extends ConstructRingPower {
 
     @Override
     public int maxSize() {
-        return 5;
+        return 12;
     }
 
     @Override
@@ -36,7 +36,7 @@ public class SculptConstruct extends ConstructRingPower {
 
     @Override
     public int empoweredMaxSize() {
-        return 7;
+        return 16;
     }
 
     @Override

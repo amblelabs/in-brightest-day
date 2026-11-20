@@ -335,7 +335,7 @@ public class HandPoseScreen extends Screen {
         float time = client.player.tickCount + client.getDeltaTracker().getGameTimeDeltaPartialTick(false);
         List<ShieldEffects.Oriented> voxels = new ArrayList<>(HandEffects.voxels(worldCenter, worldForward, worldSide, worldUp,
                 HandEffects.shape(screen.pose.sanitized()), screen.scale(), color, time, 0.0F));
-        ShieldEffects.submitGlassOriented(context, eye, voxels, 1.0F, HandEffects.rim(screen.scale()));
+        ShieldEffects.submitGlassOriented(context, eye, voxels, 1.0F, HandEffects.rim(screen.scale()), ShieldEffects.GLASS_FILL, ShieldEffects.opacityOf(client.player));
     }
 
     private static Vec3 world(Vector3fc forward, Vector3fc up, Vector3fc left, Vector3f point) {

@@ -1,5 +1,6 @@
 package dev.amble.client.wheel;
 
+import com.google.common.base.Suppliers;
 import dev.amble.BrightestDay;
 import dev.amble.client.BrightestDayKeybinds;
 import dev.amble.client.effects.InsigniaEffects;
@@ -51,9 +52,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.BooleanSupplier;
-import java.util.function.Consumer;
-import java.util.function.Function;
+import java.util.function.*;
 
 public final class PowerWheel {
     private static final double ROOT_RADIUS = 58.0;
@@ -76,89 +75,161 @@ public final class PowerWheel {
     private static final double POINTER_SPREAD = 7.0;
     private static final int TRAIL_SPACING = 5;
     public static final int HUD_MARGIN = 4;
-    private static int indicatorTop = -1;
     private static final int HUD_PADDING = 4;
 
-    private static final Map<RingPower<?>, Item> ICONS = Map.ofEntries(
-            Map.entry(RingPowerRegistry.BLAST, Items.FIRE_CHARGE),
-            Map.entry(RingPowerRegistry.BEAM, Items.END_ROD),
-            Map.entry(RingPowerRegistry.HEAL_BEAM, Items.GLISTERING_MELON_SLICE),
-            Map.entry(RingPowerRegistry.ENTITY_SHIELD, Items.HEART_OF_THE_SEA),
-            Map.entry(RingPowerRegistry.AREA_SHIELD, Items.TURTLE_HELMET),
-            Map.entry(RingPowerRegistry.BULWARK, Items.SHIELD),
-            Map.entry(RingPowerRegistry.CONSTRUCT_RING, Items.GOLD_NUGGET),
-            Map.entry(RingPowerRegistry.WALL, Items.STONE_BRICKS),
-            Map.entry(RingPowerRegistry.SCULPT, Items.AMETHYST_SHARD),
-            Map.entry(RingPowerRegistry.LIGHT_ORB, Items.GLOWSTONE),
-            Map.entry(RingPowerRegistry.DRILL, Items.DIAMOND_PICKAXE),
-            Map.entry(RingPowerRegistry.GLIDER, Items.ELYTRA),
-            Map.entry(RingPowerRegistry.GRAPPLING_HOOK, Items.TRIPWIRE_HOOK),
-            Map.entry(RingPowerRegistry.LUMBERJACK, Items.IRON_AXE),
-            Map.entry(RingPowerRegistry.BLOOD_HUNT, Items.REDSTONE),
-            Map.entry(RingPowerRegistry.MEGAPHONE, Items.GOAT_HORN),
-            Map.entry(RingPowerRegistry.CONSTRUCT_HORSE, Items.SADDLE),
-            Map.entry(RingPowerRegistry.CONSTRUCT_BOAT, Items.BIRCH_BOAT),
-            Map.entry(RingPowerRegistry.CONTAINMENT_SPHERE, Items.ENDER_PEARL),
-            Map.entry(RingPowerRegistry.MAGNET, Items.IRON_INGOT),
-            Map.entry(RingPowerRegistry.RING_COMPASS, Items.COMPASS),
-            Map.entry(RingPowerRegistry.INSIGNIA, Items.GLOW_ITEM_FRAME),
-            Map.entry(RingPowerRegistry.ORE_PROBE, Items.SPYGLASS),
-            Map.entry(RingPowerRegistry.SWARM_MISSILES, Items.FIREWORK_ROCKET),
-            Map.entry(RingPowerRegistry.PIERCING_LANCE, Items.SPECTRAL_ARROW),
-            Map.entry(RingPowerRegistry.CHAIN_BOLT, Items.TRIDENT),
-            Map.entry(RingPowerRegistry.BOOMERANG_DISC, Items.MUSIC_DISC_PIGSTEP),
-            Map.entry(RingPowerRegistry.NOVA_BURST, Items.FIREWORK_STAR),
-            Map.entry(RingPowerRegistry.GROUND_SLAM, Items.MACE),
-            Map.entry(RingPowerRegistry.RAPID_BARRAGE, Items.PRISMARINE_SHARD),
-            Map.entry(RingPowerRegistry.HAND, Items.HEAVY_CORE),
-            Map.entry(RingPowerRegistry.GRAVITY_BALL, Items.ENDER_PEARL),
-            Map.entry(RingPowerRegistry.GRAVITY_REPULSOR, Items.WIND_CHARGE),
-            Map.entry(RingPowerRegistry.ENERGY_WHIP, Items.BREEZE_ROD),
-            Map.entry(RingPowerRegistry.SENTRY_TURRET, Items.DISPENSER),
-            Map.entry(RingPowerRegistry.TOOL_FORGE, Items.ANVIL),
-            Map.entry(RingPowerRegistry.PLASMA_BURST, Items.MAGMA_CREAM),
-            Map.entry(RingPowerRegistry.CRYSTAL_PRISON, Items.AMETHYST_CLUSTER),
-            Map.entry(RingPowerRegistry.TRACTOR_BEAM, Items.LEAD),
-            Map.entry(RingPowerRegistry.SCAN, Items.SPYGLASS),
-            Map.entry(RingPowerRegistry.CONVERSION, Items.ECHO_SHARD),
-            Map.entry(RingPowerRegistry.GATHER, Items.RECOVERY_COMPASS),
-            Map.entry(RingPowerRegistry.BERSERK, Items.BLAZE_POWDER),
-            Map.entry(RingPowerRegistry.COMMS, Items.BELL),
-            Map.entry(RingPowerRegistry.CONCUSSIVE, Items.WIND_CHARGE),
-            Map.entry(RingPowerRegistry.ACID, Items.MAGMA_CREAM)
-    );
-    private static final Map<SculptShape, Item> SHAPE_ICONS = Map.of(
-            SculptShape.FREEFORM, Items.FEATHER,
-            SculptShape.STAIRS, Items.OAK_STAIRS,
-            SculptShape.TUBE, Items.HOPPER,
-            SculptShape.CAGE, Items.IRON_BARS
-    );
+    private static final Supplier<Map<RingPower<?>, ItemStack>> ICONS = Suppliers.memoize(() -> Map.ofEntries(
+            Map.entry(RingPowerRegistry.BLAST, Items.FIRE_CHARGE.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.BEAM, Items.END_ROD.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.HEAL_BEAM, Items.GLISTERING_MELON_SLICE.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.ENTITY_SHIELD, Items.HEART_OF_THE_SEA.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.AREA_SHIELD, Items.TURTLE_HELMET.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.BULWARK, Items.SHIELD.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.CONSTRUCT_RING, Items.GOLD_NUGGET.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.WALL, Items.STONE_BRICKS.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.SCULPT, Items.AMETHYST_SHARD.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.LIGHT_ORB, Items.GLOWSTONE.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.DRILL, Items.DIAMOND_PICKAXE.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.GLIDER, Items.ELYTRA.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.GRAPPLING_HOOK, Items.TRIPWIRE_HOOK.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.LUMBERJACK, Items.IRON_AXE.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.BLOOD_HUNT, Items.REDSTONE.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.MEGAPHONE, Items.GOAT_HORN.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.CONSTRUCT_HORSE, Items.SADDLE.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.CONSTRUCT_BOAT, Items.BIRCH_BOAT.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.CONTAINMENT_SPHERE, Items.ENDER_PEARL.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.MAGNET, Items.IRON_INGOT.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.RING_COMPASS, Items.COMPASS.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.INSIGNIA, Items.GLOW_ITEM_FRAME.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.ORE_PROBE, Items.SPYGLASS.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.SWARM_MISSILES, Items.FIREWORK_ROCKET.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.PIERCING_LANCE, Items.SPECTRAL_ARROW.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.CHAIN_BOLT, Items.TRIDENT.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.BOOMERANG_DISC, Items.MUSIC_DISC_PIGSTEP.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.NOVA_BURST, Items.FIREWORK_STAR.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.GROUND_SLAM, Items.MACE.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.RAPID_BARRAGE, Items.PRISMARINE_SHARD.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.HAND, Items.HEAVY_CORE.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.GRAVITY_BALL, Items.ENDER_PEARL.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.GRAVITY_REPULSOR, Items.WIND_CHARGE.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.ENERGY_WHIP, Items.BREEZE_ROD.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.SENTRY_TURRET, Items.DISPENSER.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.TOOL_FORGE, Items.ANVIL.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.PLASMA_BURST, Items.MAGMA_CREAM.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.CRYSTAL_PRISON, Items.AMETHYST_CLUSTER.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.TRACTOR_BEAM, Items.LEAD.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.SCAN, Items.SPYGLASS.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.CONVERSION, Items.ECHO_SHARD.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.GATHER, Items.RECOVERY_COMPASS.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.BERSERK, Items.BLAZE_POWDER.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.COMMS, Items.BELL.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.CONCUSSIVE, Items.WIND_CHARGE.getDefaultInstance()),
+            Map.entry(RingPowerRegistry.ACID, Items.MAGMA_CREAM.getDefaultInstance())
+    ));
+
+    private static final Supplier<Map<DrillMode, ItemStack>> DRILL_MODE_ICONS = Suppliers.memoize(() -> Map.of(
+            DrillMode.HOLD, Items.DIAMOND_PICKAXE.getDefaultInstance(),
+            DrillMode.TUNNEL, Items.DIAMOND_SHOVEL.getDefaultInstance()
+    ));
+
+    private static final Supplier<Map<SculptShape, ItemStack>> SHAPE_ICONS = Suppliers.memoize(() -> Map.of(
+            SculptShape.FREEFORM, Items.FEATHER.getDefaultInstance(),
+            SculptShape.STAIRS, Items.OAK_STAIRS.getDefaultInstance(),
+            SculptShape.TUBE, Items.HOPPER.getDefaultInstance(),
+            SculptShape.CAGE, Items.IRON_BARS.getDefaultInstance(),
+            SculptShape.FLOOR, Items.SMOOTH_STONE_SLAB.getDefaultInstance()
+    ));
+
+    private static final Supplier<ItemStack> FALLBACK_ICON = Suppliers.memoize(Items.NETHER_STAR::getDefaultInstance);
+
+    private static final Supplier<Entry> ENTRY_INSIGNIA = Suppliers.memoize(() -> new Entry(Component.translatable("gui.brightestday.style.insignia"),
+            Items.GLOW_ITEM_FRAME.getDefaultInstance(), Set.of(), _ -> ClientPlayNetworking.send(ToggleInsigniaC2SPayload.INSTANCE),
+            List.of(), InsigniaEffects::shown));
+
+    private static final Supplier<Entry> ENTRY_SUIT = Suppliers.memoize(() -> new Entry(Component.translatable("gui.brightestday.suit"),
+            Items.LEATHER_CHESTPLATE.getDefaultInstance(), Set.of(), BrightestDayKeybinds::toggleSuit, List.of(),
+            player -> BrightestDayAttachments.getColorTweak(player).suit()));
+
+    private static final Supplier<Entry> ENTRY_MASK = Suppliers.memoize(() -> new Entry(Component.translatable("gui.brightestday.mask"),
+            Items.LEATHER_HELMET.getDefaultInstance(), Set.of(), BrightestDayKeybinds::toggleMask, List.of(),
+            player -> BrightestDayAttachments.getColorTweak(player).mask()));
+
+    private static final Supplier<Entry> ENTRY_DRILLS = Suppliers.memoize(() -> {
+        ConstructRingPower construct = RingPowerRegistry.DRILL;
+        List<Sub> modes = new ArrayList<>();
+
+        for (DrillMode mode : DrillMode.values()) {
+            modes.add(new Sub(Component.translatable(mode.translationKey()), DRILL_MODE_ICONS.get().get(mode), player -> {
+                setDrillMode(mode);
+                selectConstruct(player, construct);
+            }, () -> DrillModes.client() == mode));
+        }
+
+        return new Entry(Component.translatable(construct.getTranslationKey()), icon(construct), Set.of(construct),
+                player -> selectConstruct(player, construct), modes);
+    });
+
+    private static final Supplier<Entry> ENTRY_SCULPT = Suppliers.memoize(() -> {
+        ConstructRingPower construct = RingPowerRegistry.SCULPT;
+        SculptShape[] shapes = SculptShape.values();
+        List<Sub> shapesSubs = new ArrayList<>(shapes.length);
+
+        for (SculptShape shape : SculptShape.values()) {
+            shapesSubs.add(new Sub(Component.translatable(shape.translationKey()), SHAPE_ICONS.get().get(shape), player -> {
+                SculptClient.setShape(shape);
+                selectConstruct(player, construct);
+            }, () -> SculptClient.shape() == shape));
+        }
+
+        return new Entry(Component.translatable(construct.getTranslationKey()), icon(construct), Set.of(construct),
+                player -> selectConstruct(player, construct), shapesSubs);
+    });
+
     private static final List<Group> GROUPS = List.of(
             new Group("construct_group.brightestday.attacks", Items.BLAZE_ROD, List.of("blast", "swarm_missiles", "piercing_lance", "chain_bolt", "boomerang_disc", "rapid_barrage", "nova_burst", "ground_slam", "plasma_burst", "crystal_prison", "gravity_ball", "gravity_repulsor")),
             new Group("construct_group.brightestday.weapons", Items.IRON_SWORD, List.of("energy_whip", "sentry_turret")),
             new Group("construct_group.brightestday.utility", Items.COMPASS, List.of("glider", "grappling_hook", "light_orb", "lumberjack", "ore_probe", "megaphone", "construct_horse", "construct_boat", "ring_compass", "construct_ring")),
             new Group("construct_group.brightestday.shield", Items.SHIELD, List.of("entity_shield", "area_shield", "bulwark", "containment_sphere"))
     );
-    private static final Map<DrillMode, Item> DRILL_MODE_ICONS = Map.of(
-            DrillMode.HOLD, Items.DIAMOND_PICKAXE,
-            DrillMode.TUNNEL, Items.DIAMOND_SHOVEL
-    );
-    private static final Item FALLBACK_ICON = Items.NETHER_STAR;
-    private static final Map<Item, ItemStack> STACKS = new HashMap<>();
 
     private static final PowerWheel CONSTRUCTS = new PowerWheel("construct_wheel", BrightestDayKeybinds.CYCLE_CONSTRUCT,
             PowerWheel::constructEntries, player -> ArmedRingPower.selectedConstruct(player).map(construct -> construct), PowerWheel::tapConstructs);
     private static final PowerWheel ABILITIES = new PowerWheel("ability_wheel", BrightestDayKeybinds.ABILITY_WHEEL,
             PowerWheel::abilityEntries, ArmedRingPower::selectedAbility, PowerWheel::tapAbilities);
     private static final PowerWheel STYLE = new PowerWheel("style_wheel", BrightestDayKeybinds.STYLE_WHEEL,
-            PowerWheel::styleEntries, player -> Optional.empty(), PoseAnimations::cycle);
+            PowerWheel::styleEntries, _ -> Optional.empty(), PoseAnimations::cycle);
     private static final List<PowerWheel> WHEELS = List.of(CONSTRUCTS, ABILITIES, STYLE);
 
-    private record Sub(Component name, Item icon, Runnable apply, BooleanSupplier current) {}
+    private static final Map<String, Component> COMPONENT_CACHE = new HashMap<>();
 
-    private record Entry(Component name, Item icon, Set<RingPower<?>> powers, Runnable apply, List<Sub> subs, BooleanSupplier active) {
+    private static Component t(String key) {
+        return COMPONENT_CACHE.computeIfAbsent(key, Component::translatable);
+    }
+
+    private static Component lit(String key) {
+        return COMPONENT_CACHE.computeIfAbsent(key, Component::literal);
+    }
+
+    private record Sub(Component name, ItemStack icon, Consumer<Player> apply, BooleanSupplier current) {}
+
+    private record Entry(Component name, ItemStack icon, Set<RingPower<?>> powers, Consumer<Player> apply, List<Sub> subs, Predicate<Player> active) {
+        Entry(Component name, ItemStack icon, Set<RingPower<?>> powers, Runnable apply, List<Sub> subs, Predicate<Player> active) {
+            this(name, icon, powers, _ -> apply.run(), subs, active);
+        }
+
+        Entry(Component name, ItemStack icon, Set<RingPower<?>> powers, Runnable apply, List<Sub> subs) {
+            this(name, icon, powers, apply, subs, _ -> false);
+        }
+
+        Entry(Component name, ItemStack icon, Set<RingPower<?>> powers, Consumer<Player> apply, List<Sub> subs) {
+            this(name, icon, powers, apply, subs, _ -> false);
+        }
+
         Entry(Component name, Item icon, Set<RingPower<?>> powers, Runnable apply, List<Sub> subs) {
-            this(name, icon, powers, apply, subs, () -> false);
+            this(name, icon.getDefaultInstance(), powers, apply, subs);
+        }
+
+        Entry(Component name, Item icon, Set<RingPower<?>> powers, Consumer<Player> apply, List<Sub> subs) {
+            this(name, icon.getDefaultInstance(), powers, apply, subs);
         }
 
         Optional<Sub> currentSub() {
@@ -180,6 +251,9 @@ public final class PowerWheel {
     private double travelled;
     private int hoveredEntry = -1;
     private int hoveredSub = -1;
+    private int currentEntry = -1;
+    private int currentSub = -1;
+    private ItemStack currentIcon;
     private int submenu = -1;
     private boolean backHovered;
     private float[] rootHover = new float[0];
@@ -241,49 +315,91 @@ public final class PowerWheel {
     }
 
     private boolean isCurrent(Player player, Entry entry) {
-        return entry.active().getAsBoolean() || this.selection.apply(player).map(entry.powers()::contains).orElse(false);
+        return entry.active().test(player) || this.selection.apply(player).map(entry.powers()::contains).orElse(false);
     }
 
     private void tick(Minecraft client) {
         LocalPlayer player = client.player;
-        this.entries = player == null ? List.of() : this.builder.apply(player);
-        this.validate();
 
         boolean pressed = false;
         while (this.key.consumeClick()) pressed = true;
         if (client.gui.screen() != null) pressed = false;
         boolean down = player != null && client.gui.screen() == null && this.key.isDown();
 
+        if (player == null) {
+            this.entries = List.of();
+            this.currentEntry = -1;
+            this.currentSub = -1;
+            this.currentIcon = null;
+            this.validate();
+            return;
+        }
+
         if (!this.open) {
             if (!pressed && !down) return;
-            if (player == null) return;
+            this.entries = this.builder.apply(player);
+            this.validate();
             if (this.entries.isEmpty() || !down) {
                 this.onTap.accept(player);
                 return;
             }
             if (WHEELS.stream().anyMatch(wheel -> wheel != this && wheel.open)) return;
+
             this.openWheel();
+            this.refreshCurrent(player);
             return;
         }
 
         if (down && !this.entries.isEmpty()) {
+            if (client.level != null && client.level.getGameTime() % 10 == 0) {
+                this.entries = this.builder.apply(player);
+                this.validate();
+                this.refreshCurrent(player);
+                if (this.submenu >= 0) this.currentSub = findCurrentSub(this.entries.get(this.submenu));
+            }
             this.heldTicks++;
             this.animateHover();
             return;
         }
+
         this.open = false;
+        this.currentEntry = -1;
+        this.currentSub = -1;
+        this.currentIcon = null;
         if (this.heldTicks <= TAP_TICKS && this.travelled < TAP_DISTANCE) {
-            if (player != null) this.onTap.accept(player);
+            this.onTap.accept(player);
             return;
         }
         if (this.hoveredEntry < 0 || this.hoveredEntry >= this.entries.size()) return;
 
         Entry entry = this.entries.get(this.hoveredEntry);
         if (this.submenu == this.hoveredEntry && this.hoveredSub >= 0 && this.hoveredSub < entry.subs().size()) {
-            entry.subs().get(this.hoveredSub).apply().run();
+            entry.subs().get(this.hoveredSub).apply().accept(player);
         } else if (!this.backHovered) {
-            entry.apply().run();
+            entry.apply().accept(player);
         }
+    }
+
+    private int findCurrent(LocalPlayer player) {
+        for (int i = 0; i < this.entries.size(); i++) {
+            if (this.isCurrent(player, this.entries.get(i))) return i;
+        }
+        return -1;
+    }
+
+    private int findCurrentSub(Entry entry) {
+        for (int i = 0; i < entry.subs().size(); i++) {
+            if (entry.subs().get(i).current().getAsBoolean()) return i;
+        }
+        return -1;
+    }
+
+    private void refreshCurrent(LocalPlayer player) {
+        this.currentEntry = findCurrent(player);
+        this.currentIcon = this.currentEntry < 0 ? null
+                : this.entries.get(this.currentEntry).currentSub()
+                .map(Sub::icon)
+                .orElse(this.entries.get(this.currentEntry).icon());
     }
 
     private void openWheel() {
@@ -307,10 +423,12 @@ public final class PowerWheel {
         if (this.submenu >= count || this.submenu >= 0 && this.entries.get(this.submenu).subs().size() != this.subHover.length) {
             this.submenu = -1;
             this.hoveredSub = -1;
+            this.currentSub = -1;
             this.backHovered = false;
             this.subHover = new float[0];
             this.subHoverO = new float[0];
         }
+        if (this.currentEntry >= count) this.currentEntry = -1;
         if (this.hoveredEntry >= count) this.hoveredEntry = -1;
     }
 
@@ -360,9 +478,10 @@ public final class PowerWheel {
 
     private void openSubmenu(int index) {
         this.submenu = index;
-        int subs = this.entries.get(index).subs().size();
-        this.subHover = new float[subs];
-        this.subHoverO = new float[subs];
+        Entry entry = this.entries.get(index);
+        this.subHover = new float[entry.subs().size()];
+        this.subHoverO = new float[entry.subs().size()];
+        this.currentSub = findCurrentSub(entry);
         this.hoveredSub = -1;
         this.backHovered = false;
         this.clampCursor();
@@ -433,29 +552,13 @@ public final class PowerWheel {
                     slots.put(group, built.size());
                     built.add(null);
                 }
-                members.computeIfAbsent(group, key -> new ArrayList<>()).add(construct);
+                members.computeIfAbsent(group, _ -> new ArrayList<>()).add(construct);
             } else if (construct == RingPowerRegistry.DRILL) {
-                List<Sub> modes = new ArrayList<>();
-                for (DrillMode mode : DrillMode.values()) {
-                    modes.add(new Sub(Component.translatable(mode.translationKey()), DRILL_MODE_ICONS.get(mode), () -> {
-                        setDrillMode(mode);
-                        selectConstruct(player, construct);
-                    }, () -> DrillModes.client() == mode));
-                }
-                built.add(new Entry(Component.translatable(construct.getTranslationKey()), icon(construct), Set.of(construct),
-                        () -> selectConstruct(player, construct), modes));
+                built.add(ENTRY_DRILLS.get());
             } else if (construct == RingPowerRegistry.SCULPT) {
-                List<Sub> shapes = new ArrayList<>();
-                for (SculptShape shape : SculptShape.values()) {
-                    shapes.add(new Sub(Component.translatable(shape.translationKey()), SHAPE_ICONS.get(shape), () -> {
-                        SculptClient.setShape(shape);
-                        selectConstruct(player, construct);
-                    }, () -> SculptClient.shape() == shape));
-                }
-                built.add(new Entry(Component.translatable(construct.getTranslationKey()), icon(construct), Set.of(construct),
-                        () -> selectConstruct(player, construct), shapes));
+                built.add(ENTRY_SCULPT.get());
             } else {
-                built.add(new Entry(Component.translatable(construct.getTranslationKey()), icon(construct), Set.of(construct),
+                built.add(new Entry(t(construct.getTranslationKey()), icon(construct), Set.of(construct),
                         () -> selectConstruct(player, construct), List.of()));
             }
         }
@@ -469,17 +572,17 @@ public final class PowerWheel {
         ordered.sort(Comparator.comparingInt(group::indexOf));
         List<Sub> subs = new ArrayList<>();
         for (ConstructRingPower construct : ordered) {
-            subs.add(new Sub(Component.translatable(construct.getTranslationKey()), icon(construct),
-                    () -> selectConstruct(player, construct), () -> ArmedRingPower.selectedConstruct(player).orElse(null) == construct));
+            subs.add(new Sub(t(construct.getTranslationKey()), icon(construct),
+                    _ -> selectConstruct(player, construct), () -> ArmedRingPower.selectedConstruct(player).orElse(null) == construct));
         }
         Set<RingPower<?>> powers = Set.copyOf(ordered);
         Sub first = subs.getFirst();
-        return new Entry(Component.translatable(group.key()), group.icon(), powers, () -> {
+        return new Entry(t(group.key()), group.icon(), powers, () -> {
             Optional<ConstructRingPower> current = ArmedRingPower.selectedConstruct(player);
             if (current.isPresent() && powers.contains(current.get())) {
                 selectConstruct(player, current.get());
             } else {
-                first.apply().run();
+                first.apply().accept(player);
             }
         }, List.copyOf(subs));
     }
@@ -487,7 +590,7 @@ public final class PowerWheel {
     private static List<Entry> abilityEntries(Player player) {
         List<Entry> built = new ArrayList<>();
         for (RingPower<?> ability : ArmedRingPower.abilities(player)) {
-            built.add(new Entry(Component.translatable(ability.getTranslationKey()), icon(ability), Set.of(ability),
+            built.add(new Entry(t(ability.getTranslationKey()), icon(ability), Set.of(ability),
                     () -> selectAbility(player, ability), List.of()));
         }
         return built;
@@ -501,32 +604,29 @@ public final class PowerWheel {
                 List<Sub> subs = new ArrayList<>();
                 for (int i = 0; i < poses.size(); i++) {
                     int index = i;
-                    subs.add(new Sub(Component.literal(poses.get(i).name()), Items.ARMOR_STAND, () -> PoseAnimations.strike(local, index),
+                    subs.add(new Sub(lit(poses.get(i).name()), Items.ARMOR_STAND.getDefaultInstance(), _ -> PoseAnimations.strike(local, index),
                             () -> PoseAnimations.struck(local) == index));
                 }
-                built.add(new Entry(Component.translatable("gui.brightestday.style.pose"), Items.ARMOR_STAND, Set.of(),
-                        () -> PoseAnimations.cycle(local), List.copyOf(subs), () -> PoseAnimations.pose(local) > 0));
+                built.add(new Entry(t("gui.brightestday.style.pose"), Items.ARMOR_STAND.getDefaultInstance(), Set.of(),
+                        () -> PoseAnimations.cycle(local), List.copyOf(subs), _ -> PoseAnimations.pose(local) > 0));
             }
         }
-        built.add(new Entry(Component.translatable("gui.brightestday.suit"), Items.LEATHER_CHESTPLATE, Set.of(),
-                BrightestDayKeybinds::toggleSuit, List.of(), () -> BrightestDayAttachments.getColorTweak(player).suit()));
-        built.add(new Entry(Component.translatable("gui.brightestday.mask"), Items.LEATHER_HELMET, Set.of(),
-                BrightestDayKeybinds::toggleMask, List.of(), () -> BrightestDayAttachments.getColorTweak(player).mask()));
+        built.add(ENTRY_SUIT.get());
+        built.add(ENTRY_MASK.get());
         PowerRingItem.getWornCorps(player).ifPresent(corps -> {
             List<String> styles = SuitStyles.styles(corps);
             if (styles.size() < 2) return;
             List<Sub> subs = new ArrayList<>();
             for (String style : styles) {
-                subs.add(new Sub(SuitStyles.name(style), Items.LEATHER_CHESTPLATE, () -> BrightestDayKeybinds.setSuitStyle(style),
+                subs.add(new Sub(SuitStyles.name(style), Items.LEATHER_CHESTPLATE.getDefaultInstance(), _ -> BrightestDayKeybinds.setSuitStyle(style),
                         () -> SuitStyles.resolve(corps, BrightestDayAttachments.getColorTweak(player).style()).equals(style)));
             }
-            built.add(new Entry(Component.translatable("gui.brightestday.suit_style"), Items.PAINTING, Set.of(),
+            built.add(new Entry(t("gui.brightestday.suit_style"), Items.PAINTING.getDefaultInstance(), Set.of(),
                     () -> BrightestDayKeybinds.cycleSuitStyle(styles), List.copyOf(subs),
-                    () -> SuitStyles.comic(SuitStyles.resolve(corps, BrightestDayAttachments.getColorTweak(player).style()))));
+                    _ -> SuitStyles.comic(SuitStyles.resolve(corps, BrightestDayAttachments.getColorTweak(player).style()))));
         });
         if (Insignia.available(player)) {
-            built.add(new Entry(Component.translatable("gui.brightestday.style.insignia"), Items.GLOW_ITEM_FRAME, Set.of(),
-                    () -> ClientPlayNetworking.send(ToggleInsigniaC2SPayload.INSTANCE), List.of(), () -> InsigniaEffects.shown(player)));
+            built.add(ENTRY_INSIGNIA.get());
         }
         return built;
     }
@@ -567,14 +667,9 @@ public final class PowerWheel {
         selectAbility(player, abilities.get((abilities.indexOf(current.get()) + 1) % abilities.size()));
     }
 
-    private static ItemStack stack(Item item) {
-        return STACKS.computeIfAbsent(item, ItemStack::new);
+    private static ItemStack icon(RingPower<?> power) {
+        return ICONS.get().getOrDefault(power, FALLBACK_ICON.get());
     }
-
-    private static Item icon(RingPower<?> power) {
-        return ICONS.getOrDefault(power, FALLBACK_ICON);
-    }
-
 
     private static int darken(int color, float factor) {
         return ARGB.color(255, Math.round(ARGB.red(color) * factor), Math.round(ARGB.green(color) * factor), Math.round(ARGB.blue(color) * factor));
@@ -599,8 +694,8 @@ public final class PowerWheel {
         graphics.pose().pushMatrix();
         graphics.pose().translate(centerX, centerY);
         graphics.pose().scale(0.6F + 0.4F * opening, 0.6F + 0.4F * opening);
-
         float rootFade = this.submenu >= 0 ? 0.45F : 1.0F;
+
         disc(graphics, 0, 0, (int) ROOT_RADIUS + NODE_RADIUS + 10, ARGB.color(Math.round(0x58 * opening), darken(color, 0.12F)));
         ring(graphics, 0, 0, (int) ROOT_RADIUS, 1, ARGB.color(Math.round(0x50 * rootFade * opening), color));
 
@@ -608,17 +703,27 @@ public final class PowerWheel {
             Entry entry = this.entries.get(i);
             float hover = i < this.rootHover.length ? Mth.lerp(partialTicks, this.rootHoverO[i], this.rootHover[i]) : 0.0F;
             boolean parent = i == this.submenu;
-            this.node(graphics, entry.icon(), nodeX(i, count), nodeY(i, count), parent ? 1.0F : hover, parent ? 1.0F : rootFade,
-                    this.isCurrent(player, entry), !entry.subs().isEmpty(), rootAngle(i, count), color, opening);
+            nodeBackground(graphics, nodeX(i, count), nodeY(i, count),
+                    parent ? 1.0F : hover, parent ? 1.0F : rootFade,
+                    this.currentEntry == i, !entry.subs().isEmpty(),
+                    rootAngle(i, count), color, opening);
         }
 
-        if (this.submenu >= 0) {
-            this.extractSubmenu(graphics, this.entries.get(this.submenu), partialTicks, color, opening);
-        } else {
-            this.pointer(graphics, 0.0, 0.0, ROOT_RADIUS, DEAD_ZONE, color, opening);
+        if (this.submenu >= 0) submenuBackground(graphics, this.entries.get(this.submenu), partialTicks, color, opening);
+        else pointer(graphics, 0.0, 0.0, ROOT_RADIUS, DEAD_ZONE, color, opening);
+
+        hubBackground(graphics, color, opening);
+
+        for (int i = 0; i < count; i++) {
+            Entry entry = this.entries.get(i);
+            float hover = i < this.rootHover.length ? Mth.lerp(partialTicks, this.rootHoverO[i], this.rootHover[i]) : 0.0F;
+            boolean parent = i == this.submenu;
+            nodeIcon(graphics, entry.icon(), nodeX(i, count), nodeY(i, count), parent ? 1.0F : hover);
         }
 
-        this.hub(graphics, player, color, opening);
+        if (this.submenu >= 0) submenuIcons(graphics, this.entries.get(this.submenu), partialTicks);
+
+        hubIcon(graphics, player, color, opening);
         graphics.pose().popMatrix();
 
         Component label = this.label();
@@ -629,7 +734,38 @@ public final class PowerWheel {
         }
     }
 
-    private void extractSubmenu(GuiGraphicsExtractor graphics, Entry entry, float partialTicks, int color, float opening) {
+    private void nodeBackground(GuiGraphicsExtractor graphics, double x, double y, float hover, float fade, boolean current,
+                                boolean hasSubs, double angle, int color, float opening) {
+        int cx = (int) Math.round(x);
+        int cy = (int) Math.round(y);
+        int radius = NODE_RADIUS + Math.round(NODE_GROWTH * hover);
+        int fill = ARGB.srgbLerp(hover, darken(color, 0.28F), color);
+        disc(graphics, cx, cy, radius, ARGB.color(Math.round((0xA8 + 0x40 * hover) * fade * opening), fill));
+        ring(graphics, cx, cy, radius, 1, ARGB.color(Math.round((0x60 + 0x9F * hover) * fade * opening), ARGB.srgbLerp(hover, color, 0xFFFFFFFF)));
+        if (current) ring(graphics, cx, cy, radius + 3, 1, ARGB.color(Math.round(0xD0 * fade * opening), color));
+        if (hasSubs) {
+            double outward = Math.toRadians(angle);
+            for (int k = -1; k <= 1; k++) {
+                double dotAngle = outward + k * 0.32;
+                int dx = Math.round(Mth.cos(dotAngle) * (radius + 5));
+                int dy = Math.round(Mth.sin(dotAngle) * (radius + 5));
+                disc(graphics, cx + dx, cy + dy, 1, ARGB.color(Math.round(0xC0 * fade * opening), ARGB.srgbLerp(hover, color, 0xFFFFFFFF)));
+            }
+        }
+    }
+
+    private void nodeIcon(GuiGraphicsExtractor graphics, ItemStack icon, double x, double y, float hover) {
+        int cx = (int) Math.round(x);
+        int cy = (int) Math.round(y);
+        float scale = 1.0F + 0.35F * hover;
+        graphics.pose().pushMatrix();
+        graphics.pose().translate(cx, cy);
+        graphics.pose().scale(scale, scale);
+        graphics.item(icon, -8, -8);
+        graphics.pose().popMatrix();
+    }
+
+    private void submenuBackground(GuiGraphicsExtractor graphics, Entry entry, float partialTicks, int color, float opening) {
         int count = this.entries.size();
         double originX = nodeX(this.submenu, count);
         double originY = nodeY(this.submenu, count);
@@ -640,8 +776,8 @@ public final class PowerWheel {
         ring(graphics, (int) Math.round(originX), (int) Math.round(originY), (int) SUB_RADIUS, 1, ARGB.color(Math.round(0x50 * opening), color));
 
         double back = Math.toRadians(backAngle(this.submenu, count));
-        int backX = (int) Math.round(originX + Math.cos(back) * SUB_RADIUS * 0.55);
-        int backY = (int) Math.round(originY + Math.sin(back) * SUB_RADIUS * 0.55);
+        int backX = (int) Math.round(originX + Mth.cos(back) * SUB_RADIUS * 0.55);
+        int backY = (int) Math.round(originY + Mth.sin(back) * SUB_RADIUS * 0.55);
         int backColor = this.backHovered ? ARGB.color(0xE0, 0xFFFFFF) : ARGB.color(0x70, color);
         disc(graphics, backX, backY, this.backHovered ? 4 : 3, backColor);
 
@@ -649,38 +785,42 @@ public final class PowerWheel {
             Sub sub = entry.subs().get(j);
             double angle = subAngle(this.submenu, count, j, subs);
             float hover = j < this.subHover.length ? Mth.lerp(partialTicks, this.subHoverO[j], this.subHover[j]) : 0.0F;
-            this.node(graphics, sub.icon(), originX + Math.cos(Math.toRadians(angle)) * SUB_RADIUS, originY + Math.sin(Math.toRadians(angle)) * SUB_RADIUS,
-                    hover, 1.0F, sub.current().getAsBoolean(), false, angle, color, opening);
+            nodeBackground(graphics,
+                    originX + Mth.cos(Math.toRadians(angle)) * SUB_RADIUS,
+                    originY + Mth.sin(Math.toRadians(angle)) * SUB_RADIUS,
+                    hover, 1.0F, j == this.currentSub, false, angle, color, opening);
         }
 
-        this.pointer(graphics, originX, originY, SUB_RADIUS, SUB_DEAD_ZONE, color, opening);
+        pointer(graphics, originX, originY, SUB_RADIUS, SUB_DEAD_ZONE, color, opening);
     }
 
-    private void node(GuiGraphicsExtractor graphics, Item icon, double x, double y, float hover, float fade, boolean current, boolean hasSubs,
-                      double angle, int color, float opening) {
-        int cx = (int) Math.round(x);
-        int cy = (int) Math.round(y);
-        int radius = NODE_RADIUS + Math.round(NODE_GROWTH * hover);
-        int fill = ARGB.srgbLerp(hover, darken(color, 0.28F), color);
-        disc(graphics, cx, cy, radius, ARGB.color(Math.round((0xA8 + 0x40 * hover) * fade * opening), fill));
-        ring(graphics, cx, cy, radius, 1, ARGB.color(Math.round((0x60 + 0x9F * hover) * fade * opening), ARGB.srgbLerp(hover, color, 0xFFFFFFFF)));
-        if (current) ring(graphics, cx, cy, radius + 3, 1, ARGB.color(Math.round(0xD0 * fade * opening), color));
-
-        if (hasSubs) {
-            double outward = Math.toRadians(angle);
-            for (int k = -1; k <= 1; k++) {
-                double dotAngle = outward + k * 0.32;
-                int dx = (int) Math.round(Math.cos(dotAngle) * (radius + 5));
-                int dy = (int) Math.round(Math.sin(dotAngle) * (radius + 5));
-                disc(graphics, cx + dx, cy + dy, 1, ARGB.color(Math.round(0xC0 * fade * opening), ARGB.srgbLerp(hover, color, 0xFFFFFFFF)));
-            }
+    private void submenuIcons(GuiGraphicsExtractor graphics, Entry entry, float partialTicks) {
+        int count = this.entries.size();
+        double originX = nodeX(this.submenu, count);
+        double originY = nodeY(this.submenu, count);
+        int subs = entry.subs().size();
+        for (int j = 0; j < subs; j++) {
+            Sub sub = entry.subs().get(j);
+            double angle = subAngle(this.submenu, count, j, subs);
+            float hover = j < this.subHover.length ? Mth.lerp(partialTicks, this.subHoverO[j], this.subHover[j]) : 0.0F;
+            nodeIcon(graphics, sub.icon(),
+                    originX + Mth.cos(Math.toRadians(angle)) * SUB_RADIUS,
+                    originY + Mth.sin(Math.toRadians(angle)) * SUB_RADIUS, hover);
         }
+    }
 
-        float scale = 1.0F + 0.35F * hover;
+    private void hubBackground(GuiGraphicsExtractor graphics, int color, float opening) {
+        disc(graphics, 0, 0, HUB_RADIUS, ARGB.color(Math.round(0xC8 * opening), darken(color, 0.18F)));
+        ring(graphics, 0, 0, HUB_RADIUS, 1, ARGB.color(Math.round(0xB0 * opening), color));
+        ring(graphics, 0, 0, (int) DEAD_ZONE, 1, ARGB.color(Math.round(0x40 * opening), color));
+    }
+
+    private void hubIcon(GuiGraphicsExtractor graphics, Player player, int color, float opening) {
+        ItemStack icon = this.hoveredIcon(player);
+        if (icon == null) return;
         graphics.pose().pushMatrix();
-        graphics.pose().translate(cx, cy);
-        graphics.pose().scale(scale, scale);
-        graphics.item(stack(icon), -8, -8);
+        graphics.pose().scale(1.5F, 1.5F);
+        graphics.item(icon, -8, -8);
         graphics.pose().popMatrix();
     }
 
@@ -707,25 +847,9 @@ public final class PowerWheel {
         disc(graphics, cursorX, cursorY, 2, ARGB.color(Math.round(0xF0 * opening), 0xFFFFFF));
     }
 
-    private void hub(GuiGraphicsExtractor graphics, Player player, int color, float opening) {
-        disc(graphics, 0, 0, HUB_RADIUS, ARGB.color(Math.round(0xC8 * opening), darken(color, 0.18F)));
-        ring(graphics, 0, 0, HUB_RADIUS, 1, ARGB.color(Math.round(0xB0 * opening), color));
-        ring(graphics, 0, 0, (int) DEAD_ZONE, 1, ARGB.color(Math.round(0x40 * opening), color));
-
-        Item icon = this.hoveredIcon(player);
-        if (icon == null) return;
-        graphics.pose().pushMatrix();
-        graphics.pose().scale(1.5F, 1.5F);
-        graphics.item(stack(icon), -8, -8);
-        graphics.pose().popMatrix();
-    }
-
-    private Item hoveredIcon(Player player) {
+    private ItemStack hoveredIcon(Player player) {
         if (this.hoveredEntry < 0 || this.hoveredEntry >= this.entries.size()) {
-            for (Entry entry : this.entries) {
-                if (this.isCurrent(player, entry)) return entry.currentSub().map(Sub::icon).orElse(entry.icon());
-            }
-            return null;
+            return this.currentIcon;
         }
         Entry entry = this.entries.get(this.hoveredEntry);
         if (this.hoveredSub >= 0 && this.hoveredSub < entry.subs().size()) return entry.subs().get(this.hoveredSub).icon();
@@ -734,10 +858,10 @@ public final class PowerWheel {
 
     private Component label() {
         if (this.hoveredEntry < 0 || this.hoveredEntry >= this.entries.size()) {
-            return this.travelled >= TAP_DISTANCE ? Component.translatable("gui.brightestday.wheel_cancel") : null;
+            return this.travelled >= TAP_DISTANCE ? t("gui.brightestday.wheel_cancel") : null;
         }
         Entry entry = this.entries.get(this.hoveredEntry);
-        if (this.backHovered) return Component.translatable("gui.brightestday.wheel_back");
+        if (this.backHovered) return t("gui.brightestday.wheel_back");
         if (this.hoveredSub >= 0 && this.hoveredSub < entry.subs().size()) {
             return Component.empty().append(entry.name()).append(" › ").append(entry.subs().get(this.hoveredSub).name());
         }
@@ -777,37 +901,41 @@ public final class PowerWheel {
         }
     }
 
-    public static int indicatorTop() {
-        return indicatorTop;
-    }
-
     private static void extractIndicator(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
-        indicatorTop = -1;
         Minecraft client = Minecraft.getInstance();
         LocalPlayer player = client.player;
         if (player == null || PowerRingItem.getWornCorps(player).isEmpty()) return;
 
-        Item icon;
+        ItemStack icon;
         Component title;
         Component detail = null;
         Optional<RingPower<?>> ability = ArmedRingPower.activeAbility(player);
         if (ability.isPresent()) {
             icon = icon(ability.get());
-            title = Component.translatable(ability.get().getTranslationKey());
+            title = t(ability.get().getTranslationKey());
         } else {
             Optional<ConstructRingPower> selected = ArmedRingPower.selectedConstruct(player);
             if (selected.isEmpty()) return;
 
             ConstructRingPower construct = selected.get();
-            Entry entry = CONSTRUCTS.entries.stream().filter(candidate -> candidate.powers().contains(construct)).findFirst().orElse(null);
-            Optional<Sub> sub = entry == null ? Optional.empty() : entry.currentSub();
-            icon = sub.map(Sub::icon).orElse(icon(construct));
-            title = Component.translatable(construct.getTranslationKey());
-            if ((construct == RingPowerRegistry.SCULPT || construct == RingPowerRegistry.DRILL) && sub.isPresent()) {
-                title = Component.empty().append(title).append(" · ").append(sub.get().name());
+            icon = icon(construct);
+            title = t(construct.getTranslationKey());
+
+            if (construct == RingPowerRegistry.DRILL) {
+                DrillMode mode = DrillModes.client();
+                ItemStack modeIcon = DRILL_MODE_ICONS.get().get(mode);
+                if (modeIcon != null) icon = modeIcon;
+                title = Component.empty().append(title).append(" · ").append(t(mode.translationKey()));
+            } else if (construct == RingPowerRegistry.SCULPT) {
+                SculptShape shape = SculptClient.shape();
+                ItemStack shapeIcon = SHAPE_ICONS.get().get(shape);
+                if (shapeIcon != null) icon = shapeIcon;
+                title = Component.empty().append(title).append(" · ").append(t(shape.translationKey()));
             }
+
             if (construct.usesSize()) {
-                detail = Component.translatable("hud.brightestday.construct_size", construct.describeSize(ConstructClient.size(construct)));
+                detail = Component.translatable("hud.brightestday.construct_size",
+                        construct.describeSize(ConstructClient.size(construct)));
             }
         }
 
@@ -818,11 +946,10 @@ public final class PowerWheel {
         int height = HUD_PADDING * 2 + 16;
         int left = HUD_MARGIN;
         int top = graphics.guiHeight() - HUD_MARGIN - height;
-        indicatorTop = top;
 
         graphics.fill(left, top, left + width, top + height, ARGB.color(0x90, darken(color, 0.25F)));
         graphics.fill(left, top, left + 1, top + height, ARGB.color(0xFF, color));
-        graphics.item(stack(icon), left + HUD_PADDING, top + HUD_PADDING);
+        graphics.item(icon, left + HUD_PADDING, top + HUD_PADDING);
         int textX = left + HUD_PADDING * 2 + 16;
         if (detail == null) {
             graphics.text(font, title, textX, top + HUD_PADDING + 4, 0xFFFFFFFF, true);

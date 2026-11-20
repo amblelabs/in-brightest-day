@@ -1,5 +1,6 @@
 package dev.amble.core.shields;
 
+import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.mannequin.Mannequins;
 import dev.amble.core.progression.Milestone;
 import dev.amble.core.progression.Trigger;
@@ -13,6 +14,9 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
+import dev.amble.core.items.PowerRingItem;
+import dev.amble.core.walls.WallManager;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -40,12 +44,15 @@ import java.util.WeakHashMap;
 public final class ShieldManager {
     public static final int ENTITY_SHIELD_TICKS = 200;
     public static final int AREA_SHIELD_TICKS = 300;
+    public static final int NO_EXPIRY = -1;
+    private static final int AREA_DRAIN_PER_SECOND = 3;
     public static final int EXPAND_TICKS = 8;
     private static final float ENTITY_SHIELD_STRENGTH = 20.0F;
     private static final float ENTITY_SHIELD_PADDING = 0.35F;
     private static final float ENTITY_SHIELD_SCALE = 1.15F;
     private static final double DEFLECT_DAMPING = 0.6;
     private static final double BARRIER_PUSH = 0.45;
+    private static final double BREACH_REACH = 1.5;
 
     private static final List<Shield> SHIELDS = new ArrayList<>();
     private static int nextId;
@@ -64,6 +71,7 @@ public final class ShieldManager {
         final Set<ServerPlayer> watchers = Collections.newSetFromMap(new WeakHashMap<>());
         float strength;
         int age;
+        int barrier = -1;
 
         Shield(int id, ServerLevel level, @Nullable Entity target, Vec3 center, float radius, float scale, UUID caster, int color, int duration, float strength) {
             this.id = id;
@@ -132,24 +140,65 @@ public final class ShieldManager {
     }
 
     public static void shieldArea(ServerLevel level, Vec3 center, float radius, int color, ServerPlayer caster) {
-        Shield shield = new Shield(nextId++, level, null, center, radius, 1.0F, caster.getUUID(), color, AREA_SHIELD_TICKS, 0.0F);
+        Shield shield = new Shield(nextId++, level, null, center, radius, 1.0F, caster.getUUID(), color, NO_EXPIRY, 0.0F);
+        shield.barrier = WallManager.raiseHidden(level, shellBlocks(center, radius), color, caster);
         SHIELDS.add(shield);
         syncWatchers(shield);
     }
 
     private static void tick(MinecraftServer server) {
+        if (server.getTickCount() % 20 == 0) drainAreas(server);
         Iterator<Shield> iterator = SHIELDS.iterator();
         while (iterator.hasNext()) {
             Shield shield = iterator.next();
             boolean targetGone = shield.target != null && (shield.target.isRemoved() || !shield.target.isAlive());
-            if (++shield.age >= shield.duration || targetGone) {
+            if (++shield.age >= shield.duration && shield.duration != NO_EXPIRY || targetGone) {
                 iterator.remove();
                 forget(shield);
+                continue;
+            }
+            if (shattered(shield)) {
+                iterator.remove();
+                dismissed(shield);
                 continue;
             }
             syncWatchers(shield);
             barrier(shield);
         }
+    }
+
+    private static void drainAreas(MinecraftServer server) {
+        List<UUID> broke = new ArrayList<>();
+        for (Shield shield : SHIELDS) {
+            if (shield.target != null || shield.duration != NO_EXPIRY) continue;
+            ServerPlayer caster = server.getPlayerList().getPlayer(shield.caster);
+            if (caster == null || caster.hasInfiniteMaterials()) continue;
+            if (!PowerRingItem.drainWorn(caster, AREA_DRAIN_PER_SECOND)) broke.add(shield.caster);
+        }
+        broke.forEach(ShieldManager::dismissAll);
+    }
+
+    private static List<BlockPos> shellBlocks(Vec3 center, float radius) {
+        List<BlockPos> cells = new ArrayList<>();
+        double limit = radius * radius;
+        BlockPos origin = BlockPos.containing(center);
+        int reach = Mth.ceil(radius) + 1;
+        for (int x = -reach; x <= reach; x++) {
+            for (int y = -reach; y <= reach; y++) {
+                for (int z = -reach; z <= reach; z++) {
+                    BlockPos pos = origin.offset(x, y, z);
+                    if (!within(pos, center, limit)) continue;
+                    if (within(pos.above(), center, limit) && within(pos.below(), center, limit) && within(pos.north(), center, limit)
+                            && within(pos.south(), center, limit) && within(pos.east(), center, limit) && within(pos.west(), center, limit)) continue;
+                    cells.add(pos);
+                }
+            }
+        }
+        return cells;
+    }
+
+    private static boolean within(BlockPos pos, Vec3 center, double limit) {
+        return Vec3.atCenterOf(pos).distanceToSqr(center) <= limit;
     }
 
     private static void barrier(Shield shield) {
@@ -166,8 +215,8 @@ public final class ShieldManager {
 
             if (entity instanceof Projectile projectile) {
                 if (shield.target != null && projectile.getOwner() == shield.target) continue;
-                if (distance <= radius + 0.3 && previousDistance > radius - 0.3) deflect(projectile, center);
-            } else if (shield.target == null && entity instanceof LivingEntity && previousDistance >= radius && distance < radius) {
+                if (distance <= radius + 0.3 && previousDistance > radius - 0.3 && !breached(shield, center, position)) deflect(projectile, center);
+            } else if (shield.target == null && entity instanceof LivingEntity && previousDistance >= radius && distance < radius && !breached(shield, center, position)) {
                 Vec3 outward = position.subtract(center);
                 outward = outward.lengthSqr() < 1.0E-4 ? new Vec3(0.0, 1.0, 0.0) : outward.normalize();
                 entity.setDeltaMovement(outward.scale(BARRIER_PUSH));
@@ -176,6 +225,18 @@ public final class ShieldManager {
         }
     }
 
+
+    private static boolean breached(Shield shield, Vec3 center, Vec3 position) {
+        if (shield.barrier < 0) return false;
+        Vec3 outward = position.subtract(center);
+        if (outward.lengthSqr() < 1.0E-4) return false;
+        Vec3 crossing = center.add(outward.normalize().scale(shield.radius - 0.5));
+        return WallManager.breached(shield.barrier, crossing, BREACH_REACH);
+    }
+
+    private static boolean shattered(Shield shield) {
+        return shield.barrier >= 0 && shield.age % 10 == 0 && WallManager.brokenFraction(shield.barrier) >= BrightestDayConfig.get().domeShatterFraction;
+    }
     private static void deflect(Projectile projectile, Vec3 center) {
         Vec3 velocity = projectile.getDeltaMovement();
         Vec3 normal = projectile.position().subtract(center);
@@ -227,7 +288,8 @@ public final class ShieldManager {
         for (ServerPlayer player : tracking) {
             if (shield.watchers.add(player)) {
                 int entityId = shield.target != null ? shield.target.getId() : ShieldSpawnS2CPayload.NO_ENTITY;
-                ServerPlayNetworking.send(player, new ShieldSpawnS2CPayload(shield.id, entityId, shield.center(), shield.target != null ? shield.scale : shield.radius, shield.color, shield.duration, shield.age));
+                ServerPlayNetworking.send(player, new ShieldSpawnS2CPayload(shield.id, entityId, shield.center(), shield.target != null ? shield.scale : shield.radius, shield.color, shield.duration, shield.age, casterId(shield)));
+                if (shield.barrier >= 0) WallManager.sendCracks(shield.barrier, player);
             }
         }
 
@@ -236,6 +298,11 @@ public final class ShieldManager {
             if (gone && !player.hasDisconnected()) ServerPlayNetworking.send(player, new ShieldRemoveS2CPayload(shield.id));
             return gone;
         });
+    }
+
+    private static int casterId(Shield shield) {
+        ServerPlayer caster = shield.level.getServer().getPlayerList().getPlayer(shield.caster);
+        return caster == null ? ShieldSpawnS2CPayload.NO_ENTITY : caster.getId();
     }
 
     public static long latestCreatedAt(UUID caster) {
@@ -271,6 +338,10 @@ public final class ShieldManager {
     }
 
     private static void forget(Shield shield) {
+        if (shield.barrier >= 0) {
+            WallManager.remove(shield.barrier, false);
+            shield.barrier = -1;
+        }
         for (ServerPlayer player : shield.watchers) {
             if (!player.hasDisconnected()) ServerPlayNetworking.send(player, new ShieldRemoveS2CPayload(shield.id));
         }

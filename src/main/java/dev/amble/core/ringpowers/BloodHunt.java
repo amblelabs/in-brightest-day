@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.UUID;
 
 public final class BloodHunt {
-    public static final float DAMAGE_BONUS = 1.3F;
+    public static final float DAMAGE_BONUS = 0.3F;
     private static final int RED = LanternCorps.RED.color();
     private static final int UPDATE_INTERVAL = 10;
 

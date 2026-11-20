@@ -26,7 +26,7 @@ public class MagnetConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int useCost() {
+    public int baseCost() {
         return this.cost(this.defaultSize());
     }
 
@@ -56,7 +56,7 @@ public class MagnetConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int cooldownTicks() {
+    public int cooldownTicks(int size) {
         return COOLDOWN_TICKS;
     }
 

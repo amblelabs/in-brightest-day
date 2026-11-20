@@ -8,7 +8,8 @@ public enum SculptShape {
     FREEFORM("~"),
     STAIRS("/"),
     TUBE("□"),
-    CAGE("∩");
+    CAGE("∩"),
+    FLOOR("▭");
 
     private static final SculptShape[] VALUES = values();
 

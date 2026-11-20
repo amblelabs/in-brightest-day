@@ -7,13 +7,15 @@
     "AbstractVillagerMixin",
     "AnimalMixin",
     "AvatarMixin",
+    "CombatTrackerAccessor",
+    "CombatTrackerMixin",
     "ConstructContainerItemMixin",
     "ConstructFurnaceMixin",
     "ConstructItemStackMixin",
     "EntityMixin",
-    "ExampleMixin",
     "GlideLivingEntityMixin",
     "ItemEntityMixin",
+    "KineticWeaponMixin",
     "LivingEntityMixin",
     "MannequinAccessor",
     "MinecraftServerStatusMixin",
@@ -23,9 +25,7 @@
     "ServerGamePacketListenerImplMixin",
     "ServerPlayerTabMixin",
     "TamableAnimalMixin",
-    "ZombieVillagerMixin",
-    "client.verification.DedicatedServerMixin",
-    "client.verification.IntegratedServerMixin"
+    "ZombieVillagerMixin"
   ],
   "client": [
     "client.AbstractBoatRendererMixin",
@@ -40,19 +40,21 @@
     "client.EntityTurnMixin",
     "client.FirstPersonHandsAndItemsRendererMixin",
     "client.FlashbackRecorderMixin",
+    "client.GameRendererHandMixin",
     "client.HudOverlayMixin",
+    "client.IrisPipelineMixin",
     "client.ItemInHandLayerMixin",
     "client.ItemModelResolverMixin",
     "client.ItemStackLayerRenderStateMixin",
+    "client.LevelRendererFrostMixin",
     "client.LivingEntityRendererMixin",
     "client.LocalPlayerMixin",
     "client.MinecraftMixin",
     "client.MouseHandlerMixin",
     "client.PlayerModelArmedMixin",
+    "client.PreparedFrameAccessor",
     "client.RenderTargetMixin",
-    "client.verification.JoinMultiplayerScreenMixin",
-    "client.verification.TitleScreenMixin",
-    "client.verification.WorldOpenFlowsMixin"
+    "client.SubmitNodeCollectionMixin"
   ],
   "injectors": {
     "defaultRequire": 1

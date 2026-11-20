@@ -17,6 +17,7 @@ public final class LaunchAnimations {
 
     private static final Map<Player, Integer> STATES = new WeakHashMap<>();
     private static final Map<Player, Integer> RELEASING = new WeakHashMap<>();
+    private static final Map<Player, Integer> CHARGING = new WeakHashMap<>();
 
     public static void init() {
         ClientPlayNetworking.registerGlobalReceiver(GroundLaunchS2CPayload.TYPE, (payload, context) -> {
@@ -36,14 +37,17 @@ public final class LaunchAnimations {
         switch (state) {
             case GroundLaunch.CHARGING -> {
                 RELEASING.remove(player);
+                CHARGING.put(player, 0);
                 if (previous == null || previous != GroundLaunch.CHARGING) FlightAnimations.launchCharge(controller);
             }
             case GroundLaunch.LAUNCHED -> {
+                CHARGING.remove(player);
                 FlightAnimations.launchOff(controller);
                 RELEASING.put(player, OFF_TICKS);
             }
             default -> {
                 RELEASING.remove(player);
+                CHARGING.remove(player);
                 STATES.remove(player);
                 if (previous != null && !FlightAnimator.phaseActive(player)) FlightAnimations.rise(controller);
             }
@@ -52,6 +56,13 @@ public final class LaunchAnimations {
 
     private static void tick(Minecraft client) {
         if (client.isPaused()) return;
+        CHARGING.replaceAll((player, ticks) -> {
+            if (player == client.player || player.isRemoved()) return ticks;
+            int next = Math.min(ticks + 1, GroundLaunch.FULL_CHARGE);
+            GroundLaunchClient.chargeEffects(client, player, next);
+            return next;
+        });
+        CHARGING.keySet().removeIf(Player::isRemoved);
         Iterator<Map.Entry<Player, Integer>> iterator = RELEASING.entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry<Player, Integer> entry = iterator.next();

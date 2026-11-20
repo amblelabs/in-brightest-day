@@ -13,12 +13,12 @@ public class BoomerangDiscConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int useCost() {
+    public int baseCost() {
         return BrightestDayConfig.get().discCost;
     }
 
     @Override
-    public int cooldownTicks() {
+    public int cooldownTicks(int size) {
         return 15;
     }
 

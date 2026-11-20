@@ -28,7 +28,7 @@ public class NovaBurstConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int useCost() {
+    public int baseCost() {
         return BrightestDayConfig.get().novaCost;
     }
 

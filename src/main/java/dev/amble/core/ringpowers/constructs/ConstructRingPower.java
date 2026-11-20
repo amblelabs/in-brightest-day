@@ -23,7 +23,6 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import org.jspecify.annotations.Nullable;
 
-import java.util.EnumSet;
 import java.util.Set;
 
 public abstract class ConstructRingPower extends RingPower<Unit> {
@@ -48,7 +47,7 @@ public abstract class ConstructRingPower extends RingPower<Unit> {
     }
 
     public int cost(int radius) {
-        return this.useCost();
+        return this.baseCost();
     }
 
     public boolean usesSize() {
@@ -109,7 +108,7 @@ public abstract class ConstructRingPower extends RingPower<Unit> {
         return SHORT_CHARGE;
     }
 
-    public int cooldownTicks() {
+    public int cooldownTicks(int size) {
         return 0;
     }
 

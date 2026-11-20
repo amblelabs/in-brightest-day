@@ -25,12 +25,12 @@ public class BloodHuntConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int useCost() {
+    public int baseCost() {
         return USE_COST;
     }
 
     @Override
-    public int cooldownTicks() {
+    public int cooldownTicks(int size) {
         return COOLDOWN_TICKS;
     }
 

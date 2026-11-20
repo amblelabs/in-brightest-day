@@ -85,7 +85,7 @@ public abstract class RingPower<D> implements Identifiable, Translatable {
     @Environment(EnvType.CLIENT)
     public void tick(AbstractClientPlayer clientPlayer, D data) {}
 
-    public int useCost() {
+    public int baseCost() {
         return 0;
     }
 
@@ -106,6 +106,11 @@ public abstract class RingPower<D> implements Identifiable, Translatable {
     @Override
     public String getTranslationKey() {
         return this.id().getNamespace() + ".ring_power." + this.id().getPath();
+    }
+
+    @Override
+    public int hashCode() {
+        return this.id().hashCode();
     }
 
     public static class Builder {

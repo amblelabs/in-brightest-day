@@ -1,5 +1,6 @@
 package dev.amble.core.attacks.projectile;
 
+import dev.amble.core.walls.HardLightDamage;
 import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.networking.payloads.s2c.DiscS2CPayload;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -134,6 +135,7 @@ public final class DiscManager {
             BlockHitResult blockHit = level.clip(new ClipContext(from, to, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, owner));
             if (blockHit.getType() == HitResult.Type.BLOCK) {
                 to = blockHit.getLocation();
+                HardLightDamage.hit(level, blockHit, config.discDamage, owner);
                 turn(disc);
                 disc.velocity = disc.velocity.scale(-0.3);
                 level.playSound(null, to.x, to.y, to.z, SoundEvents.TRIDENT_HIT, SoundSource.PLAYERS, 0.6F, 1.6F);

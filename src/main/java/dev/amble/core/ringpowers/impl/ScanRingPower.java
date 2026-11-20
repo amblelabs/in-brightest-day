@@ -60,7 +60,7 @@ public class ScanRingPower extends RingPower<Unit> {
     }
 
     @Override
-    public int useCost() {
+    public int baseCost() {
         return USE_COST;
     }
 

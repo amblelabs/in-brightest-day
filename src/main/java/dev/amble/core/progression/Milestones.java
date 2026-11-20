@@ -4,7 +4,6 @@ import dev.amble.core.BrightestDayAttachments;
 import dev.amble.core.ringpowers.CorpsCombat;
 import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.core.team.LanternTeams;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.EntityTypeTags;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.effect.MobEffects;
@@ -247,7 +246,7 @@ public final class Milestones {
         versus(blue, 3, "blue_second_chance", 1, Trigger.HOPE_GRANT, always(),
                 "blue_raid", 1, Trigger.SECOND, (player, context) -> player.hasEffect(MobEffects.HERO_OF_THE_VILLAGE));
         pool(blue, 3, "blue_shield", 300, Trigger.SHIELD, always());
-        pool(blue, 3, "blue_walls", 40, Trigger.CONSTRUCT, construct("wall"));
+        pool(blue, 3, "blue_walls", 40, Trigger.CONSTRUCT, construct("sculpt"));
         pool(blue, 3, "blue_protector", 15, Trigger.RESCUE, hunted(false));
         pool(blue, 4, "blue_hope", 1, Trigger.SECOND, meter(Emotion.HOPE, Emotion.MAX));
         pool(blue, 4, "blue_hero", 1, Trigger.SECOND, (player, context) -> player.hasEffect(MobEffects.HERO_OF_THE_VILLAGE));

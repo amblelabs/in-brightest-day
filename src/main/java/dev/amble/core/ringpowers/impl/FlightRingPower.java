@@ -5,6 +5,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import dev.amble.BrightestDay;
 import dev.amble.core.BrightestDayAttachments;
+import dev.amble.core.BrightestDayEffects;
 import dev.amble.core.flight.FlightBoost;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.ringpowers.LanternCorps;
@@ -29,7 +30,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
 public class FlightRingPower extends RingPower<FlightRingPower.Data> {
-    public static Consumer<Boolean> compactSender = compact -> {};
+    public static Consumer<Boolean> compactSender = _ -> {};
     public static BooleanSupplier launching = () -> false;
 
     public static final double CRUISE_SPEED = 1.2;
@@ -132,7 +133,12 @@ public class FlightRingPower extends RingPower<FlightRingPower.Data> {
     }
 
     public static double cruiseSpeed(Player player) {
-        return speedForLevel(speedLevel(player));
+        int speedLevel = speedLevel(player);
+
+        if (player.hasEffect(BrightestDayEffects.STUNNED))
+            speedLevel /= 2;
+
+        return speedForLevel(speedLevel);
     }
 
     public static double boostSpeed(double cruise) {
@@ -220,7 +226,7 @@ public class FlightRingPower extends RingPower<FlightRingPower.Data> {
     }
 
     public static void registerEvents() {
-        ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) ->
+        ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, _) ->
                 !(entity instanceof Player player && source.is(DamageTypeTags.IS_FALL) && hasFlight(player) && PowerRingItem.hasCharge(player)));
     }
 }

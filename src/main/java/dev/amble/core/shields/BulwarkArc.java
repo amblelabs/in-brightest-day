@@ -7,6 +7,7 @@ import net.minecraft.world.phys.Vec3;
 public record BulwarkArc(Vec3 center, double radius, float yaw, double halfAngle, double bottom, double top) {
     public static final int MIN_SIZE = 1;
     public static final int MAX_SIZE = 5;
+    public static final int DAMAGE_ROWS = 4;
     private static final double FRONT = 1.0;
     private static final double RADIUS_PER_SIZE = 0.6;
     private static final double MIN_HALF_ANGLE = 60.0;
@@ -42,6 +43,45 @@ public record BulwarkArc(Vec3 center, double radius, float yaw, double halfAngle
 
     public double arcLength() {
         return this.radius * this.halfAngle * 2.0;
+    }
+
+    public static int damageColumns(int size) {
+        return 3 + 2 * Mth.clamp(size, MIN_SIZE, MAX_SIZE);
+    }
+
+    public static int damageCells(int size) {
+        return damageColumns(size) * DAMAGE_ROWS;
+    }
+
+    public static int damageCell(int size, double fraction, double height) {
+        int columns = damageColumns(size);
+        int column = Mth.clamp(Mth.floor((fraction + 1.0) * 0.5 * columns), 0, columns - 1);
+        int row = Mth.clamp(Mth.floor(height * DAMAGE_ROWS), 0, DAMAGE_ROWS - 1);
+        return row * columns + column;
+    }
+
+    public double fractionOf(Vec3 point) {
+        double angle = Math.atan2(-(point.x - this.center.x), point.z - this.center.z) - Math.toRadians(this.yaw);
+        return Mth.wrapDegrees(Math.toDegrees(angle)) / Math.toDegrees(this.halfAngle);
+    }
+
+    public double heightOf(double y) {
+        return (y - this.bottom) / (this.top - this.bottom);
+    }
+
+    // where the segment from an attacker to its victim passes through the arc, on the horizontal plane
+    public Vec3 crossing(Vec3 from, Vec3 to) {
+        double dx = to.x - from.x;
+        double dz = to.z - from.z;
+        double fx = from.x - this.center.x;
+        double fz = from.z - this.center.z;
+        double a = dx * dx + dz * dz;
+        double b = 2.0 * (fx * dx + fz * dz);
+        double c = fx * fx + fz * fz - this.radius * this.radius;
+        double discriminant = b * b - 4.0 * a * c;
+        if (a < 1.0E-8 || discriminant < 0.0) return from;
+        double t = Mth.clamp((-b - Math.sqrt(discriminant)) / (2.0 * a), 0.0, 1.0);
+        return from.add(to.subtract(from).scale(t));
     }
 
     public boolean shelters(Vec3 victim, double victimHeight, Vec3 source) {

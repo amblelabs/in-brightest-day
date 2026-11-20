@@ -12,12 +12,12 @@ public class ConstructHorseConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int useCost() {
+    public int baseCost() {
         return BrightestDayConfig.get().horseCost;
     }
 
     @Override
-    public int cooldownTicks() {
+    public int cooldownTicks(int size) {
         return 10;
     }
 

@@ -26,6 +26,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.TooltipDisplay;
 import net.minecraft.world.level.Level;
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Optional;
@@ -37,7 +38,7 @@ public class PowerRingItem extends Item {
     }
 
     @Override
-    public InteractionResult use(Level level, Player player, InteractionHand hand) {
+    public @NonNull InteractionResult use(@NonNull Level level, @NonNull Player player, @NonNull InteractionHand hand) {
         if (hand != InteractionHand.MAIN_HAND || !player.isSecondaryUseActive()) return super.use(level, player, hand);
         if (level.isClientSide()) return InteractionResult.SUCCESS;
 
@@ -53,7 +54,7 @@ public class PowerRingItem extends Item {
     }
 
     @Override
-    public void inventoryTick(ItemStack itemStack, ServerLevel level, Entity owner, @Nullable EquipmentSlot slot) {
+    public void inventoryTick(@NonNull ItemStack itemStack, @NonNull ServerLevel level, @NonNull Entity owner, @Nullable EquipmentSlot slot) {
         super.inventoryTick(itemStack, level, owner, slot);
         if (owner instanceof Player player && CorpsSynergy.empoweredByHope(player)) return;
         PowerRingItem.tickCharge(itemStack, level);
@@ -75,8 +76,17 @@ public class PowerRingItem extends Item {
     public static ItemStack getWornRing(Player player) {
         ItemStack slotted = BrightestDayAttachments.getRing(player);
         if (slotted.getItem() instanceof PowerRingItem) return slotted;
-        if (player.getMainHandItem().getItem() instanceof PowerRingItem) return player.getMainHandItem();
-        if (player.getOffhandItem().getItem() instanceof PowerRingItem) return player.getOffhandItem();
+
+        ItemStack handStack = player.getMainHandItem();
+
+        if (handStack.getItem() instanceof PowerRingItem && CorpsCaps.check(player, handStack))
+            return handStack;
+
+        handStack = player.getOffhandItem();
+
+        if (handStack.getItem() instanceof PowerRingItem && CorpsCaps.check(player, handStack))
+            return handStack;
+
         return ItemStack.EMPTY;
     }
 

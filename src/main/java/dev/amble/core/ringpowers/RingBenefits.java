@@ -1,5 +1,6 @@
 package dev.amble.core.ringpowers;
 
+import dev.amble.mixin.CombatTrackerAccessor;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.minecraft.tags.DamageTypeTags;
 import dev.amble.BrightestDay;
@@ -31,7 +32,7 @@ public final class RingBenefits {
     private static final EquipmentSlot[] ARMOR_SLOTS = {EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET};
 
     private static final int REGEN_INTERVAL = 40;
-    private static final float REGEN_AMOUNT = 1.0F;
+    private static final float REGEN_AMOUNT = 1;
     private static final int WATER_DRAIN_PER_SECOND = 1;
     private static final int LAVA_DRAIN_PER_SECOND = 3;
 
@@ -76,7 +77,7 @@ public final class RingBenefits {
         if (player.isOnFire()) player.clearFire();
         if (player.getFoodData().getFoodLevel() < 1) player.getFoodData().setFoodLevel(1);
 
-        if (serverTick % REGEN_INTERVAL == 0 && player.isAlive() && player.getHealth() < player.getMaxHealth()) {
+        if (serverTick % REGEN_INTERVAL == 0 && player.isAlive() && player.getHealth() < player.getMaxHealth() && !((CombatTrackerAccessor) player.getCombatTracker()).getInCombat()) {
             player.heal(REGEN_AMOUNT);
         }
 

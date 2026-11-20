@@ -21,13 +21,13 @@ public class HandConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int useCost() {
+    public int baseCost() {
         return BrightestDayConfig.get().fistCost;
     }
 
     @Override
     public int cost(int radius) {
-        return Math.round(this.useCost() * scale(this.clampSize(radius)));
+        return Math.round(this.baseCost() * scale(this.clampSize(radius)));
     }
 
     @Override
@@ -66,7 +66,7 @@ public class HandConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int cooldownTicks() {
+    public int cooldownTicks(int size) {
         return 15;
     }
 

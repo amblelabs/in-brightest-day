@@ -8,6 +8,7 @@ import dev.amble.client.effects.attacks.weapon.HandClient;
 import dev.amble.client.effects.drill.DrillEffects;
 import dev.amble.client.forge.ForgeClient;
 import dev.amble.client.flight.FlightRenderTypes;
+import dev.amble.client.render.FrostedGlass;
 import dev.amble.core.items.PowerRingItem;
 import dev.amble.core.items.LanternBlockItem;
 import dev.amble.core.sync.RingSync;
@@ -205,6 +206,7 @@ public final class BlastEffects {
     private static void release(LocalPlayer player) {
         retractCharge();
         HandClient.beforeFire(player);
+        WallClient.beforeFire(player);
         boolean sustained = ArmedRingPower.selectedConstruct(player).map(construct -> construct.sustained(player)).orElse(false);
         ClientPlayNetworking.send(new FireConstructC2SPayload(ConstructClient.selectedSize(player)));
         if (sustained) {
@@ -343,6 +345,8 @@ public final class BlastEffects {
 
             context.submitNodeCollector().submitCustomGeometry(poseStack, FlightRenderTypes.GLOW,
                     (pose, buffer) -> draw(pose, buffer, centers, halves, colors, GLOW_SCALE, GLOW_ALPHA * life, false));
+            if (FrostedGlass.ready()) context.submitNodeCollector().submitCustomGeometry(poseStack, FrostedGlass.GLASS,
+                    (pose, buffer) -> draw(pose, buffer, centers, halves, colors, 1.0F, FrostedGlass.FROST_ALPHA * life, false));
             context.submitNodeCollector().submitCustomGeometry(poseStack, FlightRenderTypes.glass(),
                     (pose, buffer) -> draw(pose, buffer, centers, halves, colors, 1.0F, VoxelRenderer.denser(GLASS_ALPHA * life), true));
         }
@@ -376,6 +380,8 @@ public final class BlastEffects {
         float alpha = 0.4F + progress * 0.5F;
         context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.GLOW,
                 (pose, buffer) -> draw(pose, buffer, centers, halves, colors, GLOW_SCALE, GLOW_ALPHA * alpha, false));
+        if (FrostedGlass.ready()) context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FrostedGlass.GLASS,
+                (pose, buffer) -> draw(pose, buffer, centers, halves, colors, 1.0F, FrostedGlass.FROST_ALPHA * alpha, false));
         context.submitNodeCollector().submitCustomGeometry(context.poseStack(), FlightRenderTypes.glass(),
                 (pose, buffer) -> draw(pose, buffer, centers, halves, colors, 1.0F, VoxelRenderer.denser(GLASS_ALPHA * alpha), true));
     }

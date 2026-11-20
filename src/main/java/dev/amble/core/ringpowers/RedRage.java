@@ -35,7 +35,7 @@ import java.util.UUID;
 
 public final class RedRage {
     private static final int RED = LanternCorps.RED.color();
-    private static final float RAGE_DAMAGE = 0.5F;
+    private static final float RAGE_DAMAGE = 0.35F;
     private static final int CHARGE_PER_DAMAGE_DEALT = 4;
     private static final int CHARGE_PER_DAMAGE_TAKEN = 6;
     private static final int RETALIATION_BURN_SECONDS = 4;
@@ -68,9 +68,11 @@ public final class RedRage {
 
     public static float scale(LivingEntity victim, DamageSource source, float amount) {
         if (!(source.getEntity() instanceof ServerPlayer attacker) || attacker == victim || !isRed(attacker)) return amount;
-        float rage = isBerserk(attacker) ? 1.0F : SpectrumMeters.get(attacker, Emotion.RAGE) / (float) Emotion.MAX;
-        float scaled = amount * (1.0F + RAGE_DAMAGE * rage);
-        return BloodHunt.isPrey(attacker, victim) ? scaled * BloodHunt.DAMAGE_BONUS : scaled;
+        float rage = isBerserk(attacker) ? 1 : SpectrumMeters.get(attacker, Emotion.RAGE) / (float) Emotion.MAX;
+        float scaled = amount * (1f + RAGE_DAMAGE * rage / (1f + rage));
+
+        return BloodHunt.isPrey(attacker, victim) ? scaled
+                * (1f + BloodHunt.DAMAGE_BONUS / (1f + BloodHunt.DAMAGE_BONUS)) : scaled;
     }
 
     public static void onHurt(LivingEntity victim, DamageSource source, float amount) {

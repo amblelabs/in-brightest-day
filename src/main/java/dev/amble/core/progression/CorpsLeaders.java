@@ -17,7 +17,6 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.core.UUIDUtil;
 import net.minecraft.network.chat.ClickEvent;
@@ -44,7 +43,7 @@ import java.util.UUID;
 
 public final class CorpsLeaders {
     private static final long VOTE_TICKS = 2400L;
-    private static final String LEADER_MARK = "\u2605 ";
+    private static final String LEADER_MARK = "★ ";
 
     public static final AttachmentType<Map<LanternCorps, UUID>> LEADERS = AttachmentRegistry.<Map<LanternCorps, UUID>>builder()
             .initializer(Map::of)
@@ -336,32 +335,43 @@ public final class CorpsLeaders {
         server.overworld().setAttached(EXILED, List.copyOf(exiled));
     }
 
+    /**
+     * @param corps the corps to remove or {@code null} for all
+     */
     private static void removeRings(ServerPlayer player, String messageKey, @Nullable LanternCorps corps) {
         MinecraftServer server = player.level().getServer();
+
         ItemStack worn = BrightestDayAttachments.getRing(player);
-        LanternCorps shown = corps != null ? corps : PowerRingItem.getCorps(worn).orElse(null);
+        LanternCorps wornCorps = PowerRingItem.getCorps(worn).orElse(null);
+
         boolean removed = false;
-        if (!worn.isEmpty()) {
+        if (!worn.isEmpty() && (corps == null || wornCorps == corps)) {
             RingBonds.release(server, worn);
-            BrightestDayAttachments.setRing(player, ItemStack.EMPTY);
             removed = true;
         }
-        for (Container container : List.<Container>of(player.getInventory(), player.getEnderChestInventory())) {
+
+        for (Container container : List.of(player.getInventory(), player.getEnderChestInventory())) {
             for (int slot = 0; slot < container.getContainerSize(); slot++) {
-                if (container.getItem(slot).getItem() instanceof PowerRingItem) {
+                ItemStack stack = container.getItem(slot);
+                if (stack.getItem() instanceof PowerRingItem && (corps == null || PowerRingItem.getCorps(stack).orElse(null) == corps)) {
                     container.setItem(slot, ItemStack.EMPTY);
                     removed = true;
                 }
             }
         }
+
         if (player.containerMenu.getCarried().getItem() instanceof PowerRingItem) player.containerMenu.setCarried(ItemStack.EMPTY);
         RingBonds.forget(player);
         dropLeadership(server, player.getUUID());
+
         if (!removed) return;
+
+        BrightestDayAttachments.setRing(player, ItemStack.EMPTY);
+
+        LanternCorps shown = corps != null ? corps : wornCorps;
         Component corpsName = shown == null ? Component.empty() : shown.displayName();
         player.sendSystemMessage(Component.translatable(messageKey, corpsName).withStyle(ChatFormatting.BOLD).withColor(shown == null ? 0xFFFFFF : shown.color()));
     }
-
 
     private static void announce(MinecraftServer server, LanternCorps corps, Component message) {
         Component colored = message.copy().withColor(corps.color());

@@ -29,7 +29,7 @@ public class GravityBallConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int useCost() {
+    public int baseCost() {
         return BASE_COST;
     }
 
@@ -39,7 +39,7 @@ public class GravityBallConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int cooldownTicks() {
+    public int cooldownTicks(int size) {
         return COOLDOWN_TICKS;
     }
 

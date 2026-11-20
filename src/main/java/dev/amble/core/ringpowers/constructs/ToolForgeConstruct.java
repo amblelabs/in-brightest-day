@@ -27,7 +27,7 @@ public class ToolForgeConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int useCost() {
+    public int baseCost() {
         return USE_COST;
     }
 
@@ -37,7 +37,7 @@ public class ToolForgeConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int cooldownTicks() {
+    public int cooldownTicks(int size) {
         return 25;
     }
 

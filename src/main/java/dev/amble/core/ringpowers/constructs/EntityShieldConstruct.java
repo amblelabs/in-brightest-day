@@ -3,7 +3,6 @@ package dev.amble.core.ringpowers.constructs;
 import dev.amble.core.ringpowers.CorpsArsenal;
 import dev.amble.core.ringpowers.LanternCorps;
 import dev.amble.BrightestDay;
-import dev.amble.config.BrightestDayConfig;
 import dev.amble.core.shields.ShieldManager;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -20,12 +19,12 @@ public class EntityShieldConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int useCost() {
+    public int baseCost() {
         return USE_COST;
     }
 
     @Override
-    public int cooldownTicks() {
+    public int cooldownTicks(int size) {
         return 6;
     }
 

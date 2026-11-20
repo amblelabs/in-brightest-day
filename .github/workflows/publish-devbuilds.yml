@@ -45,7 +45,7 @@ jobs:
           datagen-
 
     - name: Run DataGen
-      run: ./gradlew --configuration-cache runDatagen
+      run: ./gradlew runDatagen
 
     - name: Save DataGen cache
       id: cache-save
@@ -55,7 +55,7 @@ jobs:
         key: ${{ steps.cache-restore.outputs.cache-primary-key }}
     
     - name: Build
-      run: ./gradlew --configuration-cache build
+      run: ./gradlew build
 
     - name: Publish artifacts
       uses: drtheodor/discord-webhook-upload-action@v0.4

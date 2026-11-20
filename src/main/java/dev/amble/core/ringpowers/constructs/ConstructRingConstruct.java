@@ -17,12 +17,12 @@ public class ConstructRingConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int useCost() {
+    public int baseCost() {
         return 0;
     }
 
     @Override
-    public int cooldownTicks() {
+    public int cooldownTicks(int size) {
         return COOLDOWN_TICKS;
     }
 

@@ -27,7 +27,6 @@ import dev.amble.core.drill.DrillManager;
 import dev.amble.core.beams.HealBeamManager;
 import dev.amble.core.acid.AcidManager;
 import dev.amble.core.attacks.area.BarrageManager;
-import dev.amble.core.items.LanternBlockItem;
 import dev.amble.core.sculpt.SculptManager;
 import dev.amble.core.tractor.TractorManager;
 import dev.amble.core.sync.RingSync;
@@ -41,7 +40,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.ItemStack;
 
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -267,7 +265,7 @@ public class ArmedRingPower extends RingPower<ArmedRingPower.Data> {
             return;
         }
         LAST_FIRED.put(player, now);
-        if (construct.get().cooldownTicks() > 0) ready.put(construct.get().id(), now + construct.get().cooldownTicks());
+        if (construct.get().cooldownTicks(radius) > 0) ready.put(construct.get().id(), now + construct.get().cooldownTicks(radius));
         if (!Poses.channeling(player)) raise(player);
         if (RingSync.misfire(player, construct.get())) return;
 

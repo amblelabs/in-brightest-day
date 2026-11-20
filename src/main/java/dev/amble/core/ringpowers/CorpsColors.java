@@ -13,8 +13,10 @@ public final class CorpsColors {
     private static final float MAX_SATURATION_BOOST = 0.8F;
 
     public static int of(Player player) {
-        LanternCorps corps = PowerRingItem.getWornCorps(player).orElse(LanternCorps.GREEN);
+        LanternCorps corps = PowerRingItem.getWornCorps(player).orElse(null);
         LanternCorps aligned = WhiteFusion.alignment(player);
+
+        if (corps == null && aligned == null) return 0xAAAAAA;
         return apply((aligned != null ? aligned : corps).color(), BrightestDayAttachments.getColorTweak(player));
     }
 

@@ -11,7 +11,9 @@ import org.jspecify.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Method;
 import java.net.URI;
+import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -24,6 +26,10 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 final class OathRecognizer {
+
+    private static final String VOSK_JAR_URL = "https://repo1.maven.org/maven2/com/alphacephei/vosk/0.3.45/vosk-0.3.45.jar";
+    private static final Path MOD_DATA_DIR = FabricLoader.getInstance().getGameDir().resolve("data").resolve(BrightestDay.MOD_ID);
+
     private static final float SAMPLE_RATE = 16000.0F;
     private static final int DOWNSAMPLE = 3;
 
@@ -52,43 +58,67 @@ final class OathRecognizer {
 
     private static void load() {
         try {
+            Files.createDirectories(MOD_DATA_DIR);
+
+            String url = VOSK_JAR_URL;
+            String name = getNameFromUrl(url, true);
+            Path lib = MOD_DATA_DIR.resolve(name);
+
+            if (!Files.exists(lib)) {
+                download(url, lib);
+            }
+
+            ClassLoader loader = OathRecognizer.class.getClassLoader();
+            Class<?> cl = loader.getClass();
+            Method addURL = cl.getMethod("addUrlFwd", URL.class);
+            addURL.setAccessible(true);
+            addURL.invoke(loader, lib.toUri().toURL());
+
             VoskLibrary library = VoskLibrary.load();
             library.vosk_set_log_level(VoskLibrary.LOG_WARNINGS);
-            Path directory = modelDirectory();
-            if (!Files.isDirectory(directory)) download(directory);
-            Pointer loaded = library.vosk_model_new(directory.toString());
-            if (loaded == null) throw new IOException("Failed to load oath model from " + directory);
+
+            url = BrightestDayConfig.get().oathModelUrl;
+            name = getNameFromUrl(url, false);
+            Path modelDir = MOD_DATA_DIR.resolve(name);
+
+            if (!Files.isDirectory(modelDir)) {
+                Path archive = MOD_DATA_DIR.resolve("oath-model.zip");
+
+                download(url, archive);
+                unzip(archive, MOD_DATA_DIR);
+
+                Files.deleteIfExists(archive);
+
+                if (!Files.isDirectory(modelDir))
+                    throw new IOException("Model archive did not contain " + archive.getFileName());
+            }
+
+            Pointer loaded = library.vosk_model_new(modelDir.toString());
+
+            if (loaded == null) throw new IOException("Failed to load oath model from " + modelDir);
+
             vosk = library;
             model = loaded;
             state = State.READY;
-            BrightestDay.LOGGER.info("Oath recognition ready ({})", directory.getFileName());
+            BrightestDay.LOGGER.info("Oath recognition ready ({})", modelDir.getFileName());
         } catch (Throwable throwable) {
             state = State.FAILED;
             BrightestDay.LOGGER.warn("Oath recognition unavailable, handheld charging stays timed", throwable);
         }
     }
 
-    private static Path modelDirectory() {
-        String url = BrightestDayConfig.get().oathModelUrl;
-        String name = url.substring(url.lastIndexOf('/') + 1).replace(".zip", "");
-        return FabricLoader.getInstance().getConfigDir().resolve(BrightestDay.MOD_ID).resolve(name);
+    private static String getNameFromUrl(String url, boolean withExtension) {
+        int slashIdx = url.lastIndexOf('/') + 1;
+        return withExtension ? url.substring(slashIdx) : url.substring(slashIdx, url.lastIndexOf('.'));
     }
 
-    private static void download(Path directory) throws IOException, InterruptedException {
-        String url = BrightestDayConfig.get().oathModelUrl;
-        BrightestDay.LOGGER.info("Downloading oath recognition model from {}", url);
-        Path root = directory.getParent();
-        Files.createDirectories(root);
-        Path archive = Files.createTempFile(root, "oath-model", ".zip");
-        try {
-            HttpClient client = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).connectTimeout(Duration.ofSeconds(20)).build();
-            HttpResponse<Path> response = client.send(HttpRequest.newBuilder(URI.create(url)).build(), HttpResponse.BodyHandlers.ofFile(archive));
-            if (response.statusCode() != 200) throw new IOException("Model download failed with HTTP " + response.statusCode());
-            unzip(archive, root);
-        } finally {
-            Files.deleteIfExists(archive);
+    private static void download(String url, Path file) throws IOException, InterruptedException {
+        BrightestDay.LOGGER.info("Downloading file from {} to {}...", url, file);
+
+        try (HttpClient client = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).connectTimeout(Duration.ofSeconds(20)).build()) {
+            HttpResponse<Path> response = client.send(HttpRequest.newBuilder(URI.create(url)).build(), HttpResponse.BodyHandlers.ofFile(file));
+            if (response.statusCode() != 200) throw new IOException("Download failed with HTTP " + response.statusCode());
         }
-        if (!Files.isDirectory(directory)) throw new IOException("Model archive did not contain " + directory.getFileName());
     }
 
     private static void unzip(Path archive, Path root) throws IOException {

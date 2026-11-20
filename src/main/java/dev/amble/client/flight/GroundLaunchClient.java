@@ -21,6 +21,7 @@ import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.Identifier;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
@@ -81,7 +82,7 @@ public final class GroundLaunchClient {
                 if (ClientPlayNetworking.canSend(GroundChargeC2SPayload.TYPE)) ClientPlayNetworking.send(new GroundChargeC2SPayload(true));
             }
             charge = Math.min(charge + 1, GroundLaunch.FULL_CHARGE);
-            charging(client, player);
+            chargeEffects(client, player, charge);
             return;
         }
         if (charge >= GroundLaunch.FULL_CHARGE && player.onGround() && (player.tickCount >= readyAt || readyAt - player.tickCount > GroundLaunch.COOLDOWN_TICKS) && ClientPlayNetworking.canSend(GroundLaunchC2SPayload.TYPE)) {
@@ -114,7 +115,8 @@ public final class GroundLaunchClient {
         FlightBoost.startClient(player, FlightBoost.BURST_TICKS);
     }
 
-    private static void charging(Minecraft client, LocalPlayer player) {
+    public static void chargeEffects(Minecraft client, Player player, int charge) {
+        if (client.level == null) return;
         float progress = charge / (float) GroundLaunch.FULL_CHARGE;
         int color = ARGB.opaque(CorpsColors.of(player));
         RandomSource random = player.getRandom();

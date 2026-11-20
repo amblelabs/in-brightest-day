@@ -18,12 +18,12 @@ public class GrapplingHookConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int useCost() {
+    public int baseCost() {
         return COST;
     }
 
     @Override
-    public int cooldownTicks() {
+    public int cooldownTicks(int size) {
         return COOLDOWN_TICKS;
     }
 

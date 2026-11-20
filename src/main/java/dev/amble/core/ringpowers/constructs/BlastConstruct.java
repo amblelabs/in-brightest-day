@@ -25,6 +25,7 @@ import net.minecraft.world.level.ExplosionDamageCalculator;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 public class BlastConstruct extends ConstructRingPower {
@@ -38,12 +39,12 @@ public class BlastConstruct extends ConstructRingPower {
 
     private static final ExplosionDamageCalculator BLOCKS_ONLY = new ExplosionDamageCalculator() {
         @Override
-        public boolean shouldDamageEntity(Explosion explosion, Entity entity) {
+        public boolean shouldDamageEntity(@NonNull Explosion explosion, @NonNull Entity entity) {
             return false;
         }
 
         @Override
-        public float getKnockbackMultiplier(Entity entity) {
+        public float getKnockbackMultiplier(@NonNull Entity entity) {
             return 0.0F;
         }
     };
@@ -53,7 +54,7 @@ public class BlastConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int useCost() {
+    public int baseCost() {
         return BrightestDayConfig.get().blastCost;
     }
 
@@ -75,7 +76,7 @@ public class BlastConstruct extends ConstructRingPower {
     @Override
     public int cost(int size) {
         int clamped = Math.clamp(this.costSize(size), 1, COST_MULTIPLIERS.length);
-        return this.useCost() * COST_MULTIPLIERS[clamped - 1];
+        return this.baseCost() * COST_MULTIPLIERS[clamped - 1];
     }
 
     @Override
@@ -88,8 +89,9 @@ public class BlastConstruct extends ConstructRingPower {
     }
 
     @Override
-    public int cooldownTicks() {
-        return 25;
+    public int cooldownTicks(int size) {
+        int clamped = Math.clamp(this.costSize(size), 1, EMPOWERED_MAX_SIZE);
+        return 25 + (clamped - 1) * 5;
     }
 
     @Override

@@ -1,14 +1,9 @@
 package dev.amble;
 
 import dev.amble.config.BrightestDayConfig;
-import dev.amble.core.BrightestDayAttachments;
-import dev.amble.core.BrightestDayBlockEntityTypes;
-import dev.amble.core.BrightestDayBlocks;
-import dev.amble.core.BrightestDayCreativeTabs;
-import dev.amble.core.BrightestDayItems;
+import dev.amble.core.*;
+import dev.amble.core.compat.Compat;
 import dev.amble.core.mannequin.Mannequins;
-import dev.amble.core.BrightestDayMenus;
-import dev.amble.core.BrightestDaySounds;
 import dev.amble.core.networking.Networking;
 import dev.amble.core.comms.Comms;
 import dev.amble.core.comms.Megaphone;
@@ -38,6 +33,7 @@ import dev.amble.core.poses.Poses;
 import dev.amble.core.visuals.Insignia;
 import dev.amble.core.ringpowers.constructs.ConstructTools;
 import dev.amble.core.ringpowers.constructs.ConstructDismissal;
+import dev.amble.core.walls.HardLightDamage;
 import dev.amble.core.walls.WallManager;
 import dev.amble.core.sculpt.SculptManager;
 import dev.amble.core.ringpowers.RingJumpstart;
@@ -113,6 +109,8 @@ public class BrightestDay implements ModInitializer {
 		BrightestDayMenus.init();
 		BrightestDaySounds.init();
 		BrightestDayCreativeTabs.init();
+		BrightestDayEffects.init();
+
 		RingPowerRegistry.init();
 		BrightestDayAttachments.init();
 		RingPowerTicker.init();
@@ -136,6 +134,7 @@ public class BrightestDay implements ModInitializer {
 		ConstructTools.init();
 		ConstructDismissal.init();
 		WallManager.init();
+		HardLightDamage.init();
 		SculptManager.init();
 		RingJumpstart.init();
 		AcidManager.init();
@@ -195,6 +194,8 @@ public class BrightestDay implements ModInitializer {
 		RingLoyalty.init();
 		RingSuspension.init();
 		LanternTeams.init();
+
+		Compat.init();
 	}
 
 	public static Identifier id(String path) {
