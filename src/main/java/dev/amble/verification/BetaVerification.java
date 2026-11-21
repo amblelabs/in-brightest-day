@@ -78,7 +78,7 @@ public class BetaVerification {
     }
 
     public static boolean isBetaLocked() {
-        return !FabricLoader.getInstance().isDevelopmentEnvironment() && isBuildUnstable() && !BetaVerification.PREFS.isTokenValid();
+        return !FabricLoader.getInstance().isDevelopmentEnvironment() && isBuildOfficialBeta() && !BetaVerification.PREFS.isTokenValid();
     }
 
     public static void init() {
