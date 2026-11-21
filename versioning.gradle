@@ -59,7 +59,7 @@ String createVer(boolean includeBuild) {
         qualifier += ".$build"
     }
 
-    return "$project.mod_version-$qualifier+mc.$project.minecraft_version"
+    return "$project.version-$qualifier+mc.$project.minecraft_version"
 }
 
 ext.getPublicVersion = {
